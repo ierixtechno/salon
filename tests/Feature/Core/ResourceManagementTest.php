@@ -11,7 +11,7 @@ beforeEach(function () {
 
 test('an owner can add and edit a resource for their branch', function () {
     $owner = onboard();
-    $branch = Branch::factory()->create(['tenant_id' => $owner->tenant_id]);
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
 
     $this->actingAs($owner)
         ->post("/branches/{$branch->id}/resources", ['type' => 'chair', 'name' => 'Chair 1', 'capacity' => 1])
@@ -30,8 +30,8 @@ test('an owner can add and edit a resource for their branch', function () {
 test('a user from tenant B cannot view, edit, or delete a resource belonging to tenant A', function () {
     $ownerA = onboard();
     $ownerB = onboard();
-    $branch = Branch::factory()->create(['tenant_id' => $ownerA->tenant_id]);
-    $resource = Resource::factory()->for($branch)->create(['tenant_id' => $ownerA->tenant_id]);
+    $branch = Branch::factory()->forTenant($ownerA->tenant)->create();
+    $resource = Resource::factory()->for($branch)->forTenant($ownerA->tenant)->create();
 
     $this->actingAs($ownerB)->get("/branches/{$branch->id}/resources")->assertNotFound();
     $this->actingAs($ownerB)->get("/resources/{$resource->id}/edit")->assertNotFound();
@@ -46,7 +46,7 @@ test('a user from tenant B cannot view, edit, or delete a resource belonging to 
 
 test('an invalid resource type is rejected', function () {
     $owner = onboard();
-    $branch = Branch::factory()->create(['tenant_id' => $owner->tenant_id]);
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
 
     $this->actingAs($owner)
         ->post("/branches/{$branch->id}/resources", ['type' => 'not-a-real-type', 'name' => 'X', 'capacity' => 1])

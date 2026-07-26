@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Core\BranchController;
+use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\EmployeeController;
 use App\Http\Controllers\Core\OrganizationSettingsController;
 use App\Http\Controllers\Core\ResourceController;
@@ -37,3 +38,11 @@ Route::resource('branches.resources', ResourceController::class)
 
 Route::resource('employees', EmployeeController::class)->except(['show']);
 Route::put('employees/{employee}/schedule', [EmployeeController::class, 'updateSchedule'])->name('employees.schedule');
+
+// destroy() deactivates (never hard-deletes, same pattern as Branch/
+// Employee). Erasure is a deliberately separate, higher-stakes action —
+// see EraseCustomer — never conflated with the ordinary resourceful verbs.
+Route::resource('customers', CustomerController::class)->except(['show']);
+Route::post('customers/{customer}/notes', [CustomerController::class, 'storeNote'])->name('customers.notes.store');
+Route::post('customers/{customer}/consent', [CustomerController::class, 'recordConsent'])->name('customers.consent.store');
+Route::post('customers/{customer}/erase', [CustomerController::class, 'erase'])->name('customers.erase');

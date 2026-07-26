@@ -10,7 +10,9 @@ class Holiday extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['tenant_id', 'branch_id', 'date', 'name'];
+    // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
+    // §28). BelongsToTenant auto-fills it from the authenticated session.
+    protected $fillable = ['branch_id', 'date', 'name'];
 
     protected function casts(): array
     {

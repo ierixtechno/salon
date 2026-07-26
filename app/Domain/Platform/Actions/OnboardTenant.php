@@ -115,10 +115,14 @@ class OnboardTenant
                 'branches.view', 'users.view',
                 'employees.view', 'employees.update',
                 'resources.view', 'resources.create', 'resources.update',
+                'customers.view', 'customers.create', 'customers.update', 'customers.deactivate',
             ])
         );
 
-        Role::create(['name' => 'Staff', 'guard_name' => 'web']);
+        $staff = Role::create(['name' => 'Staff', 'guard_name' => 'web']);
+        $staff->syncPermissions(
+            $allPermissions->whereIn('name', ['customers.view', 'customers.create'])
+        );
 
         $user->assignRole($owner);
 

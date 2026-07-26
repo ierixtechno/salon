@@ -28,14 +28,18 @@ class CreateEmployee
             $user->tenant_id = $tenant->id;
             $user->save();
 
-            EmployeeProfile::create([
-                'tenant_id' => $tenant->id,
+            // Same reasoning as User above: this action is called directly
+            // (e.g. from tests) without any `web` session in play, so
+            // BelongsToTenant's auto-fill can't be relied on here either.
+            $profile = new EmployeeProfile([
                 'user_id' => $user->id,
                 'job_title' => $data['job_title'] ?? null,
                 'employment_type' => $data['employment_type'],
                 'hire_date' => $data['hire_date'] ?? null,
                 'phone' => $data['phone'] ?? null,
             ]);
+            $profile->tenant_id = $tenant->id;
+            $profile->save();
 
             if (! $user->all_branches) {
                 $user->branches()->sync($data['branches'] ?? []);

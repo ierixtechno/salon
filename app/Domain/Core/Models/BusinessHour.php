@@ -14,7 +14,9 @@ class BusinessHour extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['tenant_id', 'owner_type', 'owner_id', 'day_of_week', 'opens_at', 'closes_at', 'is_closed'];
+    // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
+    // §28). BelongsToTenant auto-fills it from the authenticated session.
+    protected $fillable = ['owner_type', 'owner_id', 'day_of_week', 'opens_at', 'closes_at', 'is_closed'];
 
     protected function casts(): array
     {

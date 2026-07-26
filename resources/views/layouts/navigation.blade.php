@@ -16,6 +16,12 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
+                    @can('viewAny', App\Domain\Core\Models\Customer::class)
+                        <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+                            {{ __('Customers') }}
+                        </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Domain\Core\Models\Branch::class)
                         <x-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">
                             {{ __('Branches') }}
@@ -88,6 +94,12 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @can('viewAny', App\Domain\Core\Models\Customer::class)
+                <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+                    {{ __('Customers') }}
+                </x-responsive-nav-link>
+            @endcan
 
             @can('viewAny', App\Domain\Core\Models\Branch::class)
                 <x-responsive-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">

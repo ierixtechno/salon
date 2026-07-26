@@ -13,8 +13,10 @@ class EmployeeProfile extends Model
 
     public const EMPLOYMENT_TYPES = ['full_time', 'part_time', 'contract'];
 
+    // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
+    // §28). BelongsToTenant auto-fills it from the authenticated session.
     protected $fillable = [
-        'tenant_id', 'user_id', 'job_title', 'employment_type', 'hire_date', 'phone', 'skills',
+        'user_id', 'job_title', 'employment_type', 'hire_date', 'phone', 'skills',
     ];
 
     protected function casts(): array

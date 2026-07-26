@@ -7,21 +7,21 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class EmployeeSchedule extends Model
+class CustomerNote extends Model
 {
     use BelongsToTenant;
 
     // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
     // §28). BelongsToTenant auto-fills it from the authenticated session.
-    protected $fillable = ['user_id', 'branch_id', 'day_of_week', 'starts_at', 'ends_at'];
+    protected $fillable = ['customer_id', 'user_id', 'body'];
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(Branch::class);
     }
 }

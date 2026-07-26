@@ -22,7 +22,9 @@ class Resource extends Model
         return ResourceFactory::new();
     }
 
-    protected $fillable = ['tenant_id', 'branch_id', 'type', 'name', 'capacity', 'is_active'];
+    // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
+    // §28). BelongsToTenant auto-fills it from the authenticated session.
+    protected $fillable = ['branch_id', 'type', 'name', 'capacity', 'is_active'];
 
     protected function casts(): array
     {

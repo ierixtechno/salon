@@ -9,8 +9,12 @@ class BusinessProfile extends Model
 {
     use BelongsToTenant;
 
+    // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
+    // §28). BelongsToTenant auto-fills it from the authenticated session,
+    // including on the updateOrCreate() create path used in
+    // OrganizationSettingsController.
     protected $fillable = [
-        'tenant_id', 'legal_name', 'display_name', 'logo_path',
+        'legal_name', 'display_name', 'logo_path',
         'contact_email', 'contact_phone', 'address', 'cancellation_policy',
     ];
 }

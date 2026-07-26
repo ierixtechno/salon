@@ -28,7 +28,7 @@ test('an owner can create and edit a branch', function () {
 
 test('a branch cannot enable a module the tenant does not have', function () {
     $owner = onboard(['modules' => ['salon']]); // beauty NOT enabled for this tenant
-    $branch = Branch::factory()->create(['tenant_id' => $owner->tenant_id]);
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
 
     $response = $this->actingAs($owner)
         ->put("/branches/{$branch->id}/modules", ['modules' => ['beauty']]);
@@ -39,7 +39,7 @@ test('a branch cannot enable a module the tenant does not have', function () {
 
 test('a branch can enable a module the tenant does have', function () {
     $owner = onboard(['modules' => ['salon']]);
-    $branch = Branch::factory()->create(['tenant_id' => $owner->tenant_id]);
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
 
     $this->actingAs($owner)
         ->put("/branches/{$branch->id}/modules", ['modules' => ['salon']])
@@ -56,7 +56,7 @@ test('branch codes are unique per tenant but may repeat across tenants', functio
     $ownerA = onboard();
     $ownerB = onboard();
 
-    Branch::factory()->create(['tenant_id' => $ownerA->tenant_id, 'code' => 'MAIN']);
+    Branch::factory()->forTenant($ownerA->tenant)->create(['code' => 'MAIN']);
 
     // Same code, different tenant — must succeed.
     $this->actingAs($ownerB)
@@ -75,7 +75,7 @@ test('branch codes are unique per tenant but may repeat across tenants', functio
 test('a user from tenant B cannot view or edit a branch belonging to tenant A', function () {
     $ownerA = onboard();
     $ownerB = onboard();
-    $branch = Branch::factory()->create(['tenant_id' => $ownerA->tenant_id]);
+    $branch = Branch::factory()->forTenant($ownerA->tenant)->create();
 
     $this->actingAs($ownerB)->get("/branches/{$branch->id}/edit")->assertNotFound();
     $this->actingAs($ownerB)->put("/branches/{$branch->id}", ['name' => 'Hijacked', 'code' => 'HIJACK'])->assertNotFound();
@@ -86,7 +86,7 @@ test('a user from tenant B cannot view or edit a branch belonging to tenant A', 
 
 test('deactivating a branch keeps the record but marks it inactive', function () {
     $owner = onboard();
-    $branch = Branch::factory()->create(['tenant_id' => $owner->tenant_id]);
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
 
     $this->actingAs($owner)->delete("/branches/{$branch->id}")->assertRedirect();
 

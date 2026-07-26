@@ -22,8 +22,9 @@ Status values: **PROPOSED** (default suggested, awaiting confirmation) · **CONF
 
 ## D-003 — Target country / tax & invoice compliance
 
-**Status:** OPEN — no default proposed, business decision required
-**Question:** Which country/countries is this platform launching in? Indian bridal terminology (haldi, mehendi, sangeet) suggests India, but this needs explicit confirmation, since it determines:
+**Status:** PRESUMPTIVELY CONFIRMED — India (see D-004; formal GST/invoice specifics still open)
+**Question:** Which country/countries is this platform launching in?
+**Decision so far:** The user confirmed India's DPDP Act for D-004, which strongly implies India as the target market. Treat "India" as confirmed for Customer/data-privacy purposes now. The *tax/invoicing* specifics below are **still open** and must be nailed down before Phase 6:
 - GST-compliant sequential invoice numbering (per branch, per financial year)
 - CGST/SGST vs IGST logic, HSN/SAC codes, per-branch GSTIN
 - e-Invoicing/IRN thresholds
@@ -32,9 +33,10 @@ Status values: **PROPOSED** (default suggested, awaiting confirmation) · **CONF
 
 ## D-004 — Data protection regime for sensitive customer data
 
-**Status:** OPEN — no default proposed, business decision required
-**Question:** Which data protection law applies (e.g., India's DPDP Act, or another jurisdiction)? Drives retention period defaults and the shape of the customer erasure workflow for consultation notes and before/after photos.
-**Affects:** Phase 3 (Customer CRM) and Phase 4 (vertical consultation records). Confirm before those phases begin (`CLAUDE.md` §36).
+**Status:** CONFIRMED — India's Digital Personal Data Protection (DPDP) Act, 2023
+**Decision:** The Customer module (Phase 3) and vertical consultation records (Phase 4) are designed against DPDP: consent is tracked as an auditable ledger (not a single mutable flag), erasure requests **anonymize the customer record in place** rather than deleting the row (financial/appointment/audit history will reference `customer_id` from Phase 5/6 onward and must never be left with a broken foreign key — CLAUDE.md §36/§45), and automatic time-based retention purging is deliberately deferred (see note below) rather than built speculatively.
+**Not yet built:** Automatic retention-period purging (a scheduled job enforcing "don't keep data past necessity"). DPDP requires *not retaining longer than necessary*, but with no real usage data yet, a manual erasure workflow satisfies the immediate requirement; revisit automatic purging once real retention patterns exist (candidate: Phase 14, Security hardening).
+**Affects:** Phase 3 (Customer CRM, this phase) and Phase 4 (vertical consultation records / before-after photos — will reuse the same consent-ledger and erasure pattern).
 
 ## D-005 — Payroll scope
 

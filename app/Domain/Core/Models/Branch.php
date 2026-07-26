@@ -15,7 +15,9 @@ class Branch extends Model
 {
     use BelongsToTenant, HasFactory;
 
-    protected $fillable = ['tenant_id', 'name', 'code', 'timezone', 'address', 'is_active'];
+    // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
+    // §28). BelongsToTenant auto-fills it from the authenticated session.
+    protected $fillable = ['name', 'code', 'timezone', 'address', 'is_active'];
 
     protected static function newFactory(): BranchFactory
     {

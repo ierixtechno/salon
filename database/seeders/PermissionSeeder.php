@@ -39,6 +39,13 @@ class PermissionSeeder extends Seeder
             'resources.create',
             'resources.update',
             'resources.delete',
+
+            // Phase 3: customers
+            'customers.view',
+            'customers.create',
+            'customers.update',
+            'customers.deactivate',
+            'customers.erase',
         ];
 
         foreach ($permissions as $permission) {

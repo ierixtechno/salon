@@ -10,7 +10,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 test('an owner can create an employee with a role and branch access', function () {
     $owner = onboard();
-    $branch = Branch::factory()->create(['tenant_id' => $owner->tenant_id]);
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
 
     $this->actingAs($owner)->post('/employees', [
         'name' => 'Cara Stylist',
