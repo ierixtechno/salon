@@ -20,6 +20,7 @@ class ServiceFactory extends Factory
             'name' => fake()->unique()->words(3, true),
             'description' => fake()->sentence(),
             'duration_minutes' => 30,
+            'buffer_minutes' => 0,
             'base_price' => 500,
             'is_active' => true,
         ];

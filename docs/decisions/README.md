@@ -15,21 +15,22 @@ Status values: **PROPOSED** (default suggested, awaiting confirmation) · **CONF
 
 ## D-002 — Money representation & currency
 
-**Status:** PROPOSED
+**Status:** CONFIRMED
 **Question:** Storage format for monetary values, and whether multi-currency (per tenant or per branch) is required.
-**Proposed default:** `DECIMAL(12,2)`, single currency per tenant, round-half-up applied only at final calculated totals.
-**Affects:** Phase 6 (POS/Invoice/Payment/Refund) schema. Confirm before Phase 6 begins — revisiting after real financial data exists is high-risk.
+**Decision:** `DECIMAL(12,2)`, single currency per tenant (set at onboarding, INR by default), round-half-up applied only at final calculated totals (never to intermediate values). Multi-currency is not supported — a tenant's branches all bill in that one tenant currency.
+**Affects:** Phase 6 (POS/Invoice/Payment/Refund) schema onward.
 
 ## D-003 — Target country / tax & invoice compliance
 
-**Status:** PRESUMPTIVELY CONFIRMED — India (see D-004; formal GST/invoice specifics still open)
-**Question:** Which country/countries is this platform launching in?
-**Decision so far:** The user confirmed India's DPDP Act for D-004, which strongly implies India as the target market. Treat "India" as confirmed for Customer/data-privacy purposes now. The *tax/invoicing* specifics below are **still open** and must be nailed down before Phase 6:
-- GST-compliant sequential invoice numbering (per branch, per financial year)
-- CGST/SGST vs IGST logic, HSN/SAC codes, per-branch GSTIN
-- e-Invoicing/IRN thresholds
-- TDS/TCS on supplier payments
-**Affects:** Phase 6 invoice/tax schema. **Must be confirmed before Phase 6 starts** — retrofitting statutory invoice numbering onto live financial data is high-risk (`CLAUDE.md` §21).
+**Status:** CONFIRMED — India, full GST compliance, single-state assumption for v1
+**Question:** Which country/countries is this platform launching in, and how GST-compliant must invoices be?
+**Decision:**
+- India is the sole target market (consistent with D-004's DPDP Act confirmation).
+- **Full GST compliance from day one**: per-branch GSTIN, HSN codes on products / SAC codes on services, GST-compliant sequential invoice numbering (unbroken, per branch, per financial year), CGST/SGST/IGST determination on every invoice line.
+- **Single-state assumption for v1**: a tenant's branches are assumed to all operate in the same state as their registered GSTIN, so v1 only needs to implement CGST+SGST (branch state = place of supply). Full cross-state place-of-supply determination (→ IGST) is **not built yet** — the schema (per-branch GSTIN, place-of-supply field) is shaped so this can be added later without a rewrite, but the actual IGST-vs-CGST/SGST branching logic is deferred until a tenant genuinely operates cross-state.
+- **e-Invoicing/IRN**: deferred entirely — out of scope until a real tenant crosses the applicable turnover threshold. Schema must not preclude adding it later.
+- **TDS/TCS on supplier payments**: deferred to Phase 7 (Suppliers/Purchasing), not relevant to Phase 6's customer-facing invoices.
+**Affects:** Phase 6 invoice/tax schema onward. Revisit the single-state assumption before supporting a tenant with multi-state branches (`CLAUDE.md` §71 — don't casually change the tax-determination architecture once real invoices exist).
 
 ## D-004 — Data protection regime for sensitive customer data
 

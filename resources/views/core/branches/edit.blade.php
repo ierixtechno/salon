@@ -42,6 +42,19 @@
                             class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('address', $branch->address) }}</textarea>
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="state" value="State (for GST)" />
+                            <x-text-input id="state" class="block mt-1 w-full" type="text" name="state" :value="old('state', $branch->state)" placeholder="e.g. Karnataka" />
+                            <x-input-error :messages="$errors->get('state')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="gstin" value="GSTIN" />
+                            <x-text-input id="gstin" class="block mt-1 w-full uppercase" type="text" name="gstin" :value="old('gstin', $branch->gstin)" placeholder="15-character GSTIN" />
+                            <x-input-error :messages="$errors->get('gstin')" class="mt-2" />
+                        </div>
+                    </div>
+
                     <div class="flex justify-end">
                         <x-primary-button>Save</x-primary-button>
                     </div>

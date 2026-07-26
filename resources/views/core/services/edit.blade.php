@@ -67,6 +67,13 @@
                         </div>
                     </div>
 
+                    <div>
+                        <x-input-label for="sac_code" value="SAC code (optional)" />
+                        <x-text-input id="sac_code" class="block mt-1 w-full sm:w-48" type="text" name="sac_code" :value="old('sac_code', $service->sac_code)" placeholder="e.g. 999721" />
+                        <p class="text-xs text-gray-500 mt-1">Services Accounting Code, printed on GST invoices.</p>
+                        <x-input-error :messages="$errors->get('sac_code')" class="mt-2" />
+                    </div>
+
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" @checked(old('is_active', $service->is_active))>
                         <span class="text-sm text-gray-700">Active</span>

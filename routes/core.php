@@ -4,6 +4,7 @@ use App\Http\Controllers\Core\AppointmentController;
 use App\Http\Controllers\Core\BranchController;
 use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\EmployeeController;
+use App\Http\Controllers\Core\InvoiceController;
 use App\Http\Controllers\Core\OrganizationSettingsController;
 use App\Http\Controllers\Core\ResourceController;
 use App\Http\Controllers\Core\ServiceCategoryController;
@@ -71,3 +72,15 @@ Route::put('appointments/{appointment}/reschedule', [AppointmentController::clas
 
 Route::resource('waitlist', WaitlistEntryController::class, ['parameters' => ['waitlist' => 'waitlist_entry']])->except(['show']);
 Route::post('waitlist/{waitlist_entry}/book', [WaitlistEntryController::class, 'book'])->name('waitlist.book');
+
+// No update/destroy on the resource route — a draft is discarded via the
+// dedicated discardDraft action below, and a finalized invoice is never
+// freeform-edited or deleted, only voided/refunded (CLAUDE.md §45/§48).
+Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show']);
+Route::delete('invoices/{invoice}', [InvoiceController::class, 'discardDraft'])->name('invoices.discard');
+Route::post('invoices/{invoice}/lines', [InvoiceController::class, 'addLine'])->name('invoices.lines.store');
+Route::delete('invoices/{invoice}/lines/{invoice_line}', [InvoiceController::class, 'removeLine'])->name('invoices.lines.destroy');
+Route::post('invoices/{invoice}/checkout', [InvoiceController::class, 'checkout'])->name('invoices.checkout');
+Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])->name('invoices.payments.store');
+Route::post('invoices/{invoice}/refunds', [InvoiceController::class, 'storeRefund'])->name('invoices.refunds.store');
+Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');

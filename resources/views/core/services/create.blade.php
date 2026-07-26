@@ -58,9 +58,17 @@
                                 <x-input-error :messages="$errors->get('base_price')" class="mt-2" />
                             </div>
                             <div>
-                                <x-input-label for="tax_rate_percent" value="Tax % (optional)" />
+                                <x-input-label for="tax_rate_percent" value="Tax % (GST, optional)" />
                                 <x-text-input id="tax_rate_percent" class="block mt-1 w-full" type="number" step="0.01" min="0" max="100" name="tax_rate_percent" :value="old('tax_rate_percent')" />
+                                <p class="text-xs text-gray-500 mt-1">Split evenly into CGST+SGST on invoices.</p>
                             </div>
+                        </div>
+
+                        <div>
+                            <x-input-label for="sac_code" value="SAC code (optional)" />
+                            <x-text-input id="sac_code" class="block mt-1 w-full sm:w-48" type="text" name="sac_code" :value="old('sac_code')" placeholder="e.g. 999721" />
+                            <p class="text-xs text-gray-500 mt-1">Services Accounting Code, printed on GST invoices.</p>
+                            <x-input-error :messages="$errors->get('sac_code')" class="mt-2" />
                         </div>
 
                         <div class="flex justify-end">

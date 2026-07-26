@@ -21,6 +21,7 @@ class ResourceFactory extends Factory
             'type' => 'chair',
             'name' => 'Chair '.fake()->unique()->numberBetween(1, 999),
             'capacity' => 1,
+            'turnaround_minutes' => 0,
             'is_active' => true,
         ];
     }

@@ -8,6 +8,7 @@ use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * State machine (docs/modules/APPOINTMENT.md extends the simplified
@@ -105,5 +106,14 @@ class Appointment extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Whether this appointment has already been billed — an appointment
+     * can only ever appear on one invoice line (StoreInvoiceLineRequest).
+     */
+    public function invoiceLine(): HasOne
+    {
+        return $this->hasOne(InvoiceLine::class);
     }
 }

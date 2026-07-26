@@ -22,6 +22,8 @@ class StoreBranchRequest extends FormRequest
             ],
             'timezone' => ['nullable', 'string', 'timezone'],
             'address' => ['nullable', 'string', 'max:2000'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
         ];
     }
 }

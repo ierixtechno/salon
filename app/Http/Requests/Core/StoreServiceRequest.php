@@ -27,6 +27,7 @@ class StoreServiceRequest extends FormRequest
             'buffer_minutes' => ['nullable', 'integer', 'min:0', 'max:240'],
             'base_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'tax_rate_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'sac_code' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

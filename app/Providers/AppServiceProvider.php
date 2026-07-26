@@ -7,6 +7,7 @@ use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\EmployeeProfile;
+use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\Resource as BranchResource;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
@@ -15,6 +16,7 @@ use App\Policies\AppointmentPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\EmployeeProfilePolicy;
+use App\Policies\InvoicePolicy;
 use App\Policies\ResourcePolicy;
 use App\Policies\ServiceCategoryPolicy;
 use App\Policies\ServicePolicy;
@@ -55,5 +57,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Service::class, ServicePolicy::class);
         Gate::policy(Appointment::class, AppointmentPolicy::class);
         Gate::policy(WaitlistEntry::class, WaitlistEntryPolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);
     }
 }

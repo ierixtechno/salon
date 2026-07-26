@@ -122,6 +122,7 @@ class OnboardTenant
                 'spa-consultations.view', 'spa-consultations.create', 'spa-consultations.update',
                 'appointments.view', 'appointments.create', 'appointments.update', 'appointments.cancel',
                 'waitlist.view', 'waitlist.create', 'waitlist.update',
+                'invoices.view', 'invoices.create', 'payments.create',
             ])
         );
 

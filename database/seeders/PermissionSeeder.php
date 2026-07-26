@@ -72,6 +72,13 @@ class PermissionSeeder extends Seeder
             'waitlist.view',
             'waitlist.create',
             'waitlist.update',
+
+            // Phase 6: POS / invoicing / payments / refunds
+            'invoices.view',
+            'invoices.create',
+            'invoices.void',
+            'payments.create',
+            'refunds.create',
         ];
 
         foreach ($permissions as $permission) {
