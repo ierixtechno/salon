@@ -24,4 +24,12 @@ Engagement, haldi, mehendi, sangeet, wedding, reception — each with date, time
 - Skin consultation/treatment functionality requires the `beauty` module enabled for tenant + branch (`.claude/skills/beauty-saas-development/SKILL.md` §9).
 - Bridal events can carry their own sub-schedule of services/staff/payments distinct from a normal single-service appointment — coordinate with [APPOINTMENT.md](APPOINTMENT.md) on how a multi-service, multi-day event is represented (likely a parent "event" record with child appointments, to be finalized in Phase 4).
 
-## Expand when Phase 4 begins — resolve D-004 first.
+## Implemented (Phase 4)
+
+- `App\Domain\BeautyParlour\Models\SkinProfile` — one row per customer (upsert), persistent skin characteristics (skin type, known conditions, allergies). Requires `beauty-consultations.update`.
+- `App\Domain\BeautyParlour\Models\SkinConsultation` — append-only per-visit ledger (concerns, treatment plan, recommendation, notes), tied to a tenant branch that must have the `beauty` module enabled. Requires `beauty-consultations.create`; no update/delete route exists (immutable history, CLAUDE.md §46/§14).
+- Routes nested under `customers/{customer}/beauty/...`, gated by `module:beauty` (tenant-level) + `can:beauty-consultations.*` (permission-level); branch-level module enforcement happens inside `StoreSkinConsultationRequest`.
+- `EraseCustomer` purges both tables for the customer on a DPDP erasure request.
+- **Deliberately deferred, not attempted in this phase:** before/after photo capture (needs its own consent-capture UI, retention job, and storage-quota accounting — CLAUDE.md §34/§36 — before it should be built), and bridal event management (needs the Phase 5 Appointment Engine's parent-event/child-appointment model to exist first, per this file's own prior note). Both remain open follow-ups, not silently dropped.
+
+## Expand when bridal events and before/after photos are picked up — see the deferred items above.

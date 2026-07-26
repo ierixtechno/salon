@@ -95,6 +95,25 @@
                     @endif
                 </div>
 
+                @if ((current_tenant()->hasModuleEnabled('salon') && auth()->user()->can('salon-consultations.view'))
+                        || (current_tenant()->hasModuleEnabled('beauty') && auth()->user()->can('beauty-consultations.view'))
+                        || (current_tenant()->hasModuleEnabled('spa') && auth()->user()->can('spa-consultations.view')))
+                    <div class="bg-white shadow-sm rounded-lg p-6">
+                        <h3 class="font-medium text-gray-900 mb-4">Consultations</h3>
+                        <div class="flex flex-wrap gap-3">
+                            @if (current_tenant()->hasModuleEnabled('salon') && auth()->user()->can('salon-consultations.view'))
+                                <a href="{{ route('salon.profile.edit', $customer) }}" class="text-sm px-3 py-1.5 rounded-md border bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100">Hair profile &amp; consultations</a>
+                            @endif
+                            @if (current_tenant()->hasModuleEnabled('beauty') && auth()->user()->can('beauty-consultations.view'))
+                                <a href="{{ route('beauty.profile.edit', $customer) }}" class="text-sm px-3 py-1.5 rounded-md border bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100">Skin profile &amp; consultations</a>
+                            @endif
+                            @if (current_tenant()->hasModuleEnabled('spa') && auth()->user()->can('spa-consultations.view'))
+                                <a href="{{ route('spa.profile.edit', $customer) }}" class="text-sm px-3 py-1.5 rounded-md border bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100">Spa profile &amp; consultations</a>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h3 class="font-medium text-gray-900 mb-4">Notes</h3>
 

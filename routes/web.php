@@ -20,6 +20,9 @@ Route::middleware(['auth:web', 'tenant'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     require __DIR__.'/core.php';
+    require __DIR__.'/salon.php';
+    require __DIR__.'/beauty-parlour.php';
+    require __DIR__.'/spa.php';
 });
 
 require __DIR__.'/auth.php';

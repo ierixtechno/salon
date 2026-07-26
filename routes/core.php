@@ -5,6 +5,8 @@ use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\EmployeeController;
 use App\Http\Controllers\Core\OrganizationSettingsController;
 use App\Http\Controllers\Core\ResourceController;
+use App\Http\Controllers\Core\ServiceCategoryController;
+use App\Http\Controllers\Core\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,3 +48,10 @@ Route::resource('customers', CustomerController::class)->except(['show']);
 Route::post('customers/{customer}/notes', [CustomerController::class, 'storeNote'])->name('customers.notes.store');
 Route::post('customers/{customer}/consent', [CustomerController::class, 'recordConsent'])->name('customers.consent.store');
 Route::post('customers/{customer}/erase', [CustomerController::class, 'erase'])->name('customers.erase');
+
+Route::resource('service-categories', ServiceCategoryController::class)->except(['show']);
+
+Route::resource('services', ServiceController::class)->except(['show']);
+Route::put('services/{service}/variants', [ServiceController::class, 'updateVariants'])->name('services.variants');
+Route::put('services/{service}/branches', [ServiceController::class, 'updateBranches'])->name('services.branches');
+Route::put('services/{service}/staff', [ServiceController::class, 'updateStaff'])->name('services.staff');

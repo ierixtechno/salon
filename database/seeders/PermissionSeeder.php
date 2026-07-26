@@ -46,6 +46,23 @@ class PermissionSeeder extends Seeder
             'customers.update',
             'customers.deactivate',
             'customers.erase',
+
+            // Phase 4: service catalogue
+            'services.view',
+            'services.create',
+            'services.update',
+            'services.delete',
+
+            // Phase 4: vertical consultation profiles (hair/skin/spa)
+            'salon-consultations.view',
+            'salon-consultations.create',
+            'salon-consultations.update',
+            'beauty-consultations.view',
+            'beauty-consultations.create',
+            'beauty-consultations.update',
+            'spa-consultations.view',
+            'spa-consultations.create',
+            'spa-consultations.update',
         ];
 
         foreach ($permissions as $permission) {

@@ -22,6 +22,12 @@
                         </x-nav-link>
                     @endcan
 
+                    @can('viewAny', App\Domain\Core\Models\Service::class)
+                        <x-nav-link :href="route('services.index')" :active="request()->routeIs('services.*') || request()->routeIs('service-categories.*')">
+                            {{ __('Services') }}
+                        </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Domain\Core\Models\Branch::class)
                         <x-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">
                             {{ __('Branches') }}
@@ -98,6 +104,12 @@
             @can('viewAny', App\Domain\Core\Models\Customer::class)
                 <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
                     {{ __('Customers') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\Service::class)
+                <x-responsive-nav-link :href="route('services.index')" :active="request()->routeIs('services.*') || request()->routeIs('service-categories.*')">
+                    {{ __('Services') }}
                 </x-responsive-nav-link>
             @endcan
 

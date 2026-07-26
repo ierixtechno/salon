@@ -20,4 +20,12 @@ Massage, body therapy, body scrub, body wrap, aromatherapy, hydrotherapy, steam,
 - Room turnaround time (cleaning/reset between sessions) is a real availability constraint, not just a display nicety — it must reduce actual bookable capacity in the availability check.
 - Spa functionality requires the `spa` module enabled for tenant + branch.
 
-## Expand when Phase 4 begins, in close coordination with [APPOINTMENT.md](APPOINTMENT.md) since Spa exercises the Appointment Engine's hardest resource-coordination case.
+## Implemented (Phase 4)
+
+- `App\Domain\Spa\Models\SpaProfile` — one row per customer (upsert), persistent health/preference profile (health conditions, allergies, pressure preference, areas to avoid) used to screen contraindications before a session. Requires `spa-consultations.update`.
+- `App\Domain\Spa\Models\SpaConsultation` — append-only per-visit ledger (concerns, recommendation, notes), tied to a tenant branch that must have the `spa` module enabled. Requires `spa-consultations.create`; no update/delete route exists (immutable history, CLAUDE.md §46/§14).
+- Routes nested under `customers/{customer}/spa/...`, gated by `module:spa` (tenant-level) + `can:spa-consultations.*` (permission-level); branch-level module enforcement happens inside `StoreSpaConsultationRequest`.
+- `EraseCustomer` purges both tables for the customer on a DPDP erasure request.
+- **Deliberately deferred, not attempted in this phase:** room/resource allocation, room turnaround time, couple bookings, and therapist-schedule coordination all belong to the Phase 5 Appointment Engine, not the consultation record — this phase only covers the intake/consultation data, in line with this file's original scope note.
+
+## Expand further in close coordination with [APPOINTMENT.md](APPOINTMENT.md) once Phase 5 begins, since Spa exercises the Appointment Engine's hardest resource-coordination case.

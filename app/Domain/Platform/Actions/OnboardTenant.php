@@ -116,12 +116,21 @@ class OnboardTenant
                 'employees.view', 'employees.update',
                 'resources.view', 'resources.create', 'resources.update',
                 'customers.view', 'customers.create', 'customers.update', 'customers.deactivate',
+                'services.view', 'services.create', 'services.update',
+                'salon-consultations.view', 'salon-consultations.create', 'salon-consultations.update',
+                'beauty-consultations.view', 'beauty-consultations.create', 'beauty-consultations.update',
+                'spa-consultations.view', 'spa-consultations.create', 'spa-consultations.update',
             ])
         );
 
         $staff = Role::create(['name' => 'Staff', 'guard_name' => 'web']);
         $staff->syncPermissions(
-            $allPermissions->whereIn('name', ['customers.view', 'customers.create'])
+            $allPermissions->whereIn('name', [
+                'customers.view', 'customers.create', 'services.view',
+                'salon-consultations.view', 'salon-consultations.create',
+                'beauty-consultations.view', 'beauty-consultations.create',
+                'spa-consultations.view', 'spa-consultations.create',
+            ])
         );
 
         $user->assignRole($owner);
