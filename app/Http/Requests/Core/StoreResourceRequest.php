@@ -19,6 +19,7 @@ class StoreResourceRequest extends FormRequest
             'type' => ['required', 'string', Rule::in(Resource::TYPES)],
             'name' => ['required', 'string', 'max:255'],
             'capacity' => ['required', 'integer', 'min:1', 'max:20'],
+            'turnaround_minutes' => ['nullable', 'integer', 'min:0', 'max:240'],
         ];
     }
 }

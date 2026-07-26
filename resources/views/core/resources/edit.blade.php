@@ -32,6 +32,13 @@
                         <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
                     </div>
 
+                    <div>
+                        <x-input-label for="turnaround_minutes" value="Turnaround time (min)" />
+                        <x-text-input id="turnaround_minutes" class="block mt-1 w-24" type="number" name="turnaround_minutes" min="0" max="240" :value="old('turnaround_minutes', $resource->turnaround_minutes)" />
+                        <p class="text-xs text-gray-500 mt-1">Cleaning/reset time needed after a session before this resource can be booked again.</p>
+                        <x-input-error :messages="$errors->get('turnaround_minutes')" class="mt-2" />
+                    </div>
+
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" @checked(old('is_active', $resource->is_active))>
                         <span class="text-sm text-gray-700">Active</span>

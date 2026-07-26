@@ -24,6 +24,7 @@ class StoreServiceRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', Rule::unique('services', 'name')->where('tenant_id', $tenantId)],
             'description' => ['nullable', 'string', 'max:2000'],
             'duration_minutes' => ['required', 'integer', 'min:1', 'max:600'],
+            'buffer_minutes' => ['nullable', 'integer', 'min:0', 'max:240'],
             'base_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'tax_rate_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];

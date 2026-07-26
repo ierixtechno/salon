@@ -28,4 +28,8 @@ Massage, body therapy, body scrub, body wrap, aromatherapy, hydrotherapy, steam,
 - `EraseCustomer` purges both tables for the customer on a DPDP erasure request.
 - **Deliberately deferred, not attempted in this phase:** room/resource allocation, room turnaround time, couple bookings, and therapist-schedule coordination all belong to the Phase 5 Appointment Engine, not the consultation record — this phase only covers the intake/consultation data, in line with this file's original scope note.
 
-## Expand further in close coordination with [APPOINTMENT.md](APPOINTMENT.md) once Phase 5 begins, since Spa exercises the Appointment Engine's hardest resource-coordination case.
+## Implemented (Phase 5)
+
+Single-resource Spa bookings work end-to-end through the general Appointment Engine ([APPOINTMENT.md](APPOINTMENT.md)): `Customer + Therapist + Room/resource + Time slot` are all validated together before confirmation, and room turnaround time reduces actual bookable capacity (a resource's `turnaround_minutes` extends its busy window past `ends_at`, symmetrically with the employee's `buffer_minutes`). A resource's `capacity` > 1 (e.g. a couple's massage room) already allows that many simultaneous appointments before conflicting.
+
+True **couple bookings** — two therapists and two rooms reserved together as one atomic unit — are deliberately not built yet; see APPOINTMENT.md's "Deliberately deferred" section for why and what schema hook (`group_uuid`) keeps it open for later.

@@ -25,7 +25,7 @@ class Service extends Model
     // §28). BelongsToTenant auto-fills it from the authenticated session.
     protected $fillable = [
         'service_category_id', 'module_id', 'name', 'description',
-        'duration_minutes', 'base_price', 'tax_rate_percent', 'is_active',
+        'duration_minutes', 'buffer_minutes', 'base_price', 'tax_rate_percent', 'is_active',
     ];
 
     protected function casts(): array

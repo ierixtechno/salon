@@ -22,6 +22,12 @@
                         </x-nav-link>
                     @endcan
 
+                    @can('viewAny', App\Domain\Core\Models\Appointment::class)
+                        <x-nav-link :href="route('appointments.index')" :active="request()->routeIs('appointments.*') || request()->routeIs('waitlist.*')">
+                            {{ __('Appointments') }}
+                        </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Domain\Core\Models\Service::class)
                         <x-nav-link :href="route('services.index')" :active="request()->routeIs('services.*') || request()->routeIs('service-categories.*')">
                             {{ __('Services') }}
@@ -104,6 +110,12 @@
             @can('viewAny', App\Domain\Core\Models\Customer::class)
                 <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
                     {{ __('Customers') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\Appointment::class)
+                <x-responsive-nav-link :href="route('appointments.index')" :active="request()->routeIs('appointments.*') || request()->routeIs('waitlist.*')">
+                    {{ __('Appointments') }}
                 </x-responsive-nav-link>
             @endcan
 

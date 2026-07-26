@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Core\AppointmentController;
 use App\Http\Controllers\Core\BranchController;
 use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\EmployeeController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Core\OrganizationSettingsController;
 use App\Http\Controllers\Core\ResourceController;
 use App\Http\Controllers\Core\ServiceCategoryController;
 use App\Http\Controllers\Core\ServiceController;
+use App\Http\Controllers\Core\WaitlistEntryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,3 +57,17 @@ Route::resource('services', ServiceController::class)->except(['show']);
 Route::put('services/{service}/variants', [ServiceController::class, 'updateVariants'])->name('services.variants');
 Route::put('services/{service}/branches', [ServiceController::class, 'updateBranches'])->name('services.branches');
 Route::put('services/{service}/staff', [ServiceController::class, 'updateStaff'])->name('services.staff');
+
+// No edit/update/destroy — an appointment moves through its lifecycle via
+// the dedicated actions below, it is never freeform-edited or deleted
+// (CLAUDE.md §32/§48).
+Route::resource('appointments', AppointmentController::class)->only(['index', 'create', 'store', 'show']);
+Route::post('appointments/{appointment}/check-in', [AppointmentController::class, 'checkIn'])->name('appointments.check-in');
+Route::post('appointments/{appointment}/start', [AppointmentController::class, 'start'])->name('appointments.start');
+Route::post('appointments/{appointment}/complete', [AppointmentController::class, 'complete'])->name('appointments.complete');
+Route::post('appointments/{appointment}/no-show', [AppointmentController::class, 'noShow'])->name('appointments.no-show');
+Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+Route::put('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])->name('appointments.reschedule');
+
+Route::resource('waitlist', WaitlistEntryController::class, ['parameters' => ['waitlist' => 'waitlist_entry']])->except(['show']);
+Route::post('waitlist/{waitlist_entry}/book', [WaitlistEntryController::class, 'book'])->name('waitlist.book');

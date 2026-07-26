@@ -32,6 +32,13 @@
                         <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
                     </div>
 
+                    <div>
+                        <x-input-label for="turnaround_minutes" value="Turnaround time (min)" />
+                        <x-text-input id="turnaround_minutes" class="block mt-1 w-24" type="number" name="turnaround_minutes" min="0" max="240" :value="old('turnaround_minutes', 0)" />
+                        <p class="text-xs text-gray-500 mt-1">Cleaning/reset time needed after a session before this resource can be booked again.</p>
+                        <x-input-error :messages="$errors->get('turnaround_minutes')" class="mt-2" />
+                    </div>
+
                     <div class="flex justify-end">
                         <x-primary-button>Add resource</x-primary-button>
                     </div>

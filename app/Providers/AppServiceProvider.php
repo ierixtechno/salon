@@ -3,18 +3,22 @@
 namespace App\Providers;
 
 use App\Auth\TenantAwareUserProvider;
+use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\EmployeeProfile;
 use App\Domain\Core\Models\Resource as BranchResource;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
+use App\Domain\Core\Models\WaitlistEntry;
+use App\Policies\AppointmentPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\EmployeeProfilePolicy;
 use App\Policies\ResourcePolicy;
 use App\Policies\ServiceCategoryPolicy;
 use App\Policies\ServicePolicy;
+use App\Policies\WaitlistEntryPolicy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -49,5 +53,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(ServiceCategory::class, ServiceCategoryPolicy::class);
         Gate::policy(Service::class, ServicePolicy::class);
+        Gate::policy(Appointment::class, AppointmentPolicy::class);
+        Gate::policy(WaitlistEntry::class, WaitlistEntryPolicy::class);
     }
 }

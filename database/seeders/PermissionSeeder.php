@@ -63,6 +63,15 @@ class PermissionSeeder extends Seeder
             'spa-consultations.view',
             'spa-consultations.create',
             'spa-consultations.update',
+
+            // Phase 5: appointment engine
+            'appointments.view',
+            'appointments.create',
+            'appointments.update',
+            'appointments.cancel',
+            'waitlist.view',
+            'waitlist.create',
+            'waitlist.update',
         ];
 
         foreach ($permissions as $permission) {

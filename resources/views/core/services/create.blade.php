@@ -37,12 +37,21 @@
                                 class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('description') }}</textarea>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <x-input-label for="duration_minutes" value="Duration (min)" />
                                 <x-text-input id="duration_minutes" class="block mt-1 w-full" type="number" name="duration_minutes" min="1" :value="old('duration_minutes')" required />
                                 <x-input-error :messages="$errors->get('duration_minutes')" class="mt-2" />
                             </div>
+                            <div>
+                                <x-input-label for="buffer_minutes" value="Buffer after (min, optional)" />
+                                <x-text-input id="buffer_minutes" class="block mt-1 w-full" type="number" name="buffer_minutes" min="0" :value="old('buffer_minutes', 0)" />
+                                <p class="text-xs text-gray-500 mt-1">Prep/cleanup time the stylist needs before their next appointment.</p>
+                                <x-input-error :messages="$errors->get('buffer_minutes')" class="mt-2" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <x-input-label for="base_price" value="Base price" />
                                 <x-text-input id="base_price" class="block mt-1 w-full" type="number" step="0.01" min="0" name="base_price" :value="old('base_price')" required />

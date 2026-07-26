@@ -120,6 +120,8 @@ class OnboardTenant
                 'salon-consultations.view', 'salon-consultations.create', 'salon-consultations.update',
                 'beauty-consultations.view', 'beauty-consultations.create', 'beauty-consultations.update',
                 'spa-consultations.view', 'spa-consultations.create', 'spa-consultations.update',
+                'appointments.view', 'appointments.create', 'appointments.update', 'appointments.cancel',
+                'waitlist.view', 'waitlist.create', 'waitlist.update',
             ])
         );
 
@@ -130,6 +132,8 @@ class OnboardTenant
                 'salon-consultations.view', 'salon-consultations.create',
                 'beauty-consultations.view', 'beauty-consultations.create',
                 'spa-consultations.view', 'spa-consultations.create',
+                'appointments.view', 'appointments.create', 'appointments.update',
+                'waitlist.view', 'waitlist.create',
             ])
         );
 
