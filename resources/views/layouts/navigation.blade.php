@@ -15,6 +15,24 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @can('viewAny', App\Domain\Core\Models\Branch::class)
+                        <x-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">
+                            {{ __('Branches') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @can('viewAny', App\Domain\Core\Models\EmployeeProfile::class)
+                        <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.*')">
+                            {{ __('Employees') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @can('tenant.settings.manage')
+                        <x-nav-link :href="route('settings.organization.edit')" :active="request()->routeIs('settings.organization.*')">
+                            {{ __('Settings') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -70,6 +88,24 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @can('viewAny', App\Domain\Core\Models\Branch::class)
+                <x-responsive-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">
+                    {{ __('Branches') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\EmployeeProfile::class)
+                <x-responsive-nav-link :href="route('employees.index')" :active="request()->routeIs('employees.*')">
+                    {{ __('Employees') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('tenant.settings.manage')
+                <x-responsive-nav-link :href="route('settings.organization.edit')" :active="request()->routeIs('settings.organization.*')">
+                    {{ __('Settings') }}
+                </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->

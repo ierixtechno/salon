@@ -111,7 +111,11 @@ class OnboardTenant
 
         $manager = Role::create(['name' => 'Manager', 'guard_name' => 'web']);
         $manager->syncPermissions(
-            $allPermissions->whereIn('name', ['branches.view', 'users.view'])
+            $allPermissions->whereIn('name', [
+                'branches.view', 'users.view',
+                'employees.view', 'employees.update',
+                'resources.view', 'resources.create', 'resources.update',
+            ])
         );
 
         Role::create(['name' => 'Staff', 'guard_name' => 'web']);

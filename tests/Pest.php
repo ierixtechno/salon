@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Platform\Actions\OnboardTenant;
+use App\Models\User;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PermissionSeeder;
@@ -61,7 +63,21 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Onboards a full tenant + owner (roles, trial subscription, modules) via
+ * the real OnboardTenant action, so feature tests exercise actual
+ * permission-bearing users rather than bare factory Users with no RBAC
+ * context.
+ */
+function onboard(array $overrides = []): User
 {
-    // ..
+    return app(OnboardTenant::class)->execute(array_merge([
+        'business_name' => fake()->unique()->company(),
+        'timezone' => 'Asia/Kolkata',
+        'currency' => 'INR',
+        'modules' => ['salon'],
+        'owner_name' => 'Owner',
+        'owner_email' => fake()->unique()->safeEmail(),
+        'owner_password' => 'password123',
+    ], $overrides));
 }
