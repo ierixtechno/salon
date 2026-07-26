@@ -1,0 +1,49 @@
+project/
+│
+├── CLAUDE.md
+│
+├── .claude/
+│   └── skills/
+│       └── beauty-saas-development/
+│           └── SKILL.md
+│
+├── docs/
+│   ├── 00-PRODUCT-VISION.md
+│   ├── 01-ARCHITECTURE.md
+│   ├── 02-TENANCY.md
+│   ├── 03-DATABASE-STANDARDS.md
+│   ├── 04-RBAC.md
+│   ├── 05-SECURITY.md
+│   ├── 06-ERROR-HANDLING.md
+│   ├── 07-UI-UX-STANDARDS.md
+│   ├── 08-API-STANDARDS.md
+│   ├── 09-TESTING.md
+│   ├── 10-SHARED-HOSTING.md
+│   │
+│   ├── modules/
+│   │   ├── PLATFORM.md
+│   │   ├── ORGANIZATION.md
+│   │   ├── BRANCH.md
+│   │   ├── EMPLOYEE.md
+│   │   ├── CUSTOMER.md
+│   │   ├── SERVICE.md
+│   │   ├── APPOINTMENT.md
+│   │   ├── POS.md
+│   │   ├── INVENTORY.md
+│   │   ├── MEMBERSHIP.md
+│   │   ├── PACKAGE.md
+│   │   ├── FINANCE.md
+│   │   ├── MARKETING.md
+│   │   ├── REPORTING.md
+│   │   ├── SALON.md
+│   │   ├── BEAUTY-PARLOUR.md
+│   │   └── SPA.md
+│   │
+│   └── decisions/
+│       └── README.md
+│
+├── app/
+├── database/
+├── routes/
+├── resources/
+└── tests/

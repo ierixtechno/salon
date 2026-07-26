@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Http\Controllers\Platform;
+
+use App\Domain\Platform\Actions\OnboardTenant;
+use App\Domain\Platform\Actions\UpdateTenantModules;
+use App\Domain\Platform\Models\Module;
+use App\Domain\Platform\Models\PlatformAuditLog;
+use App\Domain\Platform\Models\Tenant;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Platform\CreateTenantRequest;
+use App\Http\Requests\Platform\UpdateTenantModulesRequest;
+use App\Http\Requests\Platform\UpdateTenantStatusRequest;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+
+class TenantController extends Controller
+{
+    public function index(): View
+    {
+        return view('platform.tenants.index', [
+            'tenants' => Tenant::withCount('users')->latest()->paginate(20),
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('platform.tenants.create', [
+            'modules' => Module::orderBy('name')->get(),
+        ]);
+    }
+
+    public function store(CreateTenantRequest $request, OnboardTenant $onboardTenant): RedirectResponse
+    {
+        $owner = $onboardTenant->execute($request->validated());
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'tenant.created',
+            'Tenant',
+            $owner->tenant_id,
+            $owner->tenant_id,
+        );
+
+        return redirect()->route('platform.tenants.show', $owner->tenant_id)
+            ->with('status', 'Tenant created.');
+    }
+
+    public function show(Tenant $tenant): View
+    {
+        return view('platform.tenants.show', [
+            'tenant' => $tenant,
+            'modules' => Module::orderBy('name')->get(),
+            'enabledModuleCodes' => $tenant->tenantModules()
+                ->where('enabled', true)
+                ->with('module')
+                ->get()
+                ->pluck('module.code'),
+            'subscription' => $tenant->currentSubscription(),
+        ]);
+    }
+
+    public function updateStatus(UpdateTenantStatusRequest $request, Tenant $tenant): RedirectResponse
+    {
+        $previousStatus = $tenant->status;
+
+        $tenant->update([
+            'status' => $request->validated('status'),
+            'suspended_at' => $request->validated('status') === 'suspended' ? now() : null,
+        ]);
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'tenant.status_changed',
+            'Tenant',
+            $tenant->id,
+            $tenant->id,
+            ['from' => $previousStatus, 'to' => $tenant->status],
+        );
+
+        return back()->with('status', 'Tenant status updated.');
+    }
+
+    public function updateModules(UpdateTenantModulesRequest $request, Tenant $tenant, UpdateTenantModules $updateTenantModules): RedirectResponse
+    {
+        $updateTenantModules->execute($tenant, $request->validated('modules', []));
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'tenant.modules_changed',
+            'Tenant',
+            $tenant->id,
+            $tenant->id,
+            ['modules' => $request->validated('modules', [])],
+        );
+
+        return back()->with('status', 'Modules updated.');
+    }
+}
