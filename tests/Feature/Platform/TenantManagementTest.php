@@ -26,6 +26,31 @@ test('a platform admin can log in and reach the dashboard', function () {
         ->assertOk();
 });
 
+/**
+ * Regression test: Laravel's default RedirectIfAuthenticated isn't guard-
+ * aware, so an already-authenticated platform admin revisiting the guest-
+ * only /platform/login route was being redirected to the tenant
+ * `dashboard` route — which then bounced to the *tenant* /login since
+ * there was no `web` session, a confusing dead end. See bootstrap/app.php
+ * redirectUsersTo().
+ */
+test('a logged-in platform admin revisiting the platform login page lands on the platform dashboard, not the tenant login', function () {
+    $admin = PlatformAdmin::factory()->create();
+
+    $this->actingAs($admin, 'platform')
+        ->get('/platform/login')
+        ->assertRedirect('/platform/dashboard');
+});
+
+test('a logged-in tenant user revisiting the tenant login page lands on the tenant dashboard, not the platform login', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->forTenant($tenant)->create();
+
+    $this->actingAs($user)
+        ->get('/login')
+        ->assertRedirect('/dashboard');
+});
+
 test('a platform admin can suspend and reactivate a tenant', function () {
     $admin = PlatformAdmin::factory()->create();
     $tenant = Tenant::factory()->active()->create();

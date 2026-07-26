@@ -33,6 +33,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('platform/*')
             ? route('platform.login')
             : route('login'));
+
+        // The mirror image: an already-authenticated user hitting a
+        // `guest`-only route (e.g. a platform admin revisiting
+        // /platform/login) must land on *their own* dashboard. Laravel's
+        // default RedirectIfAuthenticated isn't guard-aware, so without
+        // this it sends a platform admin to the tenant `dashboard` route,
+        // which then bounces to the tenant /login since there's no `web`
+        // session — a confusing dead end.
+        $middleware->redirectUsersTo(fn (Request $request) => $request->is('platform/*')
+            ? route('platform.dashboard')
+            : route('dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -1,7 +1,7 @@
 <x-platform-layout>
-    <h1 class="text-xl font-semibold text-gray-900 mb-6">New tenant</h1>
+    <x-slot name="header">New tenant</x-slot>
 
-    <div class="bg-white rounded-lg shadow-sm p-6 max-w-2xl">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
         <form method="POST" action="{{ route('platform.tenants.store') }}">
             @csrf
 
@@ -28,7 +28,7 @@
                 <x-input-label value="Modules" />
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
                     @foreach ($modules as $module)
-                        <label class="flex items-center gap-2 border rounded-md px-3 py-2 cursor-pointer hover:bg-gray-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+                        <label class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 cursor-pointer hover:bg-gray-50 has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-50 has-[:checked]:ring-1 has-[:checked]:ring-indigo-400 transition">
                             <input type="checkbox" name="modules[]" value="{{ $module->code }}"
                                 class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                 @checked(collect(old('modules', []))->contains($module->code))>
@@ -39,7 +39,7 @@
                 <x-input-error :messages="$errors->get('modules')" class="mt-2" />
             </div>
 
-            <div class="mt-6 pt-4 border-t border-gray-100">
+            <div class="mt-6 pt-5 border-t border-gray-100">
                 <div>
                     <x-input-label for="owner_name" value="Owner name" />
                     <x-text-input id="owner_name" class="block mt-1 w-full" type="text" name="owner_name" :value="old('owner_name')" required />
@@ -66,7 +66,9 @@
             </div>
 
             <div class="flex justify-end mt-6">
-                <x-primary-button>Create tenant</x-primary-button>
+                <button type="submit" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
+                    Create tenant
+                </button>
             </div>
         </form>
     </div>
