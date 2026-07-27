@@ -132,6 +132,14 @@ class PermissionSeeder extends Seeder
             'expense-categories.manage',
             'cash-register.view',
             'cash-register.manage',
+
+            // Phase 11: notifications, marketing
+            'marketing.templates.manage',
+            'marketing.segments.manage',
+            'marketing.campaigns.view',
+            'marketing.campaigns.create',
+            'marketing.campaigns.send',
+            'marketing.automations.manage',
         ];
 
         foreach ($permissions as $permission) {

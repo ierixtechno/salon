@@ -136,6 +136,9 @@ class OnboardTenant
                 'commission.view',
                 'expenses.view', 'expenses.create', 'expenses.approve', 'expense-categories.manage',
                 'cash-register.view', 'cash-register.manage',
+                'marketing.templates.manage', 'marketing.segments.manage',
+                'marketing.campaigns.view', 'marketing.campaigns.create', 'marketing.campaigns.send',
+                'marketing.automations.manage',
             ])
         );
 

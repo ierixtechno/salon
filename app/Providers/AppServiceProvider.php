@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Auth\TenantAwareUserProvider;
+use App\Domain\Core\Contracts\SmsProvider;
+use App\Domain\Core\Contracts\WhatsAppProvider;
 use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Customer;
@@ -19,6 +21,8 @@ use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
 use App\Domain\Core\Models\Supplier;
 use App\Domain\Core\Models\WaitlistEntry;
+use App\Domain\Core\Notifications\Providers\NullSmsProvider;
+use App\Domain\Core\Notifications\Providers\NullWhatsAppProvider;
 use App\Policies\AppointmentPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CustomerPolicy;
@@ -35,6 +39,7 @@ use App\Policies\ServiceCategoryPolicy;
 use App\Policies\ServicePolicy;
 use App\Policies\SupplierPolicy;
 use App\Policies\WaitlistEntryPolicy;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -46,7 +51,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Provider drivers default to 'null' (see config/notifications.php)
+        // — CLAUDE.md §42: swapping to a real SMS/WhatsApp provider is a
+        // config change plus a new class implementing the interface, never
+        // a change to any caller.
+        $this->app->bind(SmsProvider::class, function (Application $app) {
+            return match (config('notifications.sms.driver')) {
+                default => new NullSmsProvider,
+            };
+        });
+
+        $this->app->bind(WhatsAppProvider::class, function (Application $app) {
+            return match (config('notifications.whatsapp.driver')) {
+                default => new NullWhatsAppProvider,
+            };
+        });
     }
 
     /**

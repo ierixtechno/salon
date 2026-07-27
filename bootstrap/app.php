@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\SetPermissionsTeamFromTenant;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        // CLAUDE.md §44: idempotent per tenant per day — a missed or
+        // doubled cron firing never duplicates a marketing send (see
+        // RunsCampaignAutomation). Shared hosting runs this via the
+        // standard `php artisan schedule:run` cron entry (CLAUDE.md §64).
+        $schedule->command('marketing:run-automations')->dailyAt('08:00');
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'module' => EnsureModuleEnabled::class,

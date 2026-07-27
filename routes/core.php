@@ -3,11 +3,14 @@
 use App\Http\Controllers\Core\AppointmentController;
 use App\Http\Controllers\Core\AttendanceController;
 use App\Http\Controllers\Core\BranchController;
+use App\Http\Controllers\Core\CampaignAutomationController;
+use App\Http\Controllers\Core\CampaignController;
 use App\Http\Controllers\Core\CashRegisterController;
 use App\Http\Controllers\Core\CommissionController;
 use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\CustomerMembershipController;
 use App\Http\Controllers\Core\CustomerPackageController;
+use App\Http\Controllers\Core\CustomerSegmentController;
 use App\Http\Controllers\Core\EmployeeController;
 use App\Http\Controllers\Core\ExpenseCategoryController;
 use App\Http\Controllers\Core\ExpenseController;
@@ -18,6 +21,8 @@ use App\Http\Controllers\Core\LeaveRequestController;
 use App\Http\Controllers\Core\LeaveTypeController;
 use App\Http\Controllers\Core\LoyaltyController;
 use App\Http\Controllers\Core\MembershipPlanController;
+use App\Http\Controllers\Core\NotificationController;
+use App\Http\Controllers\Core\NotificationTemplateController;
 use App\Http\Controllers\Core\OrganizationSettingsController;
 use App\Http\Controllers\Core\PackageController;
 use App\Http\Controllers\Core\ProductCategoryController;
@@ -199,3 +204,19 @@ Route::post('cash-register/open', [CashRegisterController::class, 'open'])->name
 Route::post('cash-register/{cash_register_session}/close', [CashRegisterController::class, 'close'])->name('cash-register.close');
 Route::post('cash-register/{cash_register_session}/cash-in', [CashRegisterController::class, 'cashIn'])->name('cash-register.cash-in');
 Route::post('cash-register/{cash_register_session}/cash-out', [CashRegisterController::class, 'cashOut'])->name('cash-register.cash-out');
+
+// Phase 11: Notifications, Marketing.
+Route::resource('notification-templates', NotificationTemplateController::class)->except(['show']);
+Route::resource('customer-segments', CustomerSegmentController::class)->except(['show']);
+
+Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+Route::get('campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
+Route::post('campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
+Route::post('campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
+Route::post('campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('campaigns.cancel');
+
+Route::get('marketing/automations', [CampaignAutomationController::class, 'index'])->name('campaign-automations.index');
+Route::put('marketing/automations/{type}', [CampaignAutomationController::class, 'update'])->name('campaign-automations.update');
+
+Route::get('my-notifications', [NotificationController::class, 'index'])->name('notifications.my');
+Route::post('my-notifications/{notification_log}/read', [NotificationController::class, 'markRead'])->name('notifications.read');

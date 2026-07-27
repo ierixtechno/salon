@@ -43,6 +43,11 @@ class Customer extends Model
         return $this->hasMany(CustomerNote::class)->latest();
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     public function consents(): HasMany
     {
         return $this->hasMany(CustomerConsent::class)->latest();
