@@ -57,6 +57,27 @@
                         <p class="text-xs text-gray-500 mt-1">Reference text shown to customers — not enforced by the system yet.</p>
                     </div>
 
+                    <div class="pt-4 border-t border-gray-100">
+                        <h4 class="text-sm font-medium text-gray-700 mb-1">Loyalty program</h4>
+                        <p class="text-xs text-gray-500 mb-3">Leave at 0 to keep loyalty off — points are then never earned or redeemable.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <x-input-label for="loyalty_points_per_100" value="Points per ₹100 spent" />
+                                <x-text-input id="loyalty_points_per_100" class="block mt-1 w-full" type="number" step="0.01" min="0" name="loyalty_points_per_100" :value="old('loyalty_points_per_100', $profile->loyalty_points_per_100)" />
+                                <x-input-error :messages="$errors->get('loyalty_points_per_100')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="loyalty_redemption_value" value="₹ value per point" />
+                                <x-text-input id="loyalty_redemption_value" class="block mt-1 w-full" type="number" step="0.0001" min="0" name="loyalty_redemption_value" :value="old('loyalty_redemption_value', $profile->loyalty_redemption_value)" />
+                                <x-input-error :messages="$errors->get('loyalty_redemption_value')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="loyalty_points_expiry_days" value="Points expiry (days, optional)" />
+                                <x-text-input id="loyalty_points_expiry_days" class="block mt-1 w-full" type="number" min="1" name="loyalty_points_expiry_days" :value="old('loyalty_points_expiry_days', $profile->loyalty_points_expiry_days)" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex justify-end">
                         <x-primary-button>Save profile</x-primary-button>
                     </div>

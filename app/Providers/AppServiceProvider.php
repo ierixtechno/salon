@@ -7,7 +7,10 @@ use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\EmployeeProfile;
+use App\Domain\Core\Models\GiftCard;
 use App\Domain\Core\Models\Invoice;
+use App\Domain\Core\Models\MembershipPlan;
+use App\Domain\Core\Models\Package;
 use App\Domain\Core\Models\Product;
 use App\Domain\Core\Models\ProductCategory;
 use App\Domain\Core\Models\PurchaseOrder;
@@ -20,7 +23,10 @@ use App\Policies\AppointmentPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\EmployeeProfilePolicy;
+use App\Policies\GiftCardPolicy;
 use App\Policies\InvoicePolicy;
+use App\Policies\MembershipPlanPolicy;
+use App\Policies\PackagePolicy;
 use App\Policies\ProductCategoryPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\PurchaseOrderPolicy;
@@ -70,5 +76,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
         Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
+        Gate::policy(Package::class, PackagePolicy::class);
+        Gate::policy(MembershipPlan::class, MembershipPlanPolicy::class);
+        Gate::policy(GiftCard::class, GiftCardPolicy::class);
     }
 }

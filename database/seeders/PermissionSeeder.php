@@ -94,6 +94,25 @@ class PermissionSeeder extends Seeder
             'purchase-orders.create',
             'purchase-orders.update',
             'supplier-payments.create',
+
+            // Phase 8: packages, memberships, loyalty, wallet, gift cards
+            'packages.view',
+            'packages.create',
+            'packages.update',
+            'packages.delete',
+            'packages.sell',
+            'packages.redeem',
+            'memberships.view',
+            'memberships.create',
+            'memberships.update',
+            'memberships.delete',
+            'memberships.sell',
+            'wallet.view',
+            'wallet.credit',
+            'loyalty.view',
+            'gift-cards.view',
+            'gift-cards.create',
+            'gift-cards.cancel',
         ];
 
         foreach ($permissions as $permission) {

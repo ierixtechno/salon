@@ -127,6 +127,10 @@ class OnboardTenant
                 'inventory.view', 'inventory.adjust',
                 'suppliers.view', 'suppliers.create', 'suppliers.update',
                 'purchase-orders.view', 'purchase-orders.create', 'purchase-orders.update',
+                'packages.view', 'packages.create', 'packages.update', 'packages.sell', 'packages.redeem',
+                'memberships.view', 'memberships.create', 'memberships.update', 'memberships.sell',
+                'wallet.view', 'wallet.credit', 'loyalty.view',
+                'gift-cards.view', 'gift-cards.create',
             ])
         );
 
@@ -140,6 +144,7 @@ class OnboardTenant
                 'appointments.view', 'appointments.create', 'appointments.update',
                 'waitlist.view', 'waitlist.create',
                 'products.view', 'inventory.view',
+                'packages.view', 'memberships.view', 'wallet.view', 'loyalty.view', 'gift-cards.view',
             ])
         );
 

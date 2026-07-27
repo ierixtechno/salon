@@ -48,8 +48,51 @@ class Customer extends Model
         return $this->hasMany(CustomerConsent::class)->latest();
     }
 
+    public function customerPackages(): HasMany
+    {
+        return $this->hasMany(CustomerPackage::class);
+    }
+
+    public function customerMemberships(): HasMany
+    {
+        return $this->hasMany(CustomerMembership::class);
+    }
+
+    public function loyaltyLedgerEntries(): HasMany
+    {
+        return $this->hasMany(LoyaltyLedgerEntry::class);
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    public function giftCards(): HasMany
+    {
+        return $this->hasMany(GiftCard::class);
+    }
+
     public function isErased(): bool
     {
         return $this->erased_at !== null;
+    }
+
+    /**
+     * Never a mutable column — always the sum of the ledger (CLAUDE.md §21
+     * Loyalty).
+     */
+    public function loyaltyPointsBalance(): int
+    {
+        return (int) $this->loyaltyLedgerEntries()->sum('points');
+    }
+
+    /**
+     * Never a mutable column — always the sum of the ledger (CLAUDE.md §20
+     * Wallet).
+     */
+    public function walletBalance(): string
+    {
+        return (string) $this->walletTransactions()->sum('amount');
     }
 }

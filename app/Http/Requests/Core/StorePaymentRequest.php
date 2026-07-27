@@ -16,7 +16,7 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'method' => ['required', Rule::in(Payment::METHODS)],
+            'method' => ['required', Rule::in(Payment::MANUAL_METHODS)],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'tip_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'reference' => ['nullable', 'string', 'max:255'],

@@ -11,6 +11,23 @@
                 </div>
             @endif
 
+            @unless ($customer->isErased())
+                <div class="flex flex-wrap gap-4 text-sm">
+                    @can('viewAny', App\Domain\Core\Models\Package::class)
+                        <a href="{{ route('customers.packages.index', $customer) }}" class="text-indigo-600 hover:text-indigo-800">Packages</a>
+                    @endcan
+                    @can('viewAny', App\Domain\Core\Models\MembershipPlan::class)
+                        <a href="{{ route('customers.memberships.index', $customer) }}" class="text-indigo-600 hover:text-indigo-800">Memberships</a>
+                    @endcan
+                    @can('wallet.view')
+                        <a href="{{ route('customers.wallet.show', $customer) }}" class="text-indigo-600 hover:text-indigo-800">Wallet</a>
+                    @endcan
+                    @can('loyalty.view')
+                        <a href="{{ route('customers.loyalty.show', $customer) }}" class="text-indigo-600 hover:text-indigo-800">Loyalty</a>
+                    @endcan
+                </div>
+            @endunless
+
             @if ($customer->isErased())
                 <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
                     This customer's personal data was erased on {{ $customer->erased_at->toFormattedDateString() }}. The record is kept only so future financial/appointment history stays intact.

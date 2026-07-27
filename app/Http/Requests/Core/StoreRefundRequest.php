@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Core;
 
-use App\Domain\Core\Models\Payment;
+use App\Domain\Core\Models\Refund;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +16,7 @@ class StoreRefundRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'method' => ['required', Rule::in(Payment::METHODS)],
+            'method' => ['required', Rule::in(Refund::METHODS)],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'reason' => ['nullable', 'string', 'max:2000'],
         ];

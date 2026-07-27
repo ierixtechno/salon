@@ -11,9 +11,16 @@ class Refund extends Model
 {
     use BelongsToTenant;
 
+    /**
+     * 'gift_card' is deliberately excluded — see ProcessRefund's docblock:
+     * crediting an unrelated invoice refund into an arbitrary gift card is
+     * an ambiguous business rule nobody has specified.
+     */
+    public const METHODS = ['cash', 'card', 'upi', 'bank_transfer', 'wallet', 'loyalty'];
+
     // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
     // §28). BelongsToTenant auto-fills it from the authenticated session.
-    protected $fillable = ['invoice_id', 'amount', 'method', 'reason', 'refunded_by'];
+    protected $fillable = ['invoice_id', 'amount', 'method', 'reason', 'points_credited', 'refunded_by'];
 
     protected function casts(): array
     {

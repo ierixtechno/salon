@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Core;
 
 use App\Domain\Core\Models\Appointment;
+use App\Domain\Core\Models\CustomerMembership;
 use App\Domain\Core\Models\InvoiceLine;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceVariant;
@@ -42,6 +43,10 @@ class StoreInvoiceLineRequest extends FormRequest
             ],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
             'discount_amount' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'customer_membership_id' => [
+                'nullable', 'integer',
+                Rule::exists('customer_memberships', 'id')->where('tenant_id', $tenantId),
+            ],
         ];
     }
 
@@ -83,6 +88,17 @@ class StoreInvoiceLineRequest extends FormRequest
                 $variant = ServiceVariant::find($this->input('service_variant_id'));
                 if ($variant && $service && $variant->service_id !== $service->id) {
                     $validator->errors()->add('service_variant_id', 'The selected variant does not belong to the selected service.');
+                }
+            }
+
+            if ($this->filled('customer_membership_id')) {
+                if ($this->filled('discount_amount') && (float) $this->input('discount_amount') > 0) {
+                    $validator->errors()->add('discount_amount', 'A manual discount cannot be combined with a membership discount.');
+                }
+
+                $membership = CustomerMembership::find($this->input('customer_membership_id'));
+                if ($membership && $membership->customer_id !== $invoice->customer_id) {
+                    $validator->errors()->add('customer_membership_id', 'This membership belongs to a different customer.');
                 }
             }
         });

@@ -3,10 +3,16 @@
 use App\Http\Controllers\Core\AppointmentController;
 use App\Http\Controllers\Core\BranchController;
 use App\Http\Controllers\Core\CustomerController;
+use App\Http\Controllers\Core\CustomerMembershipController;
+use App\Http\Controllers\Core\CustomerPackageController;
 use App\Http\Controllers\Core\EmployeeController;
+use App\Http\Controllers\Core\GiftCardController;
 use App\Http\Controllers\Core\InventoryController;
 use App\Http\Controllers\Core\InvoiceController;
+use App\Http\Controllers\Core\LoyaltyController;
+use App\Http\Controllers\Core\MembershipPlanController;
 use App\Http\Controllers\Core\OrganizationSettingsController;
+use App\Http\Controllers\Core\PackageController;
 use App\Http\Controllers\Core\ProductCategoryController;
 use App\Http\Controllers\Core\ProductController;
 use App\Http\Controllers\Core\PurchaseOrderController;
@@ -16,6 +22,7 @@ use App\Http\Controllers\Core\ServiceCategoryController;
 use App\Http\Controllers\Core\ServiceController;
 use App\Http\Controllers\Core\SupplierController;
 use App\Http\Controllers\Core\WaitlistEntryController;
+use App\Http\Controllers\Core\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -90,6 +97,9 @@ Route::post('invoices/{invoice}/checkout', [InvoiceController::class, 'checkout'
 Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])->name('invoices.payments.store');
 Route::post('invoices/{invoice}/refunds', [InvoiceController::class, 'storeRefund'])->name('invoices.refunds.store');
 Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
+Route::post('invoices/{invoice}/redeem-wallet', [InvoiceController::class, 'redeemWallet'])->name('invoices.redeem-wallet');
+Route::post('invoices/{invoice}/redeem-loyalty', [InvoiceController::class, 'redeemLoyalty'])->name('invoices.redeem-loyalty');
+Route::post('invoices/{invoice}/redeem-gift-card', [InvoiceController::class, 'redeemGiftCard'])->name('invoices.redeem-gift-card');
 
 Route::resource('product-categories', ProductCategoryController::class)->except(['show']);
 Route::resource('products', ProductController::class)->except(['show']);
@@ -114,3 +124,33 @@ Route::get('inventory/adjust', [InventoryController::class, 'adjustForm'])->name
 Route::post('inventory/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
 Route::get('inventory/transfer', [InventoryController::class, 'transferForm'])->name('inventory.transfer.form');
 Route::post('inventory/transfer', [InventoryController::class, 'transfer'])->name('inventory.transfer');
+
+// Package/Membership templates: no 'show' — 'edit' is the detail view,
+// same convention as Branch/Service.
+Route::resource('packages', PackageController::class)->except(['show']);
+Route::put('packages/{package}/services', [PackageController::class, 'updateServices'])->name('packages.services');
+
+Route::resource('membership-plans', MembershipPlanController::class, ['parameters' => ['membership-plans' => 'membership_plan']])->except(['show']);
+Route::put('membership-plans/{membership_plan}/applicability', [MembershipPlanController::class, 'updateApplicability'])->name('membership-plans.applicability');
+
+// Purchased instances live under a customer — sold and cancelled, never
+// freeform-edited (same lifecycle-only pattern as Appointment/Invoice).
+Route::get('customers/{customer}/packages', [CustomerPackageController::class, 'index'])->name('customers.packages.index');
+Route::post('customers/{customer}/packages', [CustomerPackageController::class, 'store'])->name('customers.packages.store');
+Route::post('customers/{customer}/packages/{customer_package}/cancel', [CustomerPackageController::class, 'cancel'])->name('customers.packages.cancel');
+
+Route::get('customers/{customer}/memberships', [CustomerMembershipController::class, 'index'])->name('customers.memberships.index');
+Route::post('customers/{customer}/memberships', [CustomerMembershipController::class, 'store'])->name('customers.memberships.store');
+Route::post('customers/{customer}/memberships/{customer_membership}/cancel', [CustomerMembershipController::class, 'cancel'])->name('customers.memberships.cancel');
+
+Route::post('appointments/{appointment}/redeem-package', [AppointmentController::class, 'redeemPackage'])->name('appointments.redeem-package');
+
+Route::get('customers/{customer}/wallet', [WalletController::class, 'show'])->name('customers.wallet.show');
+Route::post('customers/{customer}/wallet/credit', [WalletController::class, 'credit'])->name('customers.wallet.credit');
+
+Route::get('customers/{customer}/loyalty', [LoyaltyController::class, 'show'])->name('customers.loyalty.show');
+
+Route::get('gift-cards', [GiftCardController::class, 'index'])->name('gift-cards.index');
+Route::get('gift-cards/create', [GiftCardController::class, 'create'])->name('gift-cards.create');
+Route::post('gift-cards', [GiftCardController::class, 'store'])->name('gift-cards.store');
+Route::post('gift-cards/{gift_card}/cancel', [GiftCardController::class, 'cancel'])->name('gift-cards.cancel');

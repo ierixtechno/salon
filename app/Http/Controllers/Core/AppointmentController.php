@@ -8,11 +8,14 @@ use App\Domain\Core\Actions\CheckInAppointment;
 use App\Domain\Core\Actions\CompleteAppointment;
 use App\Domain\Core\Actions\MarkAppointmentNoShow;
 use App\Domain\Core\Actions\RecordServiceConsumption;
+use App\Domain\Core\Actions\RedeemPackageItem;
 use App\Domain\Core\Actions\RescheduleAppointment;
 use App\Domain\Core\Actions\StartAppointmentService;
 use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Customer;
+use App\Domain\Core\Models\CustomerPackageItem;
+use App\Domain\Core\Models\PackageRedemption;
 use App\Domain\Core\Models\Resource;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
@@ -22,6 +25,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\CancelAppointmentRequest;
 use App\Http\Requests\Core\RescheduleAppointmentRequest;
 use App\Http\Requests\Core\StoreAppointmentRequest;
+use App\Http\Requests\Core\StorePackageRedemptionRequest;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -110,11 +114,24 @@ class AppointmentController extends Controller
     {
         $appointment->load(['customer', 'service.consumables', 'serviceVariant', 'employee', 'resource', 'branch']);
 
+        $redeemablePackageItems = $appointment->status === 'completed'
+            ? CustomerPackageItem::whereHas('customerPackage', fn ($q) => $q
+                ->where('customer_id', $appointment->customer_id)
+                ->where('status', 'active'))
+                ->where('service_id', $appointment->service_id)
+                ->with('customerPackage.package')
+                ->get()
+                ->filter(fn (CustomerPackageItem $item) => $item->quantityRemaining() > 0 && $item->customerPackage->isUsable())
+                ->values()
+            : collect();
+
         return view('core.appointments.show', [
             'appointment' => $appointment,
             'consumptionRecorded' => StockMovement::where('reference_type', 'appointment_consumption')
                 ->where('reference_id', $appointment->id)
                 ->exists(),
+            'packageRedemption' => PackageRedemption::where('appointment_id', $appointment->id)->with('customerPackageItem.customerPackage.package')->first(),
+            'redeemablePackageItems' => $redeemablePackageItems,
         ]);
     }
 
@@ -165,6 +182,21 @@ class AppointmentController extends Controller
         $action->execute($appointment, Auth::guard('web')->id());
 
         return back()->with('status', 'Product usage recorded.');
+    }
+
+    /**
+     * A manual, staff-triggered package redemption — same shape as
+     * recordConsumption above (Phase 7 precedent), not silently wired into
+     * complete().
+     */
+    public function redeemPackage(StorePackageRedemptionRequest $request, Appointment $appointment, RedeemPackageItem $action): RedirectResponse
+    {
+        $this->authorize('view', $appointment);
+
+        $item = CustomerPackageItem::findOrFail($request->validated('customer_package_item_id'));
+        $action->execute($appointment, $item, Auth::guard('web')->id());
+
+        return back()->with('status', 'Package redeemed.');
     }
 
     public function cancel(CancelAppointmentRequest $request, Appointment $appointment, CancelAppointment $action): RedirectResponse

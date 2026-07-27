@@ -16,5 +16,24 @@ class BusinessProfile extends Model
     protected $fillable = [
         'legal_name', 'display_name', 'logo_path',
         'contact_email', 'contact_phone', 'address', 'cancellation_policy',
+        'loyalty_points_per_100', 'loyalty_redemption_value', 'loyalty_points_expiry_days',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'loyalty_points_per_100' => 'decimal:2',
+            'loyalty_redemption_value' => 'decimal:4',
+        ];
+    }
+
+    /**
+     * Loyalty is opt-in per tenant — 0 (the default) means the program is
+     * off, and RecordPayment skips earning entirely (CLAUDE.md §70: an
+     * additive, tenant-gated behavior, never forced on).
+     */
+    public function loyaltyEnabled(): bool
+    {
+        return (float) $this->loyalty_points_per_100 > 0 && (float) $this->loyalty_redemption_value > 0;
+    }
 }

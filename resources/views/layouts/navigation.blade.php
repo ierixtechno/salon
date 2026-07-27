@@ -52,6 +52,18 @@
                         </x-nav-link>
                     @endcan
 
+                    @can('viewAny', App\Domain\Core\Models\Package::class)
+                        <x-nav-link :href="route('packages.index')" :active="request()->routeIs('packages.*') || request()->routeIs('membership-plans.*')">
+                            {{ __('Packages') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @can('gift-cards.view')
+                        <x-nav-link :href="route('gift-cards.index')" :active="request()->routeIs('gift-cards.*')">
+                            {{ __('Gift Cards') }}
+                        </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Domain\Core\Models\Branch::class)
                         <x-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">
                             {{ __('Branches') }}
@@ -158,6 +170,18 @@
             @can('viewAny', App\Domain\Core\Models\Supplier::class)
                 <x-responsive-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*') || request()->routeIs('purchase-orders.*') || request()->routeIs('purchase-returns.*')">
                     {{ __('Suppliers') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\Package::class)
+                <x-responsive-nav-link :href="route('packages.index')" :active="request()->routeIs('packages.*') || request()->routeIs('membership-plans.*')">
+                    {{ __('Packages') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('gift-cards.view')
+                <x-responsive-nav-link :href="route('gift-cards.index')" :active="request()->routeIs('gift-cards.*')">
+                    {{ __('Gift Cards') }}
                 </x-responsive-nav-link>
             @endcan
 

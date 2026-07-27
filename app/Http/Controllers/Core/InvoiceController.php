@@ -7,20 +7,28 @@ use App\Domain\Core\Actions\CheckoutSale;
 use App\Domain\Core\Actions\CreateDraftInvoice;
 use App\Domain\Core\Actions\ProcessRefund;
 use App\Domain\Core\Actions\RecordPayment;
+use App\Domain\Core\Actions\RedeemGiftCard;
+use App\Domain\Core\Actions\RedeemLoyaltyPoints;
+use App\Domain\Core\Actions\RedeemWalletBalance;
 use App\Domain\Core\Actions\RemoveInvoiceLine;
 use App\Domain\Core\Actions\VoidInvoice;
 use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
+use App\Domain\Core\Models\BusinessProfile;
 use App\Domain\Core\Models\Customer;
+use App\Domain\Core\Models\CustomerMembership;
 use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\InvoiceLine;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceVariant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreDraftInvoiceRequest;
+use App\Http\Requests\Core\StoreGiftCardRedemptionRequest;
 use App\Http\Requests\Core\StoreInvoiceLineRequest;
+use App\Http\Requests\Core\StoreLoyaltyRedemptionRequest;
 use App\Http\Requests\Core\StorePaymentRequest;
 use App\Http\Requests\Core\StoreRefundRequest;
+use App\Http\Requests\Core\StoreWalletRedemptionRequest;
 use App\Http\Requests\Core\VoidInvoiceRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -97,6 +105,12 @@ class InvoiceController extends Controller
             'services' => $invoice->status === 'draft'
                 ? Service::where('is_active', true)->with('variants')->get()->filter(fn (Service $s) => $s->isAvailableAtBranch($invoice->branch))->values()
                 : collect(),
+            'usableMemberships' => $invoice->status === 'draft'
+                ? $invoice->customer->customerMemberships()->with('membershipPlan')->where('status', 'active')->get()->filter->isUsable()->values()
+                : collect(),
+            'businessProfile' => BusinessProfile::where('tenant_id', $invoice->tenant_id)->first(),
+            'walletBalance' => $invoice->customer->walletBalance(),
+            'loyaltyBalance' => $invoice->customer->loyaltyPointsBalance(),
         ]);
     }
 
@@ -118,6 +132,10 @@ class InvoiceController extends Controller
             ? $appointment->serviceVariant
             : ($request->validated('service_variant_id') ? ServiceVariant::findOrFail($request->validated('service_variant_id')) : null);
 
+        $membership = $request->validated('customer_membership_id')
+            ? CustomerMembership::findOrFail($request->validated('customer_membership_id'))
+            : null;
+
         $action->execute(
             invoice: $invoice,
             service: $service,
@@ -125,6 +143,8 @@ class InvoiceController extends Controller
             appointment: $appointment,
             quantity: (int) ($request->validated('quantity') ?? 1),
             discountAmount: (float) ($request->validated('discount_amount') ?? 0),
+            membership: $membership,
+            appliedBy: Auth::guard('web')->id(),
         );
 
         return back()->with('status', 'Item added.');
@@ -159,6 +179,43 @@ class InvoiceController extends Controller
         );
 
         return back()->with('status', 'Payment recorded.');
+    }
+
+    public function redeemWallet(StoreWalletRedemptionRequest $request, Invoice $invoice, RedeemWalletBalance $action): RedirectResponse
+    {
+        $action->execute(
+            invoice: $invoice,
+            amount: (float) $request->validated('amount'),
+            idempotencyKey: $request->validated('idempotency_key'),
+            redeemedBy: Auth::guard('web')->id(),
+        );
+
+        return back()->with('status', 'Wallet balance applied.');
+    }
+
+    public function redeemLoyalty(StoreLoyaltyRedemptionRequest $request, Invoice $invoice, RedeemLoyaltyPoints $action): RedirectResponse
+    {
+        $action->execute(
+            invoice: $invoice,
+            points: (int) $request->validated('points'),
+            idempotencyKey: $request->validated('idempotency_key'),
+            redeemedBy: Auth::guard('web')->id(),
+        );
+
+        return back()->with('status', 'Loyalty points redeemed.');
+    }
+
+    public function redeemGiftCard(StoreGiftCardRedemptionRequest $request, Invoice $invoice, RedeemGiftCard $action): RedirectResponse
+    {
+        $action->execute(
+            invoice: $invoice,
+            code: $request->validated('code'),
+            amount: (float) $request->validated('amount'),
+            idempotencyKey: $request->validated('idempotency_key'),
+            redeemedBy: Auth::guard('web')->id(),
+        );
+
+        return back()->with('status', 'Gift card applied.');
     }
 
     public function storeRefund(StoreRefundRequest $request, Invoice $invoice, ProcessRefund $action): RedirectResponse

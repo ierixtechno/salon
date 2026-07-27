@@ -81,6 +81,35 @@
                 </div>
             @endif
 
+            @if ($appointment->status === 'completed' && auth()->user()->can('packages.redeem'))
+                <div class="bg-white shadow-sm rounded-lg p-6">
+                    <h3 class="font-medium text-gray-900 mb-1">Package redemption</h3>
+                    @if ($packageRedemption)
+                        <p class="text-sm text-gray-500">
+                            Redeemed against "{{ $packageRedemption->customerPackageItem->customerPackage->package->name }}" on
+                            {{ $packageRedemption->redeemed_at->format('d M Y, h:i A') }}.
+                        </p>
+                    @elseif ($redeemablePackageItems->isEmpty())
+                        <p class="text-sm text-gray-500">This customer has no active package covering this service.</p>
+                    @else
+                        <p class="text-xs text-gray-500 mb-4">Deducts one unit from the customer's prepaid package instead of charging for this service.</p>
+                        <form method="POST" action="{{ route('appointments.redeem-package', $appointment) }}" class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                            @csrf
+                            <div class="flex-1">
+                                <select name="customer_package_item_id" required class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                    @foreach ($redeemablePackageItems as $item)
+                                        <option value="{{ $item->id }}">
+                                            {{ $item->customerPackage->package->name }} &mdash; {{ $item->quantityRemaining() }} remaining
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <x-primary-button>Redeem package</x-primary-button>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
             @can('update', $appointment)
                 @if (in_array($appointment->status, ['pending', 'confirmed']))
                     <div class="bg-white shadow-sm rounded-lg p-6">

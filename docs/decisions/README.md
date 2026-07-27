@@ -45,6 +45,13 @@ Status values: **PROPOSED** (default suggested, awaiting confirmation) · **CONF
 **Decision:** Full payroll processing (salary computation, statutory deductions like PF/ESI, payslips) is **out of scope**. Only attendance, leave, and commission are tracked, for operational/incentive purposes.
 **Affects:** Phase 9. Flag before Phase 9 starts if this assumption is wrong.
 
+## D-006 — GST treatment of prepaid Package/Membership/Gift Card sales
+
+**Status:** PROPOSED (default in effect — see below)
+**Question:** Under Indian GST, does a prepaid package/membership/gift-card sale attract GST at the moment of sale (advance payment for a future service), at the moment of redemption, or is the incoming amount treated as a security-deposit-like liability with no GST event until the underlying service is actually rendered? This is genuinely jurisdiction- and structure-specific and was not going to be guessed (same weight as D-003).
+**Default in effect:** Package/Membership/Gift Card purchases (Phase 8) are recorded as simple payment-captured sales — `CustomerPackage`/`CustomerMembership`/`GiftCard` rows with `price_paid`/`purchase_method`/`purchase_reference` — entirely outside the GST-compliant Invoice/`InvoiceLine` engine built in Phase 6. No invoice number, no CGST/SGST line is generated for these sales. Redemption avoids the question rather than resolving it: Package redemption never creates an invoice line at all (a pure ledger entry, `PackageRedemption`); Membership discount is a normal server-computed discount on an already-taxed service line (no new tax question); Loyalty/Wallet/Gift Card redemption pay down an already-fully-taxed invoice's `grand_total` (also no new tax question).
+**Affects:** Phase 8 schema (`customer_packages`, `customer_memberships`, `gift_cards` all lack `invoice_id`/GST fields by design) and any future GST/reporting work that needs to reconcile "money collected" against "revenue recognized" for these three sale types. Revisit before this platform is used by a tenant whose accountant needs GST-compliant invoices for package/membership/gift-card sales specifically (`CLAUDE.md` §71 — don't retrofit statutory numbering onto these sales after real production data exists without a deliberate migration plan).
+
 ---
 
 *Add new entries at the bottom as new ambiguities surface during implementation. Never delete a superseded entry — mark it SUPERSEDED and link to its replacement.*

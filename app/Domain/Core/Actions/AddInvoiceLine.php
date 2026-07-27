@@ -4,10 +4,13 @@ namespace App\Domain\Core\Actions;
 
 use App\Domain\Core\Actions\Concerns\RecalculatesInvoiceTotals;
 use App\Domain\Core\Models\Appointment;
+use App\Domain\Core\Models\CustomerMembership;
 use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\InvoiceLine;
+use App\Domain\Core\Models\MembershipUsage;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceVariant;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Only ever valid while the parent Invoice is `draft` — CLAUDE.md
@@ -21,6 +24,14 @@ use App\Domain\Core\Models\ServiceVariant;
  * changed since. Otherwise the price is resolved fresh via
  * Service::priceForBranch()/ServiceVariant::effectivePrice(), exactly like
  * a fresh booking would.
+ *
+ * `$membership` (Phase 8) is an additive, opt-in parameter — omitting it
+ * leaves every pre-Phase-8 call site's behavior byte-for-byte unchanged.
+ * When given, its discount_percent is resolved server-side (never a
+ * client-submitted amount, .claude/skills/beauty-saas-development/SKILL.md
+ * §19) and **replaces** `$discountAmount` entirely — a membership discount
+ * and a manual discount are mutually exclusive on the same line, since
+ * stacking them would need a business rule nobody has specified.
  */
 class AddInvoiceLine
 {
@@ -33,12 +44,22 @@ class AddInvoiceLine
         ?Appointment $appointment,
         int $quantity = 1,
         float $discountAmount = 0.0,
+        ?CustomerMembership $membership = null,
+        ?int $appliedBy = null,
     ): InvoiceLine {
         abort_unless($invoice->status === 'draft', 409, 'Lines can only be added while the invoice is a draft.');
 
         $unitPrice = $appointment
             ? (float) $appointment->price
             : (float) ($variant?->effectivePrice() ?? $service->priceForBranch($invoice->branch));
+
+        if ($membership) {
+            abort_unless($membership->customer_id === $invoice->customer_id, 403, 'This membership does not belong to the invoice\'s customer.');
+            abort_unless($membership->isUsable(), 409, 'This membership is not currently active, has expired, or has reached its usage limit.');
+            abort_unless($membership->membershipPlan->appliesToServiceAtBranch($service, $invoice->branch), 422, 'This membership does not apply to this service at this branch.');
+
+            $discountAmount = round($quantity * $unitPrice * ((float) $membership->membershipPlan->discount_percent / 100), 2);
+        }
 
         abort_if($discountAmount > $quantity * $unitPrice, 422, 'Discount cannot exceed the line value.');
 
@@ -48,24 +69,41 @@ class AddInvoiceLine
         $sgstAmount = $cgstAmount;
         $lineTotal = round($taxableValue + $cgstAmount + $sgstAmount, 2);
 
-        $line = InvoiceLine::create([
-            'invoice_id' => $invoice->id,
-            'service_id' => $service->id,
-            'service_variant_id' => $variant?->id,
-            'appointment_id' => $appointment?->id,
-            'description' => $service->name.($variant ? " ({$variant->name})" : ''),
-            'quantity' => $quantity,
-            'unit_price' => $unitPrice,
-            'discount_amount' => $discountAmount,
-            'taxable_value' => $taxableValue,
-            'tax_rate_percent' => $taxRate,
-            'cgst_amount' => $cgstAmount,
-            'sgst_amount' => $sgstAmount,
-            'line_total' => $lineTotal,
-        ]);
+        return DB::transaction(function () use (
+            $invoice, $service, $variant, $appointment, $quantity, $discountAmount,
+            $unitPrice, $taxableValue, $taxRate, $cgstAmount, $sgstAmount, $lineTotal,
+            $membership, $appliedBy,
+        ) {
+            $line = InvoiceLine::create([
+                'invoice_id' => $invoice->id,
+                'service_id' => $service->id,
+                'service_variant_id' => $variant?->id,
+                'appointment_id' => $appointment?->id,
+                'description' => $service->name.($variant ? " ({$variant->name})" : ''),
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'discount_amount' => $discountAmount,
+                'taxable_value' => $taxableValue,
+                'tax_rate_percent' => $taxRate,
+                'cgst_amount' => $cgstAmount,
+                'sgst_amount' => $sgstAmount,
+                'line_total' => $lineTotal,
+            ]);
 
-        $this->recalculateTotals($invoice);
+            if ($membership) {
+                MembershipUsage::create([
+                    'customer_membership_id' => $membership->id,
+                    'invoice_line_id' => $line->id,
+                    'discount_amount' => $discountAmount,
+                    'applied_at' => now(),
+                    'applied_by' => $appliedBy,
+                ]);
+                $membership->increment('usage_count');
+            }
 
-        return $line;
+            $this->recalculateTotals($invoice);
+
+            return $line;
+        });
     }
 }

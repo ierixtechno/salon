@@ -45,4 +45,16 @@ Both are transaction ledgers, not mutable balances. Every wallet change carries 
 
 Issuance, value, balance, redemption, expiry, cancellation where legally/business appropriate.
 
+## Implemented (Phase 8)
+
+**Loyalty** (`LoyaltyLedgerEntry` — `earn|redeem|expire|adjustment|refund`, signed `points`): a tenant-configurable, opt-in program (`business_profiles.loyalty_points_per_100`/`loyalty_redemption_value`, both 0 by default = off). `RecordPayment` auto-awards points on every non-loyalty payment method once enabled — unlike Phase 7's `RecordServiceConsumption` precedent (manual, because wrongly auto-deducting stock has real inventory consequences), earning points is purely additive, harmless if wrong, and easily reversed by a refund, so it's safe to wire in automatically. `RedeemLoyaltyPoints` takes points (never a client-submitted currency amount), converts server-side, and records the payment via the same `RecordPayment` choke point with `method='loyalty'`.
+
+**Wallet** (`WalletTransaction` — `credit|debit`, signed `amount`): `CreditWallet` for manual top-ups or refund credits; `RedeemWalletBalance` locks the customer row before the balance check (same "lock a proxy row" concurrency pattern as `RecordStockMovement`, Phase 7) and pays via `RecordPayment` with `method='wallet'`.
+
+**Gift Cards** (`GiftCard` + `GiftCardTransaction` — `issue|redeem|cancel|adjustment`): server-generated `code` (never client-supplied), balance is always `sum(transactions.amount)`, never a cached column. `IssueGiftCard` records the sale directly (D-006). `RedeemGiftCard` locks the card row before the balance check and pays via `RecordPayment` with `method='gift_card'`.
+
+**Payment/Refund extensions**: `Payment::METHODS` grew to include `wallet`/`gift_card`/`loyalty`, but the generic manual payment form only accepts `Payment::MANUAL_METHODS` (`cash|card|upi|bank_transfer`) — the three new methods each require server-side balance/code/point resolution the generic form can't do, so they get dedicated actions/routes instead. `ProcessRefund`'s `method` of `wallet`/`loyalty` credits the reversal back to the customer's own balance instead of handing back cash (`Refund::METHODS` deliberately excludes `gift_card` — crediting an unrelated refund into an arbitrary gift card is an ambiguous rule nobody specified).
+
+**Deliberately deferred**: real payment gateway integration (still v1 manual recording, per Phase 6); scheduled loyalty-points expiry (`loyalty_points_expiry_days` exists as tenant config but nothing yet enforces it — belongs with Phase 11's Scheduler infrastructure, same reasoning as Phase 7's deferred low-stock alerts).
+
 ## Expand incrementally as each sub-area's phase begins (6 / 8 / 9 / 10). D-002 and D-003 in [decisions/README.md](../decisions/README.md) must be resolved before Phase 6.

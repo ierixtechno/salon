@@ -147,6 +147,19 @@
                                     <x-text-input id="discount_amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="discount_amount" value="0" />
                                 </div>
                             </div>
+                            @if ($usableMemberships->isNotEmpty())
+                                <div>
+                                    <x-input-label for="customer_membership_id" value="Apply membership discount (optional)" />
+                                    <select id="customer_membership_id" name="customer_membership_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                        <option value="">None</option>
+                                        @foreach ($usableMemberships as $membership)
+                                            <option value="{{ $membership->id }}">{{ $membership->membershipPlan->name }} ({{ $membership->membershipPlan->discount_percent }}% off)</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Replaces the manual discount above — only applies if this membership covers the selected service/branch.</p>
+                                    <x-input-error :messages="$errors->get('customer_membership_id')" class="mt-2" />
+                                </div>
+                            @endif
                             <x-input-error :messages="$errors->get('service_id')" class="mt-2" />
                             <div class="flex justify-end">
                                 <x-primary-button>Add item</x-primary-button>
@@ -179,7 +192,7 @@
                             <div>
                                 <x-input-label for="method" value="Method" />
                                 <select id="method" name="method" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                                    @foreach (\App\Domain\Core\Models\Payment::METHODS as $method)
+                                    @foreach (\App\Domain\Core\Models\Payment::MANUAL_METHODS as $method)
                                         <option value="{{ $method }}">{{ str($method)->replace('_', ' ')->headline() }}</option>
                                     @endforeach
                                 </select>
@@ -205,6 +218,34 @@
                             <x-primary-button>Record payment</x-primary-button>
                         </div>
                     </form>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <form method="POST" action="{{ route('invoices.redeem-wallet', $invoice) }}" x-data="{ idempotencyKey: crypto.randomUUID() }" class="space-y-2">
+                            @csrf
+                            <input type="hidden" name="idempotency_key" :value="idempotencyKey">
+                            <p class="text-xs text-gray-500">Wallet balance: {{ $walletBalance }}</p>
+                            <x-text-input class="block w-full text-sm" type="number" step="0.01" min="0.01" name="amount" placeholder="Amount" required />
+                            <x-secondary-button type="submit" class="w-full justify-center">Pay with wallet</x-secondary-button>
+                        </form>
+
+                        @if ($businessProfile?->loyaltyEnabled())
+                            <form method="POST" action="{{ route('invoices.redeem-loyalty', $invoice) }}" x-data="{ idempotencyKey: crypto.randomUUID() }" class="space-y-2">
+                                @csrf
+                                <input type="hidden" name="idempotency_key" :value="idempotencyKey">
+                                <p class="text-xs text-gray-500">Points balance: {{ $loyaltyBalance }}</p>
+                                <x-text-input class="block w-full text-sm" type="number" min="1" name="points" placeholder="Points" required />
+                                <x-secondary-button type="submit" class="w-full justify-center">Redeem points</x-secondary-button>
+                            </form>
+                        @endif
+
+                        <form method="POST" action="{{ route('invoices.redeem-gift-card', $invoice) }}" x-data="{ idempotencyKey: crypto.randomUUID() }" class="space-y-2">
+                            @csrf
+                            <input type="hidden" name="idempotency_key" :value="idempotencyKey">
+                            <x-text-input class="block w-full text-sm" type="text" name="code" placeholder="Gift card code" required />
+                            <x-text-input class="block w-full text-sm" type="number" step="0.01" min="0.01" name="amount" placeholder="Amount" required />
+                            <x-secondary-button type="submit" class="w-full justify-center">Redeem gift card</x-secondary-button>
+                        </form>
+                    </div>
                 </div>
             @endif
 
@@ -231,7 +272,7 @@
                             <div>
                                 <x-input-label for="refund_method" value="Method" />
                                 <select id="refund_method" name="method" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                                    @foreach (\App\Domain\Core\Models\Payment::METHODS as $method)
+                                    @foreach (\App\Domain\Core\Models\Refund::METHODS as $method)
                                         <option value="{{ $method }}">{{ str($method)->replace('_', ' ')->headline() }}</option>
                                     @endforeach
                                 </select>
@@ -261,7 +302,10 @@
                     <div class="divide-y divide-gray-100 text-sm">
                         @foreach ($invoice->payments as $payment)
                             <div class="py-2 flex justify-between">
-                                <span>{{ str($payment->method)->replace('_', ' ')->headline() }}{{ $payment->reference ? ' — '.$payment->reference : '' }}</span>
+                                <span>
+                                    {{ str($payment->method)->replace('_', ' ')->headline() }}{{ $payment->reference ? ' — '.$payment->reference : '' }}
+                                    @if ($payment->points_redeemed) ({{ $payment->points_redeemed }} points) @endif
+                                </span>
                                 <span>{{ $payment->amount }}{{ $payment->tip_amount > 0 ? ' (+'.$payment->tip_amount.' tip)' : '' }}</span>
                             </div>
                         @endforeach
