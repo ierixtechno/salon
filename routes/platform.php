@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Platform\PlatformAuthController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
+use App\Http\Controllers\Platform\SubscriptionPlanController;
 use App\Http\Controllers\Platform\TenantController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,5 +33,9 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
         Route::patch('tenants/{tenant}/status', [TenantController::class, 'updateStatus'])->name('tenants.status');
         Route::patch('tenants/{tenant}/modules', [TenantController::class, 'updateModules'])->name('tenants.modules');
+
+        Route::get('subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        Route::get('subscription-plans/{subscription_plan}/edit', [SubscriptionPlanController::class, 'edit'])->name('subscription-plans.edit');
+        Route::put('subscription-plans/{subscription_plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
     });
 });

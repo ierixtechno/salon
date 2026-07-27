@@ -4,6 +4,7 @@ namespace App\Domain\Platform\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
@@ -22,6 +23,11 @@ class SubscriptionPlan extends Model
         return $this->belongsToMany(Feature::class, 'plan_features')
             ->withPivot('limit_value')
             ->withTimestamps();
+    }
+
+    public function tenantSubscriptions(): HasMany
+    {
+        return $this->hasMany(TenantSubscription::class);
     }
 
     public function hasFeature(string $featureCode): bool

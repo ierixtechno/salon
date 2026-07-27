@@ -63,6 +63,17 @@
                         </svg>
                         Tenants
                     </a>
+
+                    <a href="{{ route('platform.subscription-plans.index') }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('platform.subscription-plans.*') ? $navItemActive : $navItemInactive }}">
+                        @if (request()->routeIs('platform.subscription-plans.*'))
+                            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                        @endif
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182C10.55 7.72 11.275 7.5 12 7.5c.768 0 1.536.219 2.121.659L15 8.818" />
+                        </svg>
+                        Subscription Plans
+                    </a>
                 </nav>
 
                 <div class="border-t border-white/10 p-3">
