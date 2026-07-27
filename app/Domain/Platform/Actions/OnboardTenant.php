@@ -35,8 +35,8 @@ class OnboardTenant
                 'name' => $data['business_name'],
                 'slug' => $this->uniqueSlug($data['business_name']),
                 'status' => 'trial',
-                'timezone' => $data['timezone'],
-                'currency' => strtoupper($data['currency']),
+                'timezone' => $data['timezone'] ?? config('platform.default_timezone'),
+                'currency' => strtoupper($data['currency'] ?? config('platform.default_currency')),
                 'trial_ends_at' => now()->addDays((int) config('platform.trial_days')),
             ]);
 

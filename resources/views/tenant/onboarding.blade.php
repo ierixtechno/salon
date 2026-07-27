@@ -13,27 +13,6 @@
                 <x-text-input id="business_name" class="block mt-1 w-full" type="text" name="business_name" :value="old('business_name')" required autofocus />
                 <x-input-error :messages="$errors->get('business_name')" class="mt-2" />
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <x-input-label for="timezone" value="Timezone" />
-                    <select id="timezone" name="timezone" required
-                        class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                        @foreach ($timezones as $tz)
-                            <option value="{{ $tz }}" @selected(old('timezone') === $tz)>{{ $tz }}</option>
-                        @endforeach
-                    </select>
-                    <x-input-error :messages="$errors->get('timezone')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="currency" value="Currency code" />
-                    <x-text-input id="currency" class="block mt-1 w-full uppercase" type="text" name="currency"
-                        maxlength="3" placeholder="e.g. INR, USD, GBP" :value="old('currency')" required />
-                    <p class="text-xs text-gray-500 mt-1">3-letter code. One currency per account for now.</p>
-                    <x-input-error :messages="$errors->get('currency')" class="mt-2" />
-                </div>
-            </div>
         </fieldset>
 
         <fieldset class="mb-6">

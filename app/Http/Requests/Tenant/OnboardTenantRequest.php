@@ -4,6 +4,12 @@ namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * `timezone`/`currency` are deliberately not collected here — India is the
+ * sole target market (D-003), so OnboardTenant defaults every tenant to
+ * IST/INR from config('platform.default_timezone'/'default_currency')
+ * rather than asking.
+ */
 class OnboardTenantRequest extends FormRequest
 {
     public function authorize(): bool
@@ -15,8 +21,6 @@ class OnboardTenantRequest extends FormRequest
     {
         return [
             'business_name' => ['required', 'string', 'max:255'],
-            'timezone' => ['required', 'string', 'timezone'],
-            'currency' => ['required', 'string', 'size:3', 'alpha'],
             'modules' => ['required', 'array', 'min:1'],
             'modules.*' => ['string', 'exists:modules,code'],
             'owner_name' => ['required', 'string', 'max:255'],

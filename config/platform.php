@@ -24,4 +24,20 @@ return [
 
     'trial_days' => env('PLATFORM_TRIAL_DAYS', 14),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Default tenant timezone/currency
+    |--------------------------------------------------------------------------
+    |
+    | D-003 (docs/decisions/README.md): India is the sole target market, so
+    | every tenant is defaulted to IST/INR at onboarding rather than asking —
+    | India has a single national timezone, and D-002 already restricts a
+    | tenant to one currency for its lifetime. Kept configurable (not
+    | hardcoded inline) in case that market assumption is ever revisited.
+    |
+    */
+
+    'default_timezone' => env('PLATFORM_DEFAULT_TIMEZONE', 'Asia/Kolkata'),
+    'default_currency' => env('PLATFORM_DEFAULT_CURRENCY', 'INR'),
+
 ];

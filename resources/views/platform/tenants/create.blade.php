@@ -11,19 +11,6 @@
                 <x-input-error :messages="$errors->get('business_name')" class="mt-2" />
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <x-input-label for="timezone" value="Timezone" />
-                    <x-text-input id="timezone" class="block mt-1 w-full" type="text" name="timezone" placeholder="e.g. Asia/Kolkata" :value="old('timezone')" required />
-                    <x-input-error :messages="$errors->get('timezone')" class="mt-2" />
-                </div>
-                <div>
-                    <x-input-label for="currency" value="Currency code" />
-                    <x-text-input id="currency" class="block mt-1 w-full uppercase" type="text" name="currency" maxlength="3" :value="old('currency')" required />
-                    <x-input-error :messages="$errors->get('currency')" class="mt-2" />
-                </div>
-            </div>
-
             <div class="mt-4">
                 <x-input-label value="Modules" />
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
