@@ -40,6 +40,18 @@
                         </x-nav-link>
                     @endcan
 
+                    @can('viewAny', App\Domain\Core\Models\Product::class)
+                        <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*') || request()->routeIs('product-categories.*') || request()->routeIs('inventory.*')">
+                            {{ __('Products') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @can('viewAny', App\Domain\Core\Models\Supplier::class)
+                        <x-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*') || request()->routeIs('purchase-orders.*') || request()->routeIs('purchase-returns.*')">
+                            {{ __('Suppliers') }}
+                        </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Domain\Core\Models\Branch::class)
                         <x-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*') || request()->routeIs('resources.*')">
                             {{ __('Branches') }}
@@ -134,6 +146,18 @@
             @can('viewAny', App\Domain\Core\Models\Service::class)
                 <x-responsive-nav-link :href="route('services.index')" :active="request()->routeIs('services.*') || request()->routeIs('service-categories.*')">
                     {{ __('Services') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\Product::class)
+                <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*') || request()->routeIs('product-categories.*') || request()->routeIs('inventory.*')">
+                    {{ __('Products') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\Supplier::class)
+                <x-responsive-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*') || request()->routeIs('purchase-orders.*') || request()->routeIs('purchase-returns.*')">
+                    {{ __('Suppliers') }}
                 </x-responsive-nav-link>
             @endcan
 

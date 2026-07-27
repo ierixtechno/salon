@@ -185,6 +185,45 @@
                 </form>
             </div>
 
+            @if ($products->isNotEmpty())
+                <div class="bg-white shadow-sm rounded-lg p-6"
+                    x-data="{
+                        consumables: {{ \Illuminate\Support\Js::from($service->consumables->map(fn ($c) => ['product_id' => $c->product_id, 'quantity_per_use' => $c->quantity_per_use])) }}
+                    }">
+                    <h3 class="font-medium text-gray-900 mb-1">Product consumption</h3>
+                    <p class="text-xs text-gray-500 mb-4">Products this service typically uses (e.g. 10ml shampoo per haircut) — the "record usage" button on a completed appointment deducts these from the branch's stock.</p>
+
+                    <form method="POST" action="{{ route('services.consumables', $service) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="space-y-3">
+                            <template x-for="(row, index) in consumables" :key="index">
+                                <div class="flex flex-col sm:flex-row gap-2 sm:items-center border border-gray-100 rounded-md p-3">
+                                    <select :name="`consumables[${index}][product_id]`" x-model="row.product_id" required
+                                        class="flex-1 border-gray-300 rounded-md shadow-sm text-sm">
+                                        <option value="">Select product&hellip;</option>
+                                        @foreach ($products as $product)
+                                            <option value="{{ $product->id }}">{{ $product->name }} ({{ $product->unit }})</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="number" step="0.001" min="0.001" :name="`consumables[${index}][quantity_per_use]`" x-model="row.quantity_per_use" placeholder="Qty per use" required
+                                        class="w-full sm:w-40 border-gray-300 rounded-md shadow-sm text-sm">
+                                    <button type="button" @click="consumables.splice(index, 1)" class="text-red-500 hover:text-red-700 text-sm shrink-0">Remove</button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <button type="button" @click="consumables.push({ product_id: '', quantity_per_use: '' })"
+                            class="mt-3 text-sm text-indigo-600 hover:text-indigo-800">+ Add product</button>
+
+                        <div class="flex justify-end mt-4">
+                            <x-primary-button>Save consumption</x-primary-button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
             @can('delete', $service)
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <h3 class="font-medium text-gray-900 mb-1">Deactivate service</h3>

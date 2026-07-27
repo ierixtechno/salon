@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Core;
 
 use App\Domain\Core\Actions\UpdateServiceBranches;
+use App\Domain\Core\Actions\UpdateServiceConsumables;
 use App\Domain\Core\Actions\UpdateServiceStaff;
 use App\Domain\Core\Actions\UpdateServiceVariants;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\EmployeeProfile;
+use App\Domain\Core\Models\Product;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreServiceRequest;
 use App\Http\Requests\Core\UpdateServiceBranchesRequest;
+use App\Http\Requests\Core\UpdateServiceConsumablesRequest;
 use App\Http\Requests\Core\UpdateServiceRequest;
 use App\Http\Requests\Core\UpdateServiceStaffRequest;
 use App\Http\Requests\Core\UpdateServiceVariantsRequest;
@@ -60,6 +63,7 @@ class ServiceController extends Controller
             'branchPivots' => $service->branches()->get()->keyBy('id'),
             'employees' => EmployeeProfile::with('user')->get(),
             'capableEmployeeIds' => $service->capableEmployees()->pluck('users.id'),
+            'products' => Product::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -101,5 +105,12 @@ class ServiceController extends Controller
         $action->execute($service, $request->validated('user_ids', []));
 
         return back()->with('status', 'Staff capability updated.');
+    }
+
+    public function updateConsumables(UpdateServiceConsumablesRequest $request, Service $service, UpdateServiceConsumables $action): RedirectResponse
+    {
+        $action->execute($service, $request->validated('consumables', []));
+
+        return back()->with('status', 'Product consumption updated.');
     }
 }

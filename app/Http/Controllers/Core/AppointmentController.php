@@ -7,6 +7,7 @@ use App\Domain\Core\Actions\CancelAppointment;
 use App\Domain\Core\Actions\CheckInAppointment;
 use App\Domain\Core\Actions\CompleteAppointment;
 use App\Domain\Core\Actions\MarkAppointmentNoShow;
+use App\Domain\Core\Actions\RecordServiceConsumption;
 use App\Domain\Core\Actions\RescheduleAppointment;
 use App\Domain\Core\Actions\StartAppointmentService;
 use App\Domain\Core\Models\Appointment;
@@ -15,6 +16,7 @@ use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\Resource;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
+use App\Domain\Core\Models\StockMovement;
 use App\Domain\Core\Models\WaitlistEntry;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\CancelAppointmentRequest;
@@ -106,7 +108,14 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment): View
     {
-        return view('core.appointments.show', ['appointment' => $appointment->load(['customer', 'service', 'serviceVariant', 'employee', 'resource', 'branch'])]);
+        $appointment->load(['customer', 'service.consumables', 'serviceVariant', 'employee', 'resource', 'branch']);
+
+        return view('core.appointments.show', [
+            'appointment' => $appointment,
+            'consumptionRecorded' => StockMovement::where('reference_type', 'appointment_consumption')
+                ->where('reference_id', $appointment->id)
+                ->exists(),
+        ]);
     }
 
     public function checkIn(Appointment $appointment, CheckInAppointment $action): RedirectResponse
@@ -139,6 +148,23 @@ class AppointmentController extends Controller
         $action->execute($appointment);
 
         return back()->with('status', 'Marked as no-show.');
+    }
+
+    /**
+     * A manual, staff-triggered stock deduction for this appointment's
+     * service — deliberately not automatic on complete() (see
+     * RecordServiceConsumption's docblock). Gated by inventory.adjust
+     * since this is fundamentally a stock action, not an appointment
+     * lifecycle one.
+     */
+    public function recordConsumption(Appointment $appointment, RecordServiceConsumption $action): RedirectResponse
+    {
+        $this->authorize('view', $appointment);
+        abort_unless(Auth::guard('web')->user()->can('inventory.adjust'), 403);
+
+        $action->execute($appointment, Auth::guard('web')->id());
+
+        return back()->with('status', 'Product usage recorded.');
     }
 
     public function cancel(CancelAppointmentRequest $request, Appointment $appointment, CancelAppointment $action): RedirectResponse

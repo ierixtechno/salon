@@ -64,6 +64,11 @@ class Service extends Model
         return $this->belongsToMany(User::class, 'service_user')->withTimestamps();
     }
 
+    public function consumables(): HasMany
+    {
+        return $this->hasMany(ServiceConsumable::class);
+    }
+
     /**
      * Server-side price resolution (CLAUDE.md §14 Pricing, §20 Money):
      * branch override > base price. Never trust a client-submitted price.

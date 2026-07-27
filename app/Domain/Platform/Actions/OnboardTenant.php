@@ -123,6 +123,10 @@ class OnboardTenant
                 'appointments.view', 'appointments.create', 'appointments.update', 'appointments.cancel',
                 'waitlist.view', 'waitlist.create', 'waitlist.update',
                 'invoices.view', 'invoices.create', 'payments.create',
+                'products.view', 'products.create', 'products.update',
+                'inventory.view', 'inventory.adjust',
+                'suppliers.view', 'suppliers.create', 'suppliers.update',
+                'purchase-orders.view', 'purchase-orders.create', 'purchase-orders.update',
             ])
         );
 
@@ -135,6 +139,7 @@ class OnboardTenant
                 'spa-consultations.view', 'spa-consultations.create',
                 'appointments.view', 'appointments.create', 'appointments.update',
                 'waitlist.view', 'waitlist.create',
+                'products.view', 'inventory.view',
             ])
         );
 

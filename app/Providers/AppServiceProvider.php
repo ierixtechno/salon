@@ -8,18 +8,26 @@ use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\EmployeeProfile;
 use App\Domain\Core\Models\Invoice;
+use App\Domain\Core\Models\Product;
+use App\Domain\Core\Models\ProductCategory;
+use App\Domain\Core\Models\PurchaseOrder;
 use App\Domain\Core\Models\Resource as BranchResource;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
+use App\Domain\Core\Models\Supplier;
 use App\Domain\Core\Models\WaitlistEntry;
 use App\Policies\AppointmentPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\EmployeeProfilePolicy;
 use App\Policies\InvoicePolicy;
+use App\Policies\ProductCategoryPolicy;
+use App\Policies\ProductPolicy;
+use App\Policies\PurchaseOrderPolicy;
 use App\Policies\ResourcePolicy;
 use App\Policies\ServiceCategoryPolicy;
 use App\Policies\ServicePolicy;
+use App\Policies\SupplierPolicy;
 use App\Policies\WaitlistEntryPolicy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -58,5 +66,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Appointment::class, AppointmentPolicy::class);
         Gate::policy(WaitlistEntry::class, WaitlistEntryPolicy::class);
         Gate::policy(Invoice::class, InvoicePolicy::class);
+        Gate::policy(ProductCategory::class, ProductCategoryPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Supplier::class, SupplierPolicy::class);
+        Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
     }
 }

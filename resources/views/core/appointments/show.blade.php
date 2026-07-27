@@ -66,6 +66,21 @@
                 </div>
             @endcan
 
+            @if ($appointment->status === 'completed' && $appointment->service->consumables->isNotEmpty() && auth()->user()->can('inventory.adjust'))
+                <div class="bg-white shadow-sm rounded-lg p-6">
+                    <h3 class="font-medium text-gray-900 mb-1">Product usage</h3>
+                    @if ($consumptionRecorded)
+                        <p class="text-sm text-gray-500">Product usage has already been recorded for this appointment.</p>
+                    @else
+                        <p class="text-xs text-gray-500 mb-4">Deducts this service's usual products (see the service's "Product consumption" settings) from {{ $appointment->branch->name }}'s stock.</p>
+                        <form method="POST" action="{{ route('appointments.consumption', $appointment) }}">
+                            @csrf
+                            <x-primary-button>Record product usage</x-primary-button>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
             @can('update', $appointment)
                 @if (in_array($appointment->status, ['pending', 'confirmed']))
                     <div class="bg-white shadow-sm rounded-lg p-6">

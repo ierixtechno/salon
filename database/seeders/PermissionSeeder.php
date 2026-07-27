@@ -79,6 +79,21 @@ class PermissionSeeder extends Seeder
             'invoices.void',
             'payments.create',
             'refunds.create',
+
+            // Phase 7: products, inventory, suppliers, purchasing
+            'products.view',
+            'products.create',
+            'products.update',
+            'products.delete',
+            'inventory.view',
+            'inventory.adjust',
+            'suppliers.view',
+            'suppliers.create',
+            'suppliers.update',
+            'purchase-orders.view',
+            'purchase-orders.create',
+            'purchase-orders.update',
+            'supplier-payments.create',
         ];
 
         foreach ($permissions as $permission) {
