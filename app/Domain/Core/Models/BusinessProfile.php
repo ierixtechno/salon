@@ -17,6 +17,7 @@ class BusinessProfile extends Model
         'legal_name', 'display_name', 'logo_path',
         'contact_email', 'contact_phone', 'address', 'cancellation_policy',
         'loyalty_points_per_100', 'loyalty_redemption_value', 'loyalty_points_expiry_days',
+        'expense_approval_required',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class BusinessProfile extends Model
         return [
             'loyalty_points_per_100' => 'decimal:2',
             'loyalty_redemption_value' => 'decimal:4',
+            'expense_approval_required' => 'boolean',
         ];
     }
 
@@ -35,5 +37,15 @@ class BusinessProfile extends Model
     public function loyaltyEnabled(): bool
     {
         return (float) $this->loyalty_points_per_100 > 0 && (float) $this->loyalty_redemption_value > 0;
+    }
+
+    /**
+     * Off by default — CreateExpense records an expense as already
+     * `approved` unless a tenant explicitly opts into requiring
+     * expenses.approve sign-off (CLAUDE.md §14 "Approval where configured").
+     */
+    public function expenseApprovalRequired(): bool
+    {
+        return (bool) $this->expense_approval_required;
     }
 }

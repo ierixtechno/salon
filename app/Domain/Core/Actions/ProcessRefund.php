@@ -3,6 +3,7 @@
 namespace App\Domain\Core\Actions;
 
 use App\Domain\Core\Models\BusinessProfile;
+use App\Domain\Core\Models\CashRegisterSession;
 use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\LoyaltyLedgerEntry;
 use App\Domain\Core\Models\Refund;
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\DB;
  * unrelated invoice refund into an arbitrary gift card is an ambiguous
  * business rule nobody has specified, unlike wallet/loyalty which are
  * unambiguously "this customer's own balance".
+ *
+ * Cash register (Phase 10): a `cash` refund debits the branch's open
+ * cash_register_session, if any — same opt-in, safe-no-op default as
+ * RecordPayment's cash crediting.
  */
 class ProcessRefund
 {
@@ -87,6 +92,21 @@ class ProcessRefund
                 $invoice->save();
 
                 app(ReverseCommission::class)->execute($invoice);
+            }
+
+            if ($method === 'cash') {
+                $session = CashRegisterSession::where('branch_id', $invoice->branch_id)->where('status', 'open')->first();
+                if ($session) {
+                    app(RecordCashMovement::class)->execute(
+                        session: $session,
+                        type: 'refund',
+                        amount: -$amount,
+                        referenceType: Refund::class,
+                        referenceId: $refund->id,
+                        reason: "Refund on invoice {$invoice->invoice_number}",
+                        createdBy: $refundedBy,
+                    );
+                }
             }
 
             return $refund;

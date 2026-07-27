@@ -134,6 +134,8 @@ class OnboardTenant
                 'attendance.view', 'attendance.mark', 'attendance.clock-self',
                 'leave.view', 'leave.request', 'leave.approve',
                 'commission.view',
+                'expenses.view', 'expenses.create', 'expenses.approve', 'expense-categories.manage',
+                'cash-register.view', 'cash-register.manage',
             ])
         );
 
@@ -149,6 +151,7 @@ class OnboardTenant
                 'products.view', 'inventory.view',
                 'packages.view', 'memberships.view', 'wallet.view', 'loyalty.view', 'gift-cards.view',
                 'attendance.clock-self', 'leave.request',
+                'expenses.create', 'cash-register.view', 'cash-register.manage',
             ])
         );
 

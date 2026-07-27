@@ -3,11 +3,14 @@
 use App\Http\Controllers\Core\AppointmentController;
 use App\Http\Controllers\Core\AttendanceController;
 use App\Http\Controllers\Core\BranchController;
+use App\Http\Controllers\Core\CashRegisterController;
 use App\Http\Controllers\Core\CommissionController;
 use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\CustomerMembershipController;
 use App\Http\Controllers\Core\CustomerPackageController;
 use App\Http\Controllers\Core\EmployeeController;
+use App\Http\Controllers\Core\ExpenseCategoryController;
+use App\Http\Controllers\Core\ExpenseController;
 use App\Http\Controllers\Core\GiftCardController;
 use App\Http\Controllers\Core\InventoryController;
 use App\Http\Controllers\Core\InvoiceController;
@@ -179,3 +182,20 @@ Route::get('commission/rules', [CommissionController::class, 'rules'])->name('co
 Route::put('commission/rules/{user}', [CommissionController::class, 'updateRule'])->name('commission.rules.update');
 Route::get('commission/ledger', [CommissionController::class, 'ledger'])->name('commission.ledger');
 Route::get('my-commission', [CommissionController::class, 'my'])->name('commission.my');
+
+// Phase 10: Expenses, Cash Register.
+Route::resource('expense-categories', ExpenseCategoryController::class)->except(['show']);
+
+Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+Route::get('expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
+Route::post('expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
+Route::post('expenses/{expense}/reject', [ExpenseController::class, 'reject'])->name('expenses.reject');
+Route::get('expenses/{expense}/attachment', [ExpenseController::class, 'downloadAttachment'])->name('expenses.attachment');
+
+Route::get('cash-register', [CashRegisterController::class, 'index'])->name('cash-register.index');
+Route::get('cash-register/history', [CashRegisterController::class, 'history'])->name('cash-register.history');
+Route::post('cash-register/open', [CashRegisterController::class, 'open'])->name('cash-register.open');
+Route::post('cash-register/{cash_register_session}/close', [CashRegisterController::class, 'close'])->name('cash-register.close');
+Route::post('cash-register/{cash_register_session}/cash-in', [CashRegisterController::class, 'cashIn'])->name('cash-register.cash-in');
+Route::post('cash-register/{cash_register_session}/cash-out', [CashRegisterController::class, 'cashOut'])->name('cash-register.cash-out');

@@ -126,6 +126,34 @@
         </a>
     @endcan
 
+    @if (Auth::user()->can('expenses.view') || Auth::user()->can('expense-categories.manage') || Auth::user()->can('cash-register.view'))
+        <p class="{{ $groupLabel }}">Finance</p>
+    @endif
+
+    @if (Auth::user()->can('expenses.view') || Auth::user()->can('expense-categories.manage'))
+        <a href="{{ Auth::user()->can('expenses.view') ? route('expenses.index') : route('expense-categories.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*') ? $navItemActive : $navItemInactive }}">
+            @if (request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*'))
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5A1.125 1.125 0 0122.875 9.375v9A2.625 2.625 0 0120.25 21H3.75A2.625 2.625 0 011.125 18.375v-9A1.125 1.125 0 012.25 8.25zM2.25 8.25V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 011.123-.08m0 0a49.05 49.05 0 019.302 0m-9.302 0a3 3 0 00-2.86 2.06m14.02-2.06a3 3 0 012.86 2.06m0 0c.083.174.153.353.212.537" />
+            </svg>
+            {{ __('Expenses') }}
+        </a>
+    @endif
+
+    @can('cash-register.view')
+        <a href="{{ route('cash-register.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('cash-register.*') ? $navItemActive : $navItemInactive }}">
+            @if (request()->routeIs('cash-register.*'))
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75h19.5v10.5H2.25V6.75zM12 15a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" />
+            </svg>
+            {{ __('Cash Register') }}
+        </a>
+    @endcan
+
     @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Branch::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\EmployeeProfile::class) || Auth::user()->can('tenant.settings.manage'))
         <p class="{{ $groupLabel }}">Organization</p>
     @endif

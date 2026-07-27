@@ -3,6 +3,7 @@
 namespace App\Domain\Core\Actions;
 
 use App\Domain\Core\Models\BusinessProfile;
+use App\Domain\Core\Models\CashRegisterSession;
 use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\LoyaltyLedgerEntry;
 use App\Domain\Core\Models\Payment;
@@ -33,6 +34,11 @@ use Illuminate\Support\Facades\DB;
  *
  * Commission accrual (Phase 9): same reasoning — fires exactly once, on
  * the transition into `paid`, never on a repeat/partial payment.
+ *
+ * Cash register (Phase 10): a `cash` payment credits the branch's open
+ * cash_register_session, if any — a tenant that hasn't opened a register
+ * for the day simply doesn't get a cash movement, the same safe no-op
+ * default as loyalty/commission.
  */
 class RecordPayment
 {
@@ -92,6 +98,10 @@ class RecordPayment
                 app(AccrueCommission::class)->execute($invoice);
             }
 
+            if ($method === 'cash') {
+                $this->creditCashRegister($invoice, $amount + $tipAmount, $payment, $recordedBy);
+            }
+
             return $payment;
         });
     }
@@ -117,5 +127,23 @@ class RecordPayment
             'reason' => "Earned from payment on invoice {$invoice->invoice_number}",
             'created_by' => $recordedBy,
         ]);
+    }
+
+    private function creditCashRegister(Invoice $invoice, float $amount, Payment $payment, ?int $recordedBy): void
+    {
+        $session = CashRegisterSession::where('branch_id', $invoice->branch_id)->where('status', 'open')->first();
+        if (! $session) {
+            return;
+        }
+
+        app(RecordCashMovement::class)->execute(
+            session: $session,
+            type: 'sale',
+            amount: $amount,
+            referenceType: Payment::class,
+            referenceId: $payment->id,
+            reason: "Payment on invoice {$invoice->invoice_number}",
+            createdBy: $recordedBy,
+        );
     }
 }

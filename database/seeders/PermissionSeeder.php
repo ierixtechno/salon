@@ -124,6 +124,14 @@ class PermissionSeeder extends Seeder
             'leave-types.manage',
             'commission.view',
             'commission.manage',
+
+            // Phase 10: expenses, cash register
+            'expenses.view',
+            'expenses.create',
+            'expenses.approve',
+            'expense-categories.manage',
+            'cash-register.view',
+            'cash-register.manage',
         ];
 
         foreach ($permissions as $permission) {
