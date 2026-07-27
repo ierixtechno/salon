@@ -147,6 +147,18 @@
                                     <x-text-input id="discount_amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="discount_amount" value="0" />
                                 </div>
                             </div>
+                            @if ($staffAtBranch->isNotEmpty())
+                                <div>
+                                    <x-input-label for="performed_by" value="Performed by (optional)" />
+                                    <select id="performed_by" name="performed_by" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                        <option value="">Unassigned</option>
+                                        @foreach ($staffAtBranch as $staff)
+                                            <option value="{{ $staff->user_id }}">{{ $staff->user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('performed_by')" class="mt-2" />
+                                </div>
+                            @endif
                             @if ($usableMemberships->isNotEmpty())
                                 <div>
                                     <x-input-label for="customer_membership_id" value="Apply membership discount (optional)" />

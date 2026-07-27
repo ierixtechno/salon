@@ -7,6 +7,7 @@ use App\Domain\Core\Models\CustomerMembership;
 use App\Domain\Core\Models\InvoiceLine;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceVariant;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,6 +47,10 @@ class StoreInvoiceLineRequest extends FormRequest
             'customer_membership_id' => [
                 'nullable', 'integer',
                 Rule::exists('customer_memberships', 'id')->where('tenant_id', $tenantId),
+            ],
+            'performed_by' => [
+                'nullable', 'integer',
+                Rule::exists('users', 'id')->where('tenant_id', $tenantId),
             ],
         ];
     }
@@ -88,6 +93,13 @@ class StoreInvoiceLineRequest extends FormRequest
                 $variant = ServiceVariant::find($this->input('service_variant_id'));
                 if ($variant && $service && $variant->service_id !== $service->id) {
                     $validator->errors()->add('service_variant_id', 'The selected variant does not belong to the selected service.');
+                }
+            }
+
+            if ($this->filled('performed_by')) {
+                $employee = User::find($this->input('performed_by'));
+                if ($employee && ! $employee->canAccessBranch($invoice->branch)) {
+                    $validator->errors()->add('performed_by', 'This employee does not have access to the invoice\'s branch.');
                 }
             }
 

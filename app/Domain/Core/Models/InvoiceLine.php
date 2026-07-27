@@ -3,6 +3,7 @@
 namespace App\Domain\Core\Models;
 
 use App\Domain\Core\Concerns\BelongsToTenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -19,7 +20,7 @@ class InvoiceLine extends Model
     use BelongsToTenant;
 
     protected $fillable = [
-        'invoice_id', 'service_id', 'service_variant_id', 'appointment_id',
+        'invoice_id', 'service_id', 'service_variant_id', 'appointment_id', 'performed_by',
         'description', 'quantity', 'unit_price', 'discount_amount',
         'taxable_value', 'tax_rate_percent', 'cgst_amount', 'sgst_amount', 'line_total',
     ];
@@ -55,5 +56,10 @@ class InvoiceLine extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function performedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'performed_by');
     }
 }

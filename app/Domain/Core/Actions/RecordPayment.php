@@ -30,6 +30,9 @@ use Illuminate\Support\Facades\DB;
  * ProcessRefund — so it's safe to wire in automatically rather than
  * requiring a separate manual step for every single sale. A payment made
  * *with* loyalty points doesn't re-earn more points on itself.
+ *
+ * Commission accrual (Phase 9): same reasoning — fires exactly once, on
+ * the transition into `paid`, never on a repeat/partial payment.
  */
 class RecordPayment
 {
@@ -77,11 +80,16 @@ class RecordPayment
             ]);
 
             $totalPaid = round($alreadyPaid + $amount, 2);
+            $wasFullyPaid = $invoice->status === 'paid';
             $invoice->status = $totalPaid >= (float) $invoice->grand_total ? 'paid' : 'partially_paid';
             $invoice->save();
 
             if ($method !== 'loyalty') {
                 $this->awardLoyaltyPoints($invoice, $amount, $payment, $recordedBy);
+            }
+
+            if ($invoice->status === 'paid' && ! $wasFullyPaid) {
+                app(AccrueCommission::class)->execute($invoice);
             }
 
             return $payment;

@@ -32,6 +32,13 @@ use Illuminate\Support\Facades\DB;
  * §19) and **replaces** `$discountAmount` entirely — a membership discount
  * and a manual discount are mutually exclusive on the same line, since
  * stacking them would need a business rule nobody has specified.
+ *
+ * `$performedBy` (Phase 9) records which employee to credit commission to.
+ * For an appointment-based line it defaults to that appointment's own
+ * assigned employee (the one who actually did the work) unless explicitly
+ * overridden; for a standalone line it's whatever the caller passes, or
+ * null (no employee attributed — simply never accrues commission, the
+ * safe default per CLAUDE.md §22).
  */
 class AddInvoiceLine
 {
@@ -46,8 +53,11 @@ class AddInvoiceLine
         float $discountAmount = 0.0,
         ?CustomerMembership $membership = null,
         ?int $appliedBy = null,
+        ?int $performedBy = null,
     ): InvoiceLine {
         abort_unless($invoice->status === 'draft', 409, 'Lines can only be added while the invoice is a draft.');
+
+        $performedBy ??= $appointment?->user_id;
 
         $unitPrice = $appointment
             ? (float) $appointment->price
@@ -72,13 +82,14 @@ class AddInvoiceLine
         return DB::transaction(function () use (
             $invoice, $service, $variant, $appointment, $quantity, $discountAmount,
             $unitPrice, $taxableValue, $taxRate, $cgstAmount, $sgstAmount, $lineTotal,
-            $membership, $appliedBy,
+            $membership, $appliedBy, $performedBy,
         ) {
             $line = InvoiceLine::create([
                 'invoice_id' => $invoice->id,
                 'service_id' => $service->id,
                 'service_variant_id' => $variant?->id,
                 'appointment_id' => $appointment?->id,
+                'performed_by' => $performedBy,
                 'description' => $service->name.($variant ? " ({$variant->name})" : ''),
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,

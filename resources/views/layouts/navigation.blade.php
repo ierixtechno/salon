@@ -166,4 +166,76 @@
             {{ __('Settings') }}
         </a>
     @endcan
+
+    @if (Auth::user()->can('attendance.view') || Auth::user()->can('leave.view') || Auth::user()->can('leave-types.manage') || Auth::user()->can('commission.manage') || Auth::user()->can('commission.view'))
+        <p class="{{ $groupLabel }}">Workforce</p>
+    @endif
+
+    @can('attendance.view')
+        <a href="{{ route('attendance.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('attendance.index') ? $navItemActive : $navItemInactive }}">
+            @if (request()->routeIs('attendance.index'))
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+            </svg>
+            {{ __('Attendance') }}
+        </a>
+    @endcan
+
+    @if (Auth::user()->can('leave.view') || Auth::user()->can('leave-types.manage'))
+        <a href="{{ Auth::user()->can('leave.view') ? route('leave.index') : route('leave-types.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('leave.index') || request()->routeIs('leave-types.*') ? $navItemActive : $navItemInactive }}">
+            @if (request()->routeIs('leave.index') || request()->routeIs('leave-types.*'))
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {{ __('Leave') }}
+        </a>
+    @endcan
+
+    @if (Auth::user()->can('commission.manage') || Auth::user()->can('commission.view'))
+        <a href="{{ Auth::user()->can('commission.manage') ? route('commission.rules') : route('commission.ledger') }}" class="{{ $navItemBase }} {{ request()->routeIs('commission.*') ? $navItemActive : $navItemInactive }}">
+            @if (request()->routeIs('commission.*'))
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ __('Commission') }}
+        </a>
+    @endcan
+
+    <p class="{{ $groupLabel }}">My Workspace</p>
+
+    <a href="{{ route('attendance.my') }}" class="{{ $navItemBase }} {{ request()->routeIs('attendance.my') ? $navItemActive : $navItemInactive }}">
+        @if (request()->routeIs('attendance.my'))
+            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+        @endif
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {{ __('My Attendance') }}
+    </a>
+
+    <a href="{{ route('leave.my') }}" class="{{ $navItemBase }} {{ request()->routeIs('leave.my') ? $navItemActive : $navItemInactive }}">
+        @if (request()->routeIs('leave.my'))
+            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+        @endif
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        {{ __('My Leave') }}
+    </a>
+
+    <a href="{{ route('commission.my') }}" class="{{ $navItemBase }} {{ request()->routeIs('commission.my') ? $navItemActive : $navItemInactive }}">
+        @if (request()->routeIs('commission.my'))
+            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+        @endif
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {{ __('My Commission') }}
+    </a>
 </nav>

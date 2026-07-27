@@ -90,6 +90,23 @@
                 </form>
             </div>
 
+            @if (Auth::user()->can('attendance.view') || Auth::user()->can('leave.view') || Auth::user()->can('commission.manage'))
+                <div class="bg-white shadow-sm rounded-lg p-6">
+                    <h3 class="font-medium text-gray-900 mb-4">Workforce</h3>
+                    <div class="flex flex-wrap gap-3">
+                        @can('attendance.view')
+                            <a href="{{ route('attendance.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">Attendance register</a>
+                        @endcan
+                        @can('leave.view')
+                            <a href="{{ route('leave.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">Leave requests</a>
+                        @endcan
+                        @can('commission.manage')
+                            <a href="{{ route('commission.rules') }}" class="text-sm text-indigo-600 hover:text-indigo-800">Commission rules</a>
+                        @endcan
+                    </div>
+                </div>
+            @endif
+
             @foreach ($branches as $branch)
                 @continue(! $assignedBranchIds->contains($branch->id))
                 @php $schedule = $schedulesByBranch->get($branch->id, collect())->keyBy('day_of_week'); @endphp

@@ -85,6 +85,8 @@ class ProcessRefund
                 abort_unless($invoice->canTransitionTo('refunded'), 409, "Cannot mark this invoice refunded from its current state ({$invoice->status}).");
                 $invoice->status = 'refunded';
                 $invoice->save();
+
+                app(ReverseCommission::class)->execute($invoice);
             }
 
             return $refund;

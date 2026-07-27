@@ -17,6 +17,7 @@ use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\BusinessProfile;
 use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\CustomerMembership;
+use App\Domain\Core\Models\EmployeeProfile;
 use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\InvoiceLine;
 use App\Domain\Core\Models\Service;
@@ -111,6 +112,9 @@ class InvoiceController extends Controller
             'businessProfile' => BusinessProfile::where('tenant_id', $invoice->tenant_id)->first(),
             'walletBalance' => $invoice->customer->walletBalance(),
             'loyaltyBalance' => $invoice->customer->loyaltyPointsBalance(),
+            'staffAtBranch' => $invoice->status === 'draft'
+                ? EmployeeProfile::with('user')->get()->filter(fn (EmployeeProfile $e) => $e->user->canAccessBranch($invoice->branch))->values()
+                : collect(),
         ]);
     }
 
@@ -145,6 +149,7 @@ class InvoiceController extends Controller
             discountAmount: (float) ($request->validated('discount_amount') ?? 0),
             membership: $membership,
             appliedBy: Auth::guard('web')->id(),
+            performedBy: $request->validated('performed_by'),
         );
 
         return back()->with('status', 'Item added.');

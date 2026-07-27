@@ -131,6 +131,9 @@ class OnboardTenant
                 'memberships.view', 'memberships.create', 'memberships.update', 'memberships.sell',
                 'wallet.view', 'wallet.credit', 'loyalty.view',
                 'gift-cards.view', 'gift-cards.create',
+                'attendance.view', 'attendance.mark', 'attendance.clock-self',
+                'leave.view', 'leave.request', 'leave.approve',
+                'commission.view',
             ])
         );
 
@@ -145,6 +148,7 @@ class OnboardTenant
                 'waitlist.view', 'waitlist.create',
                 'products.view', 'inventory.view',
                 'packages.view', 'memberships.view', 'wallet.view', 'loyalty.view', 'gift-cards.view',
+                'attendance.clock-self', 'leave.request',
             ])
         );
 

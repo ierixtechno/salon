@@ -113,6 +113,17 @@ class PermissionSeeder extends Seeder
             'gift-cards.view',
             'gift-cards.create',
             'gift-cards.cancel',
+
+            // Phase 9: attendance, leave, commission
+            'attendance.view',
+            'attendance.mark',
+            'attendance.clock-self',
+            'leave.view',
+            'leave.request',
+            'leave.approve',
+            'leave-types.manage',
+            'commission.view',
+            'commission.manage',
         ];
 
         foreach ($permissions as $permission) {

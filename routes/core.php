@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Core\AppointmentController;
+use App\Http\Controllers\Core\AttendanceController;
 use App\Http\Controllers\Core\BranchController;
+use App\Http\Controllers\Core\CommissionController;
 use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\CustomerMembershipController;
 use App\Http\Controllers\Core\CustomerPackageController;
@@ -9,6 +11,8 @@ use App\Http\Controllers\Core\EmployeeController;
 use App\Http\Controllers\Core\GiftCardController;
 use App\Http\Controllers\Core\InventoryController;
 use App\Http\Controllers\Core\InvoiceController;
+use App\Http\Controllers\Core\LeaveRequestController;
+use App\Http\Controllers\Core\LeaveTypeController;
 use App\Http\Controllers\Core\LoyaltyController;
 use App\Http\Controllers\Core\MembershipPlanController;
 use App\Http\Controllers\Core\OrganizationSettingsController;
@@ -154,3 +158,24 @@ Route::get('gift-cards', [GiftCardController::class, 'index'])->name('gift-cards
 Route::get('gift-cards/create', [GiftCardController::class, 'create'])->name('gift-cards.create');
 Route::post('gift-cards', [GiftCardController::class, 'store'])->name('gift-cards.store');
 Route::post('gift-cards/{gift_card}/cancel', [GiftCardController::class, 'cancel'])->name('gift-cards.cancel');
+
+// Phase 9: Attendance, Leave, Commission.
+Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+Route::post('attendance/mark', [AttendanceController::class, 'mark'])->name('attendance.mark');
+Route::post('attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clock-in');
+Route::post('attendance/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clock-out');
+Route::get('my-attendance', [AttendanceController::class, 'my'])->name('attendance.my');
+
+Route::resource('leave-types', LeaveTypeController::class)->except(['show']);
+
+Route::get('leave', [LeaveRequestController::class, 'index'])->name('leave.index');
+Route::get('my-leave', [LeaveRequestController::class, 'my'])->name('leave.my');
+Route::post('leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+Route::post('leave/{leave_request}/approve', [LeaveRequestController::class, 'approve'])->name('leave.approve');
+Route::post('leave/{leave_request}/reject', [LeaveRequestController::class, 'reject'])->name('leave.reject');
+Route::post('leave/{leave_request}/cancel', [LeaveRequestController::class, 'cancel'])->name('leave.cancel');
+
+Route::get('commission/rules', [CommissionController::class, 'rules'])->name('commission.rules');
+Route::put('commission/rules/{user}', [CommissionController::class, 'updateRule'])->name('commission.rules.update');
+Route::get('commission/ledger', [CommissionController::class, 'ledger'])->name('commission.ledger');
+Route::get('my-commission', [CommissionController::class, 'my'])->name('commission.my');
