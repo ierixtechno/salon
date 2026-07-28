@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Campaigns</h2>
             @can('marketing.campaigns.create')
                 <a href="{{ route('campaigns.create') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700">
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-500">
                     + New campaign
                 </a>
             @endcan
@@ -22,14 +22,14 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Name</th>
-                                <th class="text-left px-4 py-2 font-medium">Type</th>
-                                <th class="text-left px-4 py-2 font-medium">Channel</th>
-                                <th class="text-left px-4 py-2 font-medium">Recipients</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
-                                <th class="text-left px-4 py-2 font-medium">Actions</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Name</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Type</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Channel</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Recipients</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -57,7 +57,7 @@
                                                 <div class="flex items-center gap-2">
                                                     <form method="POST" action="{{ route('campaigns.send', $campaign) }}" onsubmit="return confirm('Send this campaign now?')">
                                                         @csrf
-                                                        <button type="submit" class="text-xs px-3 py-1.5 rounded-md bg-gray-800 text-white hover:bg-gray-700">Send now</button>
+                                                        <button type="submit" class="text-xs px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">Send now</button>
                                                     </form>
                                                     <form method="POST" action="{{ route('campaigns.cancel', $campaign) }}" onsubmit="return confirm('Cancel this campaign?')">
                                                         @csrf

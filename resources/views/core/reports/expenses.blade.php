@@ -27,11 +27,11 @@
                 <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-medium text-gray-900">By category</h3></div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Category</th>
-                                <th class="text-left px-4 py-2 font-medium">Count</th>
-                                <th class="text-left px-4 py-2 font-medium">Amount</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Category</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Count</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -54,11 +54,11 @@
                     <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-medium text-gray-900">By branch</h3></div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50 text-gray-500">
+                            <thead class="bg-indigo-100 text-indigo-800">
                                 <tr>
-                                    <th class="text-left px-4 py-2 font-medium">Branch</th>
-                                    <th class="text-left px-4 py-2 font-medium">Count</th>
-                                    <th class="text-left px-4 py-2 font-medium">Amount</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Branch</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Count</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Amount</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">

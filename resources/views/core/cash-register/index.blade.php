@@ -110,12 +110,12 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50 text-gray-500">
+                            <thead class="bg-indigo-100 text-indigo-800">
                                 <tr>
-                                    <th class="text-left px-4 py-2 font-medium">Time</th>
-                                    <th class="text-left px-4 py-2 font-medium">Type</th>
-                                    <th class="text-left px-4 py-2 font-medium">Reason</th>
-                                    <th class="text-left px-4 py-2 font-medium">Amount</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Time</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Type</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Reason</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Amount</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">

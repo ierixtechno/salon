@@ -32,12 +32,12 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Product</th>
-                                <th class="text-left px-4 py-2 font-medium">Category</th>
-                                <th class="text-left px-4 py-2 font-medium">Quantity</th>
-                                <th class="text-left px-4 py-2 font-medium">Reorder level</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Product</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Category</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Quantity</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Reorder level</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

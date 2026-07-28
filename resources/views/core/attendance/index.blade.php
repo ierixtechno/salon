@@ -32,12 +32,12 @@
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50 text-gray-500">
+                            <thead class="bg-indigo-100 text-indigo-800">
                                 <tr>
-                                    <th class="text-left px-4 py-2 font-medium">Employee</th>
-                                    <th class="text-left px-4 py-2 font-medium">Status</th>
-                                    <th class="text-left px-4 py-2 font-medium">Check-in / out</th>
-                                    <th class="text-left px-4 py-2 font-medium">Mark</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Employee</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Check-in / out</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Mark</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -79,7 +79,7 @@
                                                         <option value="{{ $status }}" @selected($record?->status === $status)>{{ str($status)->replace('_', ' ')->headline() }}</option>
                                                     @endforeach
                                                 </select>
-                                                <button type="submit" class="text-xs px-3 py-1.5 rounded-md bg-gray-800 text-white hover:bg-gray-700">Save</button>
+                                                <button type="submit" class="text-xs px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">Save</button>
                                             </form>
                                         </td>
                                     </tr>

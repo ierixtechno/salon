@@ -12,12 +12,12 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Module</th>
-                                <th class="text-left px-4 py-2 font-medium">Revenue</th>
-                                <th class="text-left px-4 py-2 font-medium">Appointments</th>
-                                <th class="text-left px-4 py-2 font-medium">Completed</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Module</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Revenue</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Appointments</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Completed</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

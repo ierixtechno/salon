@@ -75,12 +75,12 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Package</th>
-                                <th class="text-left px-4 py-2 font-medium">Expires</th>
-                                <th class="text-left px-4 py-2 font-medium">Remaining</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Package</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Expires</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Remaining</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
                                 <th class="px-4 py-2"></th>
                             </tr>
                         </thead>

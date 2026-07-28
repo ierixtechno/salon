@@ -23,7 +23,7 @@
                     <a href="{{ route('expense-categories.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Manage categories</a>
                 @endcan
                 @can('expenses.create')
-                    <a href="{{ route('expenses.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700">
+                    <a href="{{ route('expenses.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-500">
                         + New expense
                     </a>
                 @endcan
@@ -42,15 +42,15 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Date</th>
-                                <th class="text-left px-4 py-2 font-medium">Category</th>
-                                <th class="text-left px-4 py-2 font-medium">Vendor</th>
-                                <th class="text-left px-4 py-2 font-medium">Amount</th>
-                                <th class="text-left px-4 py-2 font-medium">Method</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
-                                <th class="text-left px-4 py-2 font-medium">Actions</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Date</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Category</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Vendor</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Amount</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Method</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

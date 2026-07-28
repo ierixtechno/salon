@@ -29,11 +29,11 @@
                 <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-medium text-gray-900">Revenue by day</h3></div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Date</th>
-                                <th class="text-left px-4 py-2 font-medium">Invoices</th>
-                                <th class="text-left px-4 py-2 font-medium">Revenue</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Date</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Invoices</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Revenue</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -56,11 +56,11 @@
                     <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-medium text-gray-900">Revenue by branch</h3></div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50 text-gray-500">
+                            <thead class="bg-indigo-100 text-indigo-800">
                                 <tr>
-                                    <th class="text-left px-4 py-2 font-medium">Branch</th>
-                                    <th class="text-left px-4 py-2 font-medium">Invoices</th>
-                                    <th class="text-left px-4 py-2 font-medium">Revenue</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Branch</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Invoices</th>
+                                    <th class="text-left px-4 py-2 font-semibold text-base">Revenue</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -81,11 +81,11 @@
                 <div class="px-6 py-4 border-b border-gray-100"><h3 class="font-medium text-gray-900">Revenue by payment method</h3></div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Method</th>
-                                <th class="text-left px-4 py-2 font-medium">Payments</th>
-                                <th class="text-left px-4 py-2 font-medium">Amount</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Method</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Payments</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

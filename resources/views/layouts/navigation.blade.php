@@ -58,7 +58,7 @@
     </a>
 
     @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Appointment::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\Customer::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\Invoice::class))
-        <x-nav-group title="Sales &amp; Scheduling" :active="$salesActive">
+        <x-nav-group title="Sales & Scheduling" :active="$salesActive">
             @can('viewAny', App\Domain\Core\Models\Appointment::class)
                 <a href="{{ route('appointments.index') }}" class="{{ $navItemBase }} {{ $appointmentsActive ? $navItemActive : $navItemInactive }}">
                     @if ($appointmentsActive)
@@ -108,10 +108,14 @@
         duplicating the controller per vertical.
     --}}
     @if (current_tenant()->hasModuleEnabled('salon') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
-        @php $salonActive = (request()->routeIs('services.*') || request()->routeIs('service-categories.*')) && request()->query('module') === 'salon'; @endphp
+        @php
+            $salonServicesActive = request()->routeIs('services.*') && request()->query('module') === 'salon';
+            $salonCategoriesActive = request()->routeIs('service-categories.*') && request()->query('module') === 'salon';
+            $salonActive = $salonServicesActive || $salonCategoriesActive;
+        @endphp
         <x-nav-group title="Salon" :active="$salonActive">
-            <a href="{{ route('services.index', ['module' => 'salon']) }}" class="{{ $navItemBase }} {{ $salonActive ? $navItemActive : $navItemInactive }}">
-                @if ($salonActive)
+            <a href="{{ route('services.index', ['module' => 'salon']) }}" class="{{ $navItemBase }} {{ $salonServicesActive ? $navItemActive : $navItemInactive }}">
+                @if ($salonServicesActive)
                     <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
                 @endif
                 <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -119,15 +123,28 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
                 </svg>
                 {{ __('Services') }}
+            </a>
+            <a href="{{ route('service-categories.index', ['module' => 'salon']) }}" class="{{ $navItemBase }} {{ $salonCategoriesActive ? $navItemActive : $navItemInactive }}">
+                @if ($salonCategoriesActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                </svg>
+                {{ __('Categories') }}
             </a>
         </x-nav-group>
     @endif
 
     @if (current_tenant()->hasModuleEnabled('beauty') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
-        @php $beautyActive = (request()->routeIs('services.*') || request()->routeIs('service-categories.*')) && request()->query('module') === 'beauty'; @endphp
+        @php
+            $beautyServicesActive = request()->routeIs('services.*') && request()->query('module') === 'beauty';
+            $beautyCategoriesActive = request()->routeIs('service-categories.*') && request()->query('module') === 'beauty';
+            $beautyActive = $beautyServicesActive || $beautyCategoriesActive;
+        @endphp
         <x-nav-group title="Beauty Parlour" :active="$beautyActive">
-            <a href="{{ route('services.index', ['module' => 'beauty']) }}" class="{{ $navItemBase }} {{ $beautyActive ? $navItemActive : $navItemInactive }}">
-                @if ($beautyActive)
+            <a href="{{ route('services.index', ['module' => 'beauty']) }}" class="{{ $navItemBase }} {{ $beautyServicesActive ? $navItemActive : $navItemInactive }}">
+                @if ($beautyServicesActive)
                     <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
                 @endif
                 <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -135,15 +152,28 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
                 </svg>
                 {{ __('Services') }}
+            </a>
+            <a href="{{ route('service-categories.index', ['module' => 'beauty']) }}" class="{{ $navItemBase }} {{ $beautyCategoriesActive ? $navItemActive : $navItemInactive }}">
+                @if ($beautyCategoriesActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                </svg>
+                {{ __('Categories') }}
             </a>
         </x-nav-group>
     @endif
 
     @if (current_tenant()->hasModuleEnabled('spa') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
-        @php $spaActive = (request()->routeIs('services.*') || request()->routeIs('service-categories.*')) && request()->query('module') === 'spa'; @endphp
+        @php
+            $spaServicesActive = request()->routeIs('services.*') && request()->query('module') === 'spa';
+            $spaCategoriesActive = request()->routeIs('service-categories.*') && request()->query('module') === 'spa';
+            $spaActive = $spaServicesActive || $spaCategoriesActive;
+        @endphp
         <x-nav-group title="Spa" :active="$spaActive">
-            <a href="{{ route('services.index', ['module' => 'spa']) }}" class="{{ $navItemBase }} {{ $spaActive ? $navItemActive : $navItemInactive }}">
-                @if ($spaActive)
+            <a href="{{ route('services.index', ['module' => 'spa']) }}" class="{{ $navItemBase }} {{ $spaServicesActive ? $navItemActive : $navItemInactive }}">
+                @if ($spaServicesActive)
                     <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
                 @endif
                 <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -152,11 +182,20 @@
                 </svg>
                 {{ __('Services') }}
             </a>
+            <a href="{{ route('service-categories.index', ['module' => 'spa']) }}" class="{{ $navItemBase }} {{ $spaCategoriesActive ? $navItemActive : $navItemInactive }}">
+                @if ($spaCategoriesActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                </svg>
+                {{ __('Categories') }}
+            </a>
         </x-nav-group>
     @endif
 
     @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Package::class) || Auth::user()->can('gift-cards.view'))
-        <x-nav-group title="Loyalty &amp; Offers" :active="$loyaltyActive">
+        <x-nav-group title="Loyalty & Offers" :active="$loyaltyActive">
             @can('viewAny', App\Domain\Core\Models\Package::class)
                 <a href="{{ route('packages.index') }}" class="{{ $navItemBase }} {{ $packagesActive ? $navItemActive : $navItemInactive }}">
                     @if ($packagesActive)
@@ -184,7 +223,7 @@
     @endif
 
     @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Product::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\Supplier::class))
-        <x-nav-group title="Catalog &amp; Inventory" :active="$catalogActive">
+        <x-nav-group title="Catalog & Inventory" :active="$catalogActive">
             @can('viewAny', App\Domain\Core\Models\Product::class)
                 <a href="{{ route('products.index') }}" class="{{ $navItemBase }} {{ $productsActive ? $navItemActive : $navItemInactive }}">
                     @if ($productsActive)

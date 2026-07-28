@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Gift Cards</h2>
             @can('gift-cards.create')
                 <a href="{{ route('gift-cards.create') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700">
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-500">
                     + Issue gift card
                 </a>
             @endcan
@@ -22,14 +22,14 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Code</th>
-                                <th class="text-left px-4 py-2 font-medium">Customer</th>
-                                <th class="text-left px-4 py-2 font-medium">Initial value</th>
-                                <th class="text-left px-4 py-2 font-medium">Balance</th>
-                                <th class="text-left px-4 py-2 font-medium">Expires</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Code</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Customer</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Initial value</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Balance</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Expires</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
                                 <th class="px-4 py-2"></th>
                             </tr>
                         </thead>

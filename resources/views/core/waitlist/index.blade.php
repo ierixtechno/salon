@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Waitlist</h2>
             @can('create', App\Domain\Core\Models\WaitlistEntry::class)
                 <a href="{{ route('waitlist.create') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700">
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-500">
                     + Add to waitlist
                 </a>
             @endcan
@@ -22,13 +22,13 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Customer</th>
-                                <th class="text-left px-4 py-2 font-medium">Branch</th>
-                                <th class="text-left px-4 py-2 font-medium">Service</th>
-                                <th class="text-left px-4 py-2 font-medium">Preferred date</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Customer</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Branch</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Service</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Preferred date</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
                                 <th class="px-4 py-2"></th>
                             </tr>
                         </thead>

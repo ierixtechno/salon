@@ -12,14 +12,14 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Employee</th>
-                                <th class="text-left px-4 py-2 font-medium">Type</th>
-                                <th class="text-left px-4 py-2 font-medium">Dates</th>
-                                <th class="text-left px-4 py-2 font-medium">Days</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
-                                <th class="text-left px-4 py-2 font-medium">Actions</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Employee</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Type</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Dates</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Days</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

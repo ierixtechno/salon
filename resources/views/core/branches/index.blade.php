@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Branches</h2>
             @can('create', App\Domain\Core\Models\Branch::class)
                 <a href="{{ route('branches.create') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700">
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-500">
                     + New branch
                 </a>
             @endcan
@@ -22,12 +22,12 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Name</th>
-                                <th class="text-left px-4 py-2 font-medium">Code</th>
-                                <th class="text-left px-4 py-2 font-medium">Resources</th>
-                                <th class="text-left px-4 py-2 font-medium">Status</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Name</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Code</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Resources</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">

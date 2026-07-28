@@ -14,13 +14,13 @@
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500">
+                        <thead class="bg-indigo-100 text-indigo-800">
                             <tr>
-                                <th class="text-left px-4 py-2 font-medium">Employee</th>
-                                <th class="text-left px-4 py-2 font-medium">Type</th>
-                                <th class="text-left px-4 py-2 font-medium">Rate</th>
-                                <th class="text-left px-4 py-2 font-medium">Active</th>
-                                <th class="text-left px-4 py-2 font-medium"></th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Employee</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Type</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Rate</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base">Active</th>
+                                <th class="text-left px-4 py-2 font-semibold text-base"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -48,7 +48,7 @@
                                         <input form="{{ $formId }}" type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" @checked($rule?->is_active ?? false)>
                                     </td>
                                     <td class="px-4 py-2">
-                                        <button form="{{ $formId }}" type="submit" class="text-xs px-3 py-1.5 rounded-md bg-gray-800 text-white hover:bg-gray-700">Save</button>
+                                        <button form="{{ $formId }}" type="submit" class="text-xs px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">Save</button>
                                     </td>
                                 </tr>
                             @empty
