@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Branch extends Model
 {
@@ -62,12 +63,33 @@ class Branch extends Model
      * (CLAUDE.md §8) — that invariant is enforced where modules are
      * assigned, not re-derived here on every read.
      */
+    /**
+     * Checked on effectively every module-gated request (CLAUDE.md §56).
+     * Same caching contract as Tenant::hasModuleEnabled() — a 10-minute
+     * safety-net TTL backed by explicit invalidation at both write paths
+     * that can change a branch's modules: UpdateBranchModules (direct) and
+     * UpdateTenantModules (tenant-level disable cascades to branches).
+     */
     public function hasModuleEnabled(string $moduleCode): bool
     {
-        return $this->modules()
-            ->where('code', $moduleCode)
-            ->wherePivot('enabled', true)
-            ->exists();
+        return Cache::remember(
+            self::moduleCacheKey($this->id, $moduleCode),
+            600,
+            fn () => $this->modules()
+                ->where('code', $moduleCode)
+                ->wherePivot('enabled', true)
+                ->exists(),
+        );
+    }
+
+    public static function forgetModuleCache(int $branchId, string $moduleCode): void
+    {
+        Cache::forget(self::moduleCacheKey($branchId, $moduleCode));
+    }
+
+    private static function moduleCacheKey(int $branchId, string $moduleCode): string
+    {
+        return "branch:{$branchId}:module:{$moduleCode}";
     }
 
     /**

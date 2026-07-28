@@ -143,6 +143,9 @@ class PermissionSeeder extends Seeder
 
             // Phase 12: reports
             'reports.view',
+
+            // Phase 14: tenant data export
+            'data-export.request',
         ];
 
         foreach ($permissions as $permission) {

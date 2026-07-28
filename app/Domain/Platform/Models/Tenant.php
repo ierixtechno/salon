@@ -9,6 +9,7 @@ use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Tenant extends Model
 {
@@ -69,12 +70,34 @@ class Tenant extends Model
             ->first();
     }
 
+    /**
+     * Checked on effectively every module-gated request (CLAUDE.md §56
+     * names "module assignments" as a good cache candidate). The 10-minute
+     * TTL is a correctness safety net, not the primary invalidation
+     * mechanism — UpdateTenantModules explicitly forgets this key the
+     * moment it changes, so staleness in practice is bounded by "did the
+     * write path forget to call forgetModuleCache", not by the TTL.
+     */
     public function hasModuleEnabled(string $moduleCode): bool
     {
-        return $this->tenantModules()
-            ->where('enabled', true)
-            ->whereHas('module', fn ($q) => $q->where('code', $moduleCode))
-            ->exists();
+        return Cache::remember(
+            self::moduleCacheKey($this->id, $moduleCode),
+            600,
+            fn () => $this->tenantModules()
+                ->where('enabled', true)
+                ->whereHas('module', fn ($q) => $q->where('code', $moduleCode))
+                ->exists(),
+        );
+    }
+
+    public static function forgetModuleCache(int $tenantId, string $moduleCode): void
+    {
+        Cache::forget(self::moduleCacheKey($tenantId, $moduleCode));
+    }
+
+    private static function moduleCacheKey(int $tenantId, string $moduleCode): string
+    {
+        return "tenant:{$tenantId}:module:{$moduleCode}";
     }
 
     /**

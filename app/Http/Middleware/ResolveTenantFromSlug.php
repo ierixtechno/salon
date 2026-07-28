@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Domain\Platform\Models\Tenant;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -30,6 +31,7 @@ class ResolveTenantFromSlug
 
         app()->instance('guestTenant', $tenant);
         $request->attributes->set('tenant', $tenant);
+        Log::withContext(['tenant_id' => $tenant->id]);
 
         return $next($request);
     }

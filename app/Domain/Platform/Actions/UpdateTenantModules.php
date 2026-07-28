@@ -2,6 +2,7 @@
 
 namespace App\Domain\Platform\Actions;
 
+use App\Domain\Core\Models\Branch;
 use App\Domain\Platform\Models\Module;
 use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantModule;
@@ -25,13 +26,25 @@ class UpdateTenantModules
                     ['tenant_id' => $tenant->id, 'module_id' => $module->id],
                     ['enabled' => $enabled, 'enabled_at' => $enabled ? now() : null],
                 );
+                Tenant::forgetModuleCache($tenant->id, $module->code);
 
                 if (! $enabled) {
+                    $affectedBranchIds = DB::table('branch_modules')
+                        ->join('branches', 'branches.id', '=', 'branch_modules.branch_id')
+                        ->where('branches.tenant_id', $tenant->id)
+                        ->where('branch_modules.module_id', $module->id)
+                        ->where('branch_modules.enabled', true)
+                        ->pluck('branches.id');
+
                     DB::table('branch_modules')
                         ->join('branches', 'branches.id', '=', 'branch_modules.branch_id')
                         ->where('branches.tenant_id', $tenant->id)
                         ->where('branch_modules.module_id', $module->id)
                         ->update(['branch_modules.enabled' => false]);
+
+                    foreach ($affectedBranchIds as $branchId) {
+                        Branch::forgetModuleCache($branchId, $module->code);
+                    }
                 }
             }
         });

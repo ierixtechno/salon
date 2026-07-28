@@ -11,6 +11,7 @@ use App\Http\Controllers\Core\CustomerController;
 use App\Http\Controllers\Core\CustomerMembershipController;
 use App\Http\Controllers\Core\CustomerPackageController;
 use App\Http\Controllers\Core\CustomerSegmentController;
+use App\Http\Controllers\Core\DataExportController;
 use App\Http\Controllers\Core\EmployeeController;
 use App\Http\Controllers\Core\ExpenseCategoryController;
 use App\Http\Controllers\Core\ExpenseController;
@@ -229,3 +230,8 @@ Route::middleware('can:reports.view')->group(function () {
     Route::get('reports/module-performance', [ReportController::class, 'modulePerformance'])->name('reports.module-performance');
     Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
 });
+
+// Phase 14: Tenant data export.
+Route::get('data-exports', [DataExportController::class, 'index'])->name('data-exports.index');
+Route::post('data-exports', [DataExportController::class, 'store'])->name('data-exports.store');
+Route::get('data-exports/{data_export}/download', [DataExportController::class, 'download'])->name('data-exports.download');

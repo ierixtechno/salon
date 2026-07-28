@@ -248,7 +248,7 @@
         </a>
     @endcan
 
-    @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Branch::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\EmployeeProfile::class) || Auth::user()->can('tenant.settings.manage'))
+    @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Branch::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\EmployeeProfile::class) || Auth::user()->can('tenant.settings.manage') || Auth::user()->can('data-export.request'))
         <p class="{{ $groupLabel }}">Organization</p>
     @endif
 
@@ -286,6 +286,18 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             {{ __('Settings') }}
+        </a>
+    @endcan
+
+    @can('data-export.request')
+        <a href="{{ route('data-exports.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('data-exports.*') ? $navItemActive : $navItemInactive }}">
+            @if (request()->routeIs('data-exports.*'))
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            {{ __('Data Export') }}
         </a>
     @endcan
 

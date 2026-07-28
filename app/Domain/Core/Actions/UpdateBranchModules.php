@@ -27,6 +27,7 @@ class UpdateBranchModules
                 $branch->modules()->syncWithoutDetaching([
                     $module->id => ['enabled' => in_array($module->code, $moduleCodes, true)],
                 ]);
+                Branch::forgetModuleCache($branch->id, $module->code);
             }
 
             AuditLog::create([

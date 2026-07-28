@@ -17,7 +17,14 @@ Route::middleware('guest')->group(function () {
     Route::get('register', [OnboardingController::class, 'create'])
         ->name('register');
 
+    // Onboarding creates a full tenant + owner, not just a User — more
+    // expensive than a login attempt and otherwise unthrottled, so an
+    // automated script could spam-create tenants. Login itself already has
+    // its own per-email+IP lockout baked into LoginRequest::authenticate()
+    // (5 attempts), independent of route middleware — this matches that
+    // same throttle:6,1 rate already used below for email verification.
     Route::post('register', [OnboardingController::class, 'store'])
+        ->middleware('throttle:6,1')
         ->name('onboarding.store');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
@@ -28,13 +35,17 @@ Route::middleware('guest')->group(function () {
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
+    // Unthrottled otherwise, a forgot-password flood is a real abuse
+    // vector (spamming a victim's inbox with reset emails).
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:6,1')
         ->name('password.email');
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('throttle:6,1')
         ->name('password.store');
 });
 
