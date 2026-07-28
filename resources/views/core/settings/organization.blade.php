@@ -25,6 +25,18 @@
                         <x-input-error :messages="$errors->get('display_name')" class="mt-2" />
                     </div>
 
+                    <div>
+                        <x-input-label for="business_type" value="Business type (optional)" />
+                        <select id="business_type" name="business_type" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                            <option value="">General (Salon / Beauty / Spa)</option>
+                            @foreach (\App\Domain\Core\Models\BusinessProfile::BUSINESS_TYPES as $type)
+                                <option value="{{ $type }}" @selected(old('business_type', $profile->business_type) === $type)>{{ str($type)->replace('_', ' ')->headline() }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">A label for how you present your business — doesn't change which services or features are available.</p>
+                        <x-input-error :messages="$errors->get('business_type')" class="mt-2" />
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="legal_name" value="Legal name (optional)" />

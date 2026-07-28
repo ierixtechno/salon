@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Core;
 
+use App\Domain\Core\Models\BusinessProfile;
 use App\Rules\IndianMobileNumber;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateBusinessProfileRequest extends FormRequest
 {
@@ -17,6 +19,7 @@ class UpdateBusinessProfileRequest extends FormRequest
         return [
             'display_name' => ['required', 'string', 'max:255'],
             'legal_name' => ['nullable', 'string', 'max:255'],
+            'business_type' => ['nullable', Rule::in(BusinessProfile::BUSINESS_TYPES)],
             'contact_email' => ['nullable', 'string', 'email', 'max:255'],
             'contact_phone' => ['nullable', new IndianMobileNumber],
             'address' => ['nullable', 'string', 'max:2000'],

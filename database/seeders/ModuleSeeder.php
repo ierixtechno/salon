@@ -17,6 +17,7 @@ class ModuleSeeder extends Seeder
             ['code' => 'salon', 'name' => 'Salon'],
             ['code' => 'beauty', 'name' => 'Beauty Parlour'],
             ['code' => 'spa', 'name' => 'Spa'],
+            ['code' => 'tattoo', 'name' => 'Tattoo Studio'],
         ];
 
         foreach ($modules as $module) {

@@ -63,6 +63,8 @@ class BookAppointment
         ?int $createdBy = null,
         ?string $groupUuid = null,
         string $initialStatus = 'confirmed',
+        string $serviceMode = 'branch',
+        ?string $deliveryAddress = null,
     ): Appointment {
         abort_unless(in_array($initialStatus, ['pending', 'confirmed'], true), 422, 'Invalid initial appointment status.');
 
@@ -77,13 +79,14 @@ class BookAppointment
         $startsAt = $startsAt->copy()->utc();
         $durationMinutes = $variant?->effectiveDurationMinutes() ?? $service->duration_minutes;
         $endsAt = $startsAt->copy()->addMinutes($durationMinutes);
-        $bufferMinutes = $service->buffer_minutes;
-        $price = $variant?->effectivePrice() ?? $service->priceForBranch($branch);
+        $bufferMinutes = $service->buffer_minutes + ($serviceMode !== 'branch' ? $service->travel_buffer_minutes : 0);
+        $price = (string) ((float) ($variant?->effectivePrice() ?? $service->priceForBranch($branch)) + (float) $service->feeForMode($serviceMode));
 
         return DB::transaction(function () use (
             $branch, $customer, $service, $variant, $employee, $resource,
             $startsAt, $endsAt, $bufferMinutes, $price,
             $source, $notes, $createdBy, $groupUuid, $initialStatus,
+            $serviceMode, $deliveryAddress,
         ) {
             // Lock proxy rows first — see class docblock.
             User::whereKey($employee->id)->lockForUpdate()->first();
@@ -116,6 +119,8 @@ class BookAppointment
                 'source' => $source,
                 'notes' => $notes,
                 'created_by' => $createdBy,
+                'service_mode' => $serviceMode,
+                'delivery_address' => $deliveryAddress,
             ]);
             $appointment->status = $initialStatus;
             $appointment->price = $price;

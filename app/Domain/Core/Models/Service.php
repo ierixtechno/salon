@@ -16,6 +16,14 @@ class Service extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    /**
+     * Where this service can be delivered. 'branch' is always implicitly
+     * available (gated by the existing service_branch pivot); 'home' and
+     * 'venue' are opt-in per service via home_service_enabled/
+     * venue_service_enabled.
+     */
+    public const SERVICE_MODES = ['branch', 'home', 'venue'];
+
     protected static function newFactory(): ServiceFactory
     {
         return ServiceFactory::new();
@@ -26,6 +34,7 @@ class Service extends Model
     protected $fillable = [
         'service_category_id', 'module_id', 'name', 'description',
         'duration_minutes', 'buffer_minutes', 'base_price', 'tax_rate_percent', 'sac_code', 'is_active',
+        'home_service_enabled', 'home_service_fee', 'venue_service_enabled', 'venue_service_fee', 'travel_buffer_minutes',
     ];
 
     protected function casts(): array
@@ -34,6 +43,10 @@ class Service extends Model
             'base_price' => 'decimal:2',
             'tax_rate_percent' => 'decimal:2',
             'is_active' => 'boolean',
+            'home_service_enabled' => 'boolean',
+            'home_service_fee' => 'decimal:2',
+            'venue_service_enabled' => 'boolean',
+            'venue_service_fee' => 'decimal:2',
         ];
     }
 
@@ -85,5 +98,28 @@ class Service extends Model
         $pivot = $this->branches()->where('branches.id', $branch->id)->first()?->pivot;
 
         return (bool) ($pivot?->is_available ?? false);
+    }
+
+    /**
+     * Flat surcharge for a non-branch delivery mode, resolved once at
+     * booking time (CLAUDE.md §14 Pricing, §20 Money — never trust a
+     * client-submitted fee).
+     */
+    public function feeForMode(string $mode): string
+    {
+        return match ($mode) {
+            'home' => (string) ($this->home_service_fee ?? '0.00'),
+            'venue' => (string) ($this->venue_service_fee ?? '0.00'),
+            default => '0.00',
+        };
+    }
+
+    public function isAvailableForMode(string $mode): bool
+    {
+        return match ($mode) {
+            'home' => (bool) $this->home_service_enabled,
+            'venue' => (bool) $this->venue_service_enabled,
+            default => true,
+        };
     }
 }

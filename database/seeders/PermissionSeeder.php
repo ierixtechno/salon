@@ -53,7 +53,7 @@ class PermissionSeeder extends Seeder
             'services.update',
             'services.delete',
 
-            // Phase 4: vertical consultation profiles (hair/skin/spa)
+            // Phase 4: vertical consultation profiles (hair/skin/spa/tattoo)
             'salon-consultations.view',
             'salon-consultations.create',
             'salon-consultations.update',
@@ -63,6 +63,9 @@ class PermissionSeeder extends Seeder
             'spa-consultations.view',
             'spa-consultations.create',
             'spa-consultations.update',
+            'tattoo-consultations.view',
+            'tattoo-consultations.create',
+            'tattoo-consultations.update',
 
             // Phase 5: appointment engine
             'appointments.view',

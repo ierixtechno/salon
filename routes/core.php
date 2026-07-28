@@ -85,6 +85,7 @@ Route::resource('services', ServiceController::class)->except(['show']);
 Route::put('services/{service}/variants', [ServiceController::class, 'updateVariants'])->name('services.variants');
 Route::put('services/{service}/branches', [ServiceController::class, 'updateBranches'])->name('services.branches');
 Route::put('services/{service}/staff', [ServiceController::class, 'updateStaff'])->name('services.staff');
+Route::put('services/{service}/delivery-modes', [ServiceController::class, 'updateDeliveryModes'])->name('services.delivery-modes');
 
 // No edit/update/destroy — an appointment moves through its lifecycle via
 // the dedicated actions below, it is never freeform-edited or deleted

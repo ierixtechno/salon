@@ -9,12 +9,20 @@ class BusinessProfile extends Model
 {
     use BelongsToTenant;
 
+    /**
+     * Cosmetic/display-only label (CLAUDE.md §10 — never a substitute for
+     * module/feature/plan/permission). Null means no preset picked ("full
+     * Salon/Beauty/Spa" or simply not specified) — there is no "general"
+     * entry here since that's just the absence of a value, not a stored one.
+     */
+    public const BUSINESS_TYPES = ['barber', 'nail_studio', 'makeup_studio', 'bridal_studio'];
+
     // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
     // §28). BelongsToTenant auto-fills it from the authenticated session,
     // including on the updateOrCreate() create path used in
     // OrganizationSettingsController.
     protected $fillable = [
-        'legal_name', 'display_name', 'logo_path',
+        'legal_name', 'display_name', 'business_type', 'logo_path',
         'contact_email', 'contact_phone', 'address', 'cancellation_policy',
         'loyalty_points_per_100', 'loyalty_redemption_value', 'loyalty_points_expiry_days',
         'expense_approval_required',

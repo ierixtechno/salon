@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Core;
 
+use App\Domain\Core\Models\Appointment;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\Resource;
 use App\Domain\Core\Models\Service;
@@ -41,6 +42,8 @@ class StoreAppointmentRequest extends FormRequest
             'source' => ['nullable', Rule::in(['staff', 'walk_in'])],
             'notes' => ['nullable', 'string', 'max:2000'],
             'waitlist_entry_id' => ['nullable', 'integer', Rule::exists('waitlist_entries', 'id')->where('tenant_id', $tenantId)],
+            'service_mode' => ['nullable', Rule::in(Appointment::SERVICE_MODES)],
+            'delivery_address' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -75,6 +78,22 @@ class StoreAppointmentRequest extends FormRequest
 
             if ($variant && $service && $variant->service_id !== $service->id) {
                 $validator->errors()->add('service_variant_id', 'The selected variant does not belong to the selected service.');
+            }
+
+            $serviceMode = $this->input('service_mode') ?: 'branch';
+
+            if ($serviceMode !== 'branch') {
+                if ($service && ! $service->isAvailableForMode($serviceMode)) {
+                    $validator->errors()->add('service_mode', 'This service is not available as a home or venue booking.');
+                }
+
+                if ($this->filled('resource_id')) {
+                    $validator->errors()->add('resource_id', 'A room/resource can\'t be selected for a home or venue booking.');
+                }
+
+                if (! $this->filled('delivery_address')) {
+                    $validator->errors()->add('delivery_address', 'A delivery address is required for a home or venue booking.');
+                }
             }
         });
     }

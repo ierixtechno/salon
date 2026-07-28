@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreServiceRequest;
 use App\Http\Requests\Core\UpdateServiceBranchesRequest;
 use App\Http\Requests\Core\UpdateServiceConsumablesRequest;
+use App\Http\Requests\Core\UpdateServiceDeliveryModesRequest;
 use App\Http\Requests\Core\UpdateServiceRequest;
 use App\Http\Requests\Core\UpdateServiceStaffRequest;
 use App\Http\Requests\Core\UpdateServiceVariantsRequest;
@@ -129,5 +130,21 @@ class ServiceController extends Controller
         $action->execute($service, $request->validated('consumables', []));
 
         return back()->with('status', 'Product consumption updated.');
+    }
+
+    public function updateDeliveryModes(UpdateServiceDeliveryModesRequest $request, Service $service): RedirectResponse
+    {
+        // $request->boolean() (not validated()) is used for the two toggles
+        // so unchecking a checkbox reliably persists as false — an absent
+        // checkbox field would otherwise leave the column untouched.
+        $service->update([
+            'home_service_enabled' => $request->boolean('home_service_enabled'),
+            'home_service_fee' => $request->validated('home_service_fee'),
+            'venue_service_enabled' => $request->boolean('venue_service_enabled'),
+            'venue_service_fee' => $request->validated('venue_service_fee'),
+            'travel_buffer_minutes' => $request->validated('travel_buffer_minutes') ?? 0,
+        ]);
+
+        return back()->with('status', 'Delivery modes updated.');
     }
 }

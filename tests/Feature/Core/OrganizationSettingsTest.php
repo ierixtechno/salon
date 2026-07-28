@@ -19,6 +19,29 @@ test('an owner can view and update the business profile', function () {
     expect($profile->contact_email)->toBe('hello@glow.test');
 });
 
+test('an owner can set a business type preset and it round-trips', function () {
+    $owner = onboard();
+
+    $this->actingAs($owner)->put('/settings/organization', [
+        'display_name' => 'Glow Salon & Spa',
+        'business_type' => 'barber',
+    ])->assertRedirect();
+
+    $profile = BusinessProfile::where('tenant_id', $owner->tenant_id)->firstOrFail();
+    expect($profile->business_type)->toBe('barber');
+
+    $this->actingAs($owner)->get('/settings/organization')->assertOk()->assertSee('Barber', escape: false);
+});
+
+test('an invalid business type is rejected', function () {
+    $owner = onboard();
+
+    $this->actingAs($owner)->put('/settings/organization', [
+        'display_name' => 'Glow Salon & Spa',
+        'business_type' => 'not-a-real-type',
+    ])->assertSessionHasErrors('business_type');
+});
+
 test('an owner can update weekly business hours', function () {
     $owner = onboard();
 

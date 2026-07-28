@@ -17,6 +17,7 @@
                     'details' => 'Details',
                     'variants' => 'Variants',
                     'availability' => 'Branch availability',
+                    'delivery-modes' => 'Delivery Modes',
                     'staff' => 'Staff',
                 ];
                 if ($hasConsumables) {
@@ -180,6 +181,56 @@
 
                             <div class="flex justify-end mt-4">
                                 <x-primary-button>Save availability</x-primary-button>
+                            </div>
+                        </form>
+                    </div>
+                </x-tab-panel>
+
+                <x-tab-panel name="delivery-modes">
+                    <div class="bg-white shadow-sm rounded-lg p-6" x-data="{
+                        home: {{ $service->home_service_enabled ? 'true' : 'false' }},
+                        venue: {{ $service->venue_service_enabled ? 'true' : 'false' }},
+                    }">
+                        <h3 class="font-medium text-gray-900 mb-1">Delivery Modes</h3>
+                        <p class="text-xs text-gray-500 mb-4">Where this service can be delivered, beyond the default in-branch booking.</p>
+
+                        <form method="POST" action="{{ route('services.delivery-modes', $service) }}" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="border border-gray-100 rounded-md p-3">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" name="home_service_enabled" value="1" x-model="home" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-700">Available as home service</span>
+                                </label>
+                                <div x-show="home" class="mt-3 sm:w-48">
+                                    <x-input-label for="home_service_fee" value="Home visit fee (optional)" />
+                                    <x-text-input id="home_service_fee" class="block mt-1 w-full" type="number" step="0.01" min="0" name="home_service_fee" :value="old('home_service_fee', $service->home_service_fee)" />
+                                    <x-input-error :messages="$errors->get('home_service_fee')" class="mt-2" />
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-100 rounded-md p-3">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" name="venue_service_enabled" value="1" x-model="venue" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-700">Available as venue service</span>
+                                </label>
+                                <div x-show="venue" class="mt-3 sm:w-48">
+                                    <x-input-label for="venue_service_fee" value="Venue visit fee (optional)" />
+                                    <x-text-input id="venue_service_fee" class="block mt-1 w-full" type="number" step="0.01" min="0" name="venue_service_fee" :value="old('venue_service_fee', $service->venue_service_fee)" />
+                                    <x-input-error :messages="$errors->get('venue_service_fee')" class="mt-2" />
+                                </div>
+                            </div>
+
+                            <div x-show="home || venue" class="sm:w-48">
+                                <x-input-label for="travel_buffer_minutes" value="Travel buffer (minutes)" />
+                                <x-text-input id="travel_buffer_minutes" class="block mt-1 w-full" type="number" min="0" name="travel_buffer_minutes" :value="old('travel_buffer_minutes', $service->travel_buffer_minutes)" />
+                                <p class="text-xs text-gray-500 mt-1">Extra time added after a home/venue booking before the staff member's next appointment.</p>
+                                <x-input-error :messages="$errors->get('travel_buffer_minutes')" class="mt-2" />
+                            </div>
+
+                            <div class="flex justify-end">
+                                <x-primary-button>Save delivery modes</x-primary-button>
                             </div>
                         </form>
                     </div>

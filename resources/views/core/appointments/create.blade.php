@@ -21,11 +21,15 @@
                                     'base_price' => $s->base_price,
                                     'variants' => $s->variants->map(fn ($v) => ['id' => $v->id, 'name' => $v->name]),
                                     'employees' => $s->capableEmployees->map(fn ($e) => ['id' => $e->id, 'name' => $e->name]),
+                                    'home_service_enabled' => $s->home_service_enabled,
+                                    'venue_service_enabled' => $s->venue_service_enabled,
                                 ]),
                             ])) }},
                             categoryId: '', serviceId: '{{ old('service_id', $prefill['service_id'] ?? '') }}', isWalkIn: false,
+                            serviceMode: '{{ old('service_mode', 'branch') }}',
                             get services() { return this.categories.find(c => c.id == this.categoryId)?.services ?? [] },
                             get service() { return this.services.find(s => s.id == this.serviceId) },
+                            resetServiceMode() { this.serviceMode = 'branch'; },
                             init() {
                                 if (this.serviceId) {
                                     const owner = this.categories.find(c => c.services.some(s => s.id == this.serviceId));
@@ -71,7 +75,7 @@
                             </div>
                             <div>
                                 <x-input-label for="service_id" value="Service" />
-                                <select id="service_id" name="service_id" x-model="serviceId" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                <select id="service_id" name="service_id" x-model="serviceId" @change="resetServiceMode()" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">Select&hellip;</option>
                                     <template x-for="s in services" :key="s.id">
                                         <option :value="s.id" x-text="s.name + ' (' + s.duration_minutes + ' min)'"></option>
@@ -104,8 +108,18 @@
                             <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
                         </div>
 
+                        <div x-show="service?.home_service_enabled || service?.venue_service_enabled">
+                            <x-input-label for="service_mode" value="Service Mode" />
+                            <select id="service_mode" name="service_mode" x-model="serviceMode" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="branch">At the branch</option>
+                                <option value="home" x-show="service?.home_service_enabled">Home service</option>
+                                <option value="venue" x-show="service?.venue_service_enabled">Venue service</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('service_mode')" class="mt-2" />
+                        </div>
+
                         @if ($resources->isNotEmpty())
-                            <div>
+                            <div x-show="serviceMode === 'branch'">
                                 <x-input-label for="resource_id" value="Room/Chair/Station (optional)" />
                                 <select id="resource_id" name="resource_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
                                     <option value="">None</option>
@@ -116,6 +130,13 @@
                                 <x-input-error :messages="$errors->get('resource_id')" class="mt-2" />
                             </div>
                         @endif
+
+                        <div x-show="serviceMode !== 'branch'">
+                            <x-input-label for="delivery_address" value="Delivery address" />
+                            <textarea id="delivery_address" name="delivery_address" rows="2"
+                                class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('delivery_address') }}</textarea>
+                            <x-input-error :messages="$errors->get('delivery_address')" class="mt-2" />
+                        </div>
 
                         <div>
                             <x-input-label for="starts_at" value="Date & time" />

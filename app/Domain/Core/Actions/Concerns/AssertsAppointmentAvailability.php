@@ -75,11 +75,17 @@ trait AssertsAppointmentAvailability
             ->when($ignoreAppointmentId, fn ($q) => $q->whereKeyNot($ignoreAppointmentId))
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->whereBetween('starts_at', [$startsAt->copy()->subHours(15), $candidateBusyEnd])
-            ->with('service:id,buffer_minutes')
+            ->with('service:id,buffer_minutes,travel_buffer_minutes')
             ->get();
 
         foreach ($existing as $row) {
-            $existingBusyEnd = $row->ends_at->copy()->addMinutes($row->service->buffer_minutes ?? 0);
+            // A non-branch appointment's busy time includes its own travel
+            // buffer too — otherwise a back-to-back home/venue booking could
+            // slot in right after this one ends, before the employee could
+            // realistically have traveled away from it.
+            $rowBufferMinutes = ($row->service->buffer_minutes ?? 0)
+                + ($row->service_mode !== 'branch' ? ($row->service->travel_buffer_minutes ?? 0) : 0);
+            $existingBusyEnd = $row->ends_at->copy()->addMinutes($rowBufferMinutes);
 
             if ($startsAt->lt($existingBusyEnd) && $candidateBusyEnd->gt($row->starts_at)) {
                 abort(409, 'This staff member is no longer available at the selected time.');

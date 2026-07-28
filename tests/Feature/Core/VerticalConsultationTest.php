@@ -7,6 +7,8 @@ use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Scopes\TenantScope;
 use App\Domain\Salon\Models\HairConsultation;
 use App\Domain\Salon\Models\HairProfile;
+use App\Domain\Tattoo\Models\TattooConsultation;
+use App\Domain\Tattoo\Models\TattooProfile;
 use App\Models\User;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -102,6 +104,108 @@ test('an owner can set a spa profile and record a spa consultation for a custome
     $this->actingAs($owner)->get("/customers/{$customer->id}/spa/consultations")
         ->assertOk()
         ->assertSee('Lower back tension');
+});
+
+test('an owner can set a tattoo profile and record a tattoo consultation for a customer', function () {
+    $owner = onboard(['modules' => ['tattoo']]);
+    $customer = Customer::factory()->forTenant($owner->tenant)->create();
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
+    app(UpdateBranchModules::class)->execute($branch, ['tattoo']);
+
+    $this->actingAs($owner)->put("/customers/{$customer->id}/tattoo/profile", [
+        'skin_conditions' => 'Mild eczema on forearm',
+        'allergies' => 'Sensitive to red ink',
+    ])->assertRedirect();
+
+    $this->actingAs($owner)->get("/customers/{$customer->id}/tattoo/profile/edit")->assertOk()->assertSee('eczema');
+
+    $this->actingAs($owner)->post("/customers/{$customer->id}/tattoo/consultations", [
+        'branch_id' => $branch->id,
+        'consultation_date' => now()->toDateString(),
+        'design_description' => 'Minimalist line-art wolf',
+        'placement' => 'Left forearm',
+        'size_estimate' => '4x6 in',
+    ])->assertRedirect();
+
+    $this->actingAs($owner)->get("/customers/{$customer->id}/tattoo/consultations")
+        ->assertOk()
+        ->assertSee('Minimalist line-art wolf')
+        ->assertSee('Left forearm');
+});
+
+test('a tattoo consultation is rejected when the chosen branch does not have the tattoo module enabled', function () {
+    $owner = onboard(['modules' => ['tattoo']]);
+    $customer = Customer::factory()->forTenant($owner->tenant)->create();
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
+    // Branch has no modules enabled.
+
+    $this->actingAs($owner)->post("/customers/{$customer->id}/tattoo/consultations", [
+        'branch_id' => $branch->id,
+        'consultation_date' => now()->toDateString(),
+    ])->assertSessionHasErrors('branch_id');
+});
+
+test('tattoo consultation routes are inaccessible when the tenant does not have the tattoo module enabled', function () {
+    $owner = onboard(['modules' => ['salon']]);
+    $customer = Customer::factory()->forTenant($owner->tenant)->create();
+
+    $this->actingAs($owner)->get("/customers/{$customer->id}/tattoo/profile/edit")->assertForbidden();
+    $this->actingAs($owner)->get("/customers/{$customer->id}/tattoo/consultations")->assertForbidden();
+});
+
+test('a staff member cannot update a tattoo profile without the update permission', function () {
+    $owner = onboard(['modules' => ['tattoo']]);
+    $customer = Customer::factory()->forTenant($owner->tenant)->create();
+
+    $staff = User::factory()->forTenant($owner->tenant)->create();
+    app(PermissionRegistrar::class)->setPermissionsTeamId($owner->tenant_id);
+    $staff->assignRole('Staff');
+
+    // Staff has tattoo-consultations.create but not .update.
+    $this->actingAs($staff)->put("/customers/{$customer->id}/tattoo/profile", [
+        'skin_conditions' => 'Hijacked',
+    ])->assertForbidden();
+
+    // Staff CAN create a consultation entry.
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
+    app(UpdateBranchModules::class)->execute($branch, ['tattoo']);
+
+    $this->actingAs($staff)->post("/customers/{$customer->id}/tattoo/consultations", [
+        'branch_id' => $branch->id,
+        'consultation_date' => now()->toDateString(),
+    ])->assertRedirect();
+});
+
+test('a user from tenant B cannot view or create tattoo consultations for a customer belonging to tenant A', function () {
+    $ownerA = onboard(['modules' => ['tattoo']]);
+    $ownerB = onboard(['modules' => ['tattoo']]);
+
+    $customer = Customer::factory()->forTenant($ownerA->tenant)->create();
+
+    $this->actingAs($ownerB)->get("/customers/{$customer->id}/tattoo/profile/edit")->assertNotFound();
+    $this->actingAs($ownerB)->get("/customers/{$customer->id}/tattoo/consultations")->assertNotFound();
+    $this->actingAs($ownerB)->put("/customers/{$customer->id}/tattoo/profile", ['skin_conditions' => 'Hijacked'])->assertNotFound();
+
+    expect(TattooProfile::withoutGlobalScope(TenantScope::class)->where('customer_id', $customer->id)->exists())->toBeFalse();
+});
+
+test('erasing a customer purges their tattoo consultation profile and history', function () {
+    $owner = onboard(['modules' => ['tattoo']]);
+    $customer = Customer::factory()->forTenant($owner->tenant)->create();
+    $branch = Branch::factory()->forTenant($owner->tenant)->create();
+    app(UpdateBranchModules::class)->execute($branch, ['tattoo']);
+
+    $this->actingAs($owner)->put("/customers/{$customer->id}/tattoo/profile", ['skin_conditions' => 'Fine'])->assertRedirect();
+    $this->actingAs($owner)->post("/customers/{$customer->id}/tattoo/consultations", [
+        'branch_id' => $branch->id,
+        'consultation_date' => now()->toDateString(),
+        'design_description' => 'Rose on shoulder',
+    ])->assertRedirect();
+
+    app(EraseCustomer::class)->execute($customer, $owner->id);
+
+    expect(TattooProfile::where('customer_id', $customer->id)->exists())->toBeFalse();
+    expect(TattooConsultation::where('customer_id', $customer->id)->exists())->toBeFalse();
 });
 
 test('a staff member cannot update a hair profile without the update permission', function () {

@@ -194,6 +194,35 @@
         </x-nav-group>
     @endif
 
+    @if (current_tenant()->hasModuleEnabled('tattoo') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
+        @php
+            $tattooServicesActive = request()->routeIs('services.*') && request()->query('module') === 'tattoo';
+            $tattooCategoriesActive = request()->routeIs('service-categories.*') && request()->query('module') === 'tattoo';
+            $tattooActive = $tattooServicesActive || $tattooCategoriesActive;
+        @endphp
+        <x-nav-group title="Tattoo Studio" :active="$tattooActive">
+            <a href="{{ route('services.index', ['module' => 'tattoo']) }}" class="{{ $navItemBase }} {{ $tattooServicesActive ? $navItemActive : $navItemInactive }}">
+                @if ($tattooServicesActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                </svg>
+                {{ __('Services') }}
+            </a>
+            <a href="{{ route('service-categories.index', ['module' => 'tattoo']) }}" class="{{ $navItemBase }} {{ $tattooCategoriesActive ? $navItemActive : $navItemInactive }}">
+                @if ($tattooCategoriesActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                </svg>
+                {{ __('Categories') }}
+            </a>
+        </x-nav-group>
+    @endif
+
     @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Package::class) || Auth::user()->can('gift-cards.view'))
         <x-nav-group title="Loyalty & Offers" :active="$loyaltyActive">
             @can('viewAny', App\Domain\Core\Models\Package::class)

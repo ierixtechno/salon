@@ -10,6 +10,8 @@ use App\Domain\Salon\Models\HairConsultation;
 use App\Domain\Salon\Models\HairProfile;
 use App\Domain\Spa\Models\SpaConsultation;
 use App\Domain\Spa\Models\SpaProfile;
+use App\Domain\Tattoo\Models\TattooConsultation;
+use App\Domain\Tattoo\Models\TattooProfile;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * never dangle (CLAUDE.md §36/§45).
  *
  * Free-text notes ARE deleted (CLAUDE.md §36 explicitly calls sensitive
- * notes/media deletable), and so are the vertical hair/skin/spa
+ * notes/media deletable), and so are the vertical hair/skin/spa/tattoo
  * profiles + consultation history — CLAUDE.md §36 names "skin/hair
  * consultation notes" explicitly as the sensitive data this workflow must
  * reach. The consent ledger is deliberately left intact — it is evidence of
@@ -38,6 +40,8 @@ class EraseCustomer
             SkinConsultation::where('customer_id', $customer->id)->delete();
             SpaProfile::where('customer_id', $customer->id)->delete();
             SpaConsultation::where('customer_id', $customer->id)->delete();
+            TattooProfile::where('customer_id', $customer->id)->delete();
+            TattooConsultation::where('customer_id', $customer->id)->delete();
 
             $customer->update([
                 'name' => 'Erased Customer',

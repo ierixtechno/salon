@@ -41,7 +41,8 @@ class RescheduleAppointment
         // force UTC itself.
         $newStartsAt = $newStartsAt->copy()->utc();
         $newEndsAt = $newStartsAt->copy()->addMinutes($durationMinutes);
-        $bufferMinutes = $appointment->service->buffer_minutes;
+        $bufferMinutes = $appointment->service->buffer_minutes
+            + ($appointment->service_mode !== 'branch' ? $appointment->service->travel_buffer_minutes : 0);
 
         return DB::transaction(function () use ($appointment, $branch, $employee, $resource, $newStartsAt, $newEndsAt, $bufferMinutes) {
             User::whereKey($employee->id)->lockForUpdate()->first();

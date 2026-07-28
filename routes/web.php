@@ -21,6 +21,7 @@ Route::middleware(['auth:web', 'tenant'])->group(function () {
     require __DIR__.'/salon.php';
     require __DIR__.'/beauty-parlour.php';
     require __DIR__.'/spa.php';
+    require __DIR__.'/tattoo.php';
 });
 
 require __DIR__.'/auth.php';

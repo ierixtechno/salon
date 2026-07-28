@@ -101,6 +101,8 @@ class AppointmentController extends Controller
             source: $request->validated('source') ?? 'staff',
             notes: $request->validated('notes'),
             createdBy: Auth::guard('web')->id(),
+            serviceMode: $request->validated('service_mode') ?: 'branch',
+            deliveryAddress: $request->validated('delivery_address'),
         );
 
         if ($request->validated('waitlist_entry_id')) {

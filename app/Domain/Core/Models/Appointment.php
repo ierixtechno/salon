@@ -31,6 +31,8 @@ class Appointment extends Model
 
     public const STATUSES = ['pending', 'confirmed', 'checked_in', 'in_service', 'completed', 'cancelled', 'no_show'];
 
+    public const SERVICE_MODES = ['branch', 'home', 'venue'];
+
     public const TRANSITIONS = [
         'pending' => ['confirmed', 'cancelled'],
         'confirmed' => ['checked_in', 'cancelled', 'no_show'],
@@ -51,7 +53,7 @@ class Appointment extends Model
     protected $fillable = [
         'branch_id', 'customer_id', 'service_id', 'service_variant_id',
         'user_id', 'resource_id', 'group_uuid', 'starts_at', 'ends_at',
-        'source', 'notes', 'created_by',
+        'source', 'notes', 'created_by', 'service_mode', 'delivery_address',
     ];
 
     protected function casts(): array

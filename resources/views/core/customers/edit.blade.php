@@ -19,7 +19,8 @@
                 @php
                     $showConsultations = (current_tenant()->hasModuleEnabled('salon') && auth()->user()->can('salon-consultations.view'))
                         || (current_tenant()->hasModuleEnabled('beauty') && auth()->user()->can('beauty-consultations.view'))
-                        || (current_tenant()->hasModuleEnabled('spa') && auth()->user()->can('spa-consultations.view'));
+                        || (current_tenant()->hasModuleEnabled('spa') && auth()->user()->can('spa-consultations.view'))
+                        || (current_tenant()->hasModuleEnabled('tattoo') && auth()->user()->can('tattoo-consultations.view'));
                     $showDanger = auth()->user()->can('deactivate', $customer) || auth()->user()->can('erase', $customer);
 
                     $tabs = ['profile' => 'Profile', 'consent' => 'Consent'];
@@ -139,6 +140,9 @@
                                     @endif
                                     @if (current_tenant()->hasModuleEnabled('spa') && auth()->user()->can('spa-consultations.view'))
                                         <a href="{{ route('spa.profile.edit', $customer) }}" class="text-sm px-3 py-1.5 rounded-md border bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100">Spa profile &amp; consultations</a>
+                                    @endif
+                                    @if (current_tenant()->hasModuleEnabled('tattoo') && auth()->user()->can('tattoo-consultations.view'))
+                                        <a href="{{ route('tattoo.profile.edit', $customer) }}" class="text-sm px-3 py-1.5 rounded-md border bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100">Tattoo profile &amp; consultations</a>
                                     @endif
                                 </div>
                             </div>
