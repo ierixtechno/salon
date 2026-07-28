@@ -29,6 +29,7 @@ use App\Http\Controllers\Core\ProductCategoryController;
 use App\Http\Controllers\Core\ProductController;
 use App\Http\Controllers\Core\PurchaseOrderController;
 use App\Http\Controllers\Core\PurchaseReturnController;
+use App\Http\Controllers\Core\ReportController;
 use App\Http\Controllers\Core\ResourceController;
 use App\Http\Controllers\Core\ServiceCategoryController;
 use App\Http\Controllers\Core\ServiceController;
@@ -220,3 +221,11 @@ Route::put('marketing/automations/{type}', [CampaignAutomationController::class,
 
 Route::get('my-notifications', [NotificationController::class, 'index'])->name('notifications.my');
 Route::post('my-notifications/{notification_log}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+
+// Phase 12: Reports.
+Route::middleware('can:reports.view')->group(function () {
+    Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/appointments', [ReportController::class, 'appointments'])->name('reports.appointments');
+    Route::get('reports/module-performance', [ReportController::class, 'modulePerformance'])->name('reports.module-performance');
+    Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
+});

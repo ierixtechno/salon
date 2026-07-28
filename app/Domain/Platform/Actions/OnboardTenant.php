@@ -139,6 +139,7 @@ class OnboardTenant
                 'marketing.templates.manage', 'marketing.segments.manage',
                 'marketing.campaigns.view', 'marketing.campaigns.create', 'marketing.campaigns.send',
                 'marketing.automations.manage',
+                'reports.view',
             ])
         );
 

@@ -140,6 +140,9 @@ class PermissionSeeder extends Seeder
             'marketing.campaigns.create',
             'marketing.campaigns.send',
             'marketing.automations.manage',
+
+            // Phase 12: reports
+            'reports.view',
         ];
 
         foreach ($permissions as $permission) {
