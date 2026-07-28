@@ -12,6 +12,7 @@ use App\Domain\Core\Models\ServiceVariant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The concurrency-safe core of the Appointment Engine
@@ -33,11 +34,17 @@ use Illuminate\Support\Facades\DB;
  * appointment. This is the standard "lock a proxy row, then check-then-act"
  * pattern for range conflicts on MySQL.
  *
- * Booked appointments start `confirmed`, not `pending` — every booking in
- * this phase is staff-initiated (front desk or walk-in), so there is no
- * separate "customer requests, staff confirms" step. `pending` remains a
- * valid state for the future Phase 13 self-service/online booking flow
- * (CLAUDE.md §75), which this phase does not build.
+ * Booked appointments start `confirmed` by default — staff/walk-in
+ * bookings have no separate "customer requests, staff confirms" step.
+ * Phase 13's public online-booking flow passes `initialStatus: 'pending'`
+ * instead, since an anonymous request has had far less scrutiny than a
+ * staff member typing it in; `pending -> confirmed`/`cancelled` are both
+ * valid transitions already (see Appointment::TRANSITIONS).
+ *
+ * Every appointment also gets a `public_token` (ULID) regardless of
+ * source — the unguessable, non-sequential identifier Phase 13's public
+ * view/cancel-my-booking link uses instead of the internal id
+ * (CLAUDE.md §19).
  */
 class BookAppointment
 {
@@ -55,7 +62,10 @@ class BookAppointment
         ?string $notes = null,
         ?int $createdBy = null,
         ?string $groupUuid = null,
+        string $initialStatus = 'confirmed',
     ): Appointment {
+        abort_unless(in_array($initialStatus, ['pending', 'confirmed'], true), 422, 'Invalid initial appointment status.');
+
         // Eloquent's plain `datetime` cast does NOT normalize timezones on
         // write — it stores whatever wall-clock the Carbon instance shows,
         // then re-hydrates naive DB strings assuming config('app.timezone')
@@ -73,7 +83,7 @@ class BookAppointment
         return DB::transaction(function () use (
             $branch, $customer, $service, $variant, $employee, $resource,
             $startsAt, $endsAt, $bufferMinutes, $price,
-            $source, $notes, $createdBy, $groupUuid,
+            $source, $notes, $createdBy, $groupUuid, $initialStatus,
         ) {
             // Lock proxy rows first — see class docblock.
             User::whereKey($employee->id)->lockForUpdate()->first();
@@ -107,8 +117,9 @@ class BookAppointment
                 'notes' => $notes,
                 'created_by' => $createdBy,
             ]);
-            $appointment->status = 'confirmed';
+            $appointment->status = $initialStatus;
             $appointment->price = $price;
+            $appointment->public_token = (string) Str::ulid();
             $appointment->save();
 
             return $appointment;

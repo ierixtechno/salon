@@ -39,9 +39,12 @@ use App\Policies\ServiceCategoryPolicy;
 use App\Policies\ServicePolicy;
 use App\Policies\SupplierPolicy;
 use App\Policies\WaitlistEntryPolicy;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -98,5 +101,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Package::class, PackagePolicy::class);
         Gate::policy(MembershipPlan::class, MembershipPlanPolicy::class);
         Gate::policy(GiftCard::class, GiftCardPolicy::class);
+
+        // Public booking (CLAUDE.md §75): limited per IP (a single scraper/
+        // bot) AND per tenant slug (many IPs hammering one tenant's page)
+        // independently — either limit alone is bypassable.
+        RateLimiter::for('public-booking', function (Request $request) {
+            return [
+                Limit::perMinute(20)->by('public-booking-ip:'.$request->ip()),
+                Limit::perMinute(60)->by('public-booking-tenant:'.$request->route('tenant_slug')),
+            ];
+        });
     }
 }

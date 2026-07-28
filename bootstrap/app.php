@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureTenantActive;
+use App\Http\Middleware\ResolveTenantFromSlug;
 use App\Http\Middleware\SetPermissionsTeamFromTenant;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'module' => EnsureModuleEnabled::class,
+            'resolve-tenant' => ResolveTenantFromSlug::class,
         ]);
 
         // Applied to every authenticated tenant-app route via the 'tenant'

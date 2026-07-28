@@ -25,3 +25,4 @@ Route::middleware(['auth:web', 'tenant'])->group(function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/platform.php';
+require __DIR__.'/public.php';
