@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Services</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $moduleFilter ? $moduleFilter->name.' Services' : 'Services' }}</h2>
             @can('create', App\Domain\Core\Models\Service::class)
                 <a href="{{ route('services.create') }}"
                     class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700">
@@ -26,7 +26,9 @@
                             <tr>
                                 <th class="text-left px-4 py-2 font-medium">Name</th>
                                 <th class="text-left px-4 py-2 font-medium">Category</th>
-                                <th class="text-left px-4 py-2 font-medium">Module</th>
+                                @unless ($moduleFilter)
+                                    <th class="text-left px-4 py-2 font-medium">Module</th>
+                                @endunless
                                 <th class="text-left px-4 py-2 font-medium">Duration</th>
                                 <th class="text-left px-4 py-2 font-medium">Price</th>
                                 <th class="text-left px-4 py-2 font-medium">Status</th>
@@ -41,7 +43,9 @@
                                         </a>
                                     </td>
                                     <td class="px-4 py-2 text-gray-500">{{ $service->category->name }}</td>
-                                    <td class="px-4 py-2 text-gray-500">{{ $service->module->name }}</td>
+                                    @unless ($moduleFilter)
+                                        <td class="px-4 py-2 text-gray-500">{{ $service->module->name }}</td>
+                                    @endunless
                                     <td class="px-4 py-2 text-gray-500">{{ $service->duration_minutes }} min</td>
                                     <td class="px-4 py-2 text-gray-700">{{ $service->tenant->currency }} {{ number_format($service->base_price, 2) }}</td>
                                     <td class="px-4 py-2">
@@ -52,7 +56,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-6 text-center text-gray-500">No services yet.</td>
+                                    <td colspan="{{ $moduleFilter ? 5 : 6 }}" class="px-4 py-6 text-center text-gray-500">No services yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -60,7 +64,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('service-categories.index') }}" class="inline-block mt-4 text-sm text-gray-500 hover:text-gray-700">Manage categories &rarr;</a>
+            <a href="{{ route('service-categories.index', $moduleFilter ? ['module' => $moduleFilter->code] : []) }}" class="inline-block mt-4 text-sm text-gray-500 hover:text-gray-700">Manage categories &rarr;</a>
         </div>
     </div>
 </x-app-layout>

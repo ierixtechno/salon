@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Core;
 
 use App\Domain\Core\Models\ServiceCategory;
+use App\Domain\Platform\Models\Module;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreServiceCategoryRequest;
 use App\Http\Requests\Core\UpdateServiceCategoryRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class ServiceCategoryController extends Controller
 {
@@ -16,10 +18,24 @@ class ServiceCategoryController extends Controller
         $this->authorizeResource(ServiceCategory::class, 'service_category');
     }
 
-    public function index(): View
+    /**
+     * `?module=<code>` is a display-only filter, same reasoning as
+     * ServiceController::index().
+     */
+    public function index(Request $request): View
     {
+        $moduleFilter = $request->filled('module')
+            ? Module::where('code', $request->string('module'))->first()
+            : null;
+
+        $query = ServiceCategory::with('module')->withCount('services')->orderBy('sort_order')->orderBy('name');
+        if ($moduleFilter) {
+            $query->where('module_id', $moduleFilter->id);
+        }
+
         return view('core.service-categories.index', [
-            'categories' => ServiceCategory::with('module')->withCount('services')->orderBy('sort_order')->orderBy('name')->get(),
+            'categories' => $query->get(),
+            'moduleFilter' => $moduleFilter,
         ]);
     }
 

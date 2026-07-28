@@ -57,22 +57,9 @@
         </a>
     @endcan
 
-    @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\Product::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\Supplier::class))
+    @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Product::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\Supplier::class))
         <p class="{{ $groupLabel }}">Catalog &amp; Inventory</p>
     @endif
-
-    @can('viewAny', App\Domain\Core\Models\Service::class)
-        <a href="{{ route('services.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('services.*') || request()->routeIs('service-categories.*') ? $navItemActive : $navItemInactive }}">
-            @if (request()->routeIs('services.*') || request()->routeIs('service-categories.*'))
-                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
-            @endif
-            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
-            </svg>
-            {{ __('Services') }}
-        </a>
-    @endcan
 
     @can('viewAny', App\Domain\Core\Models\Product::class)
         <a href="{{ route('products.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('products.*') || request()->routeIs('product-categories.*') || request()->routeIs('inventory.*') ? $navItemActive : $navItemInactive }}">
@@ -97,6 +84,60 @@
             {{ __('Suppliers') }}
         </a>
     @endcan
+
+    {{--
+        One section per business vertical — only shown when that module is
+        both enabled for the tenant (current_tenant()->hasModuleEnabled(),
+        CLAUDE.md §7) and the user has services.view. Each module's
+        Services link reuses the shared services.index/service-categories
+        routes with a ?module= filter (display-only, not a security
+        boundary — Service is already tenant-scoped) rather than
+        duplicating the controller per vertical.
+    --}}
+    @if (current_tenant()->hasModuleEnabled('salon') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
+        <p class="{{ $groupLabel }}">Salon</p>
+        @php $salonActive = (request()->routeIs('services.*') || request()->routeIs('service-categories.*')) && request()->query('module') === 'salon'; @endphp
+        <a href="{{ route('services.index', ['module' => 'salon']) }}" class="{{ $navItemBase }} {{ $salonActive ? $navItemActive : $navItemInactive }}">
+            @if ($salonActive)
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            </svg>
+            {{ __('Services') }}
+        </a>
+    @endif
+
+    @if (current_tenant()->hasModuleEnabled('beauty') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
+        <p class="{{ $groupLabel }}">Beauty Parlour</p>
+        @php $beautyActive = (request()->routeIs('services.*') || request()->routeIs('service-categories.*')) && request()->query('module') === 'beauty'; @endphp
+        <a href="{{ route('services.index', ['module' => 'beauty']) }}" class="{{ $navItemBase }} {{ $beautyActive ? $navItemActive : $navItemInactive }}">
+            @if ($beautyActive)
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            </svg>
+            {{ __('Services') }}
+        </a>
+    @endif
+
+    @if (current_tenant()->hasModuleEnabled('spa') && Auth::user()->can('viewAny', App\Domain\Core\Models\Service::class))
+        <p class="{{ $groupLabel }}">Spa</p>
+        @php $spaActive = (request()->routeIs('services.*') || request()->routeIs('service-categories.*')) && request()->query('module') === 'spa'; @endphp
+        <a href="{{ route('services.index', ['module' => 'spa']) }}" class="{{ $navItemBase }} {{ $spaActive ? $navItemActive : $navItemInactive }}">
+            @if ($spaActive)
+                <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+            @endif
+            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            </svg>
+            {{ __('Services') }}
+        </a>
+    @endif
 
     @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Package::class) || Auth::user()->can('gift-cards.view'))
         <p class="{{ $groupLabel }}">Loyalty &amp; Offers</p>

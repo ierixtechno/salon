@@ -11,6 +11,7 @@ use App\Domain\Core\Models\EmployeeProfile;
 use App\Domain\Core\Models\Product;
 use App\Domain\Core\Models\Service;
 use App\Domain\Core\Models\ServiceCategory;
+use App\Domain\Platform\Models\Module;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreServiceRequest;
 use App\Http\Requests\Core\UpdateServiceBranchesRequest;
@@ -20,6 +21,7 @@ use App\Http\Requests\Core\UpdateServiceStaffRequest;
 use App\Http\Requests\Core\UpdateServiceVariantsRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
@@ -28,10 +30,25 @@ class ServiceController extends Controller
         $this->authorizeResource(Service::class, 'service');
     }
 
-    public function index(): View
+    /**
+     * `?module=<code>` is a display-only filter, not an authorization
+     * boundary (Service is already tenant-scoped) — an unresolvable or
+     * disabled code just falls back to showing everything, never errors.
+     */
+    public function index(Request $request): View
     {
+        $moduleFilter = $request->filled('module')
+            ? Module::where('code', $request->string('module'))->first()
+            : null;
+
+        $query = Service::with('category', 'module')->orderBy('name');
+        if ($moduleFilter) {
+            $query->where('module_id', $moduleFilter->id);
+        }
+
         return view('core.services.index', [
-            'services' => Service::with('category', 'module')->orderBy('name')->get(),
+            'services' => $query->get(),
+            'moduleFilter' => $moduleFilter,
         ]);
     }
 
