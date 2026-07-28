@@ -1,10 +1,10 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $customer->name }}</h2>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <div class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}
@@ -49,7 +49,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <x-input-label for="phone" value="Phone" />
-                                <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone', $customer->phone)" />
+                                <x-phone-input id="phone" class="block w-full" :value="old('phone', $customer->phone)" />
+                                <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="email" value="Email" />
@@ -64,7 +65,13 @@
                             </div>
                             <div>
                                 <x-input-label for="gender" value="Gender (optional)" />
-                                <x-text-input id="gender" class="block mt-1 w-full" type="text" name="gender" :value="old('gender', $customer->gender)" />
+                                <select id="gender" name="gender" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Select&hellip;</option>
+                                    @foreach (\App\Domain\Core\Models\Customer::GENDERS as $gender)
+                                        <option value="{{ $gender }}" @selected(old('gender', $customer->gender) === $gender)>{{ ucfirst($gender) }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                             </div>
                         </div>
 

@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Cash Register History</h2>
@@ -16,7 +16,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        <div class="px-4 sm:px-6 lg:px-8 space-y-4">
             <a href="{{ route('cash-register.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to register</a>
 
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">

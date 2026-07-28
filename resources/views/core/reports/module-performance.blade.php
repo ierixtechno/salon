@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">Module Performance Report</x-slot>
 
     <div class="py-8">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             @include('core.reports._tabs')
             @include('core.reports._filters')
 

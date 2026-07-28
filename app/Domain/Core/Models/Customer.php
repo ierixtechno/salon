@@ -12,6 +12,8 @@ class Customer extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    public const GENDERS = ['male', 'female', 'other'];
+
     protected static function newFactory(): CustomerFactory
     {
         return CustomerFactory::new();

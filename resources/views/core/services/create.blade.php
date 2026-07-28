@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">New Service</x-slot>
 
     <div class="py-8">
-        <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm rounded-lg p-6">
                 @if ($categories->isEmpty())
                     <p class="text-sm text-gray-500">

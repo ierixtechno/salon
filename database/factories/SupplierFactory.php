@@ -18,7 +18,7 @@ class SupplierFactory extends Factory
         return [
             'name' => fake()->unique()->company(),
             'contact_person' => fake()->name(),
-            'phone' => fake()->numerify('##########'),
+            'phone' => fake()->numerify('9########'),
             'email' => fake()->unique()->safeEmail(),
             'address' => fake()->address(),
             'is_active' => true,

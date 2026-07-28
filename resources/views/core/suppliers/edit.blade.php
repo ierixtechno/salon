@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">{{ $supplier->name }}</x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <div class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}
@@ -29,7 +29,8 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="phone" value="Phone" />
-                            <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone', $supplier->phone)" />
+                            <x-phone-input id="phone" class="block w-full" :value="old('phone', $supplier->phone)" />
+                            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="email" value="Email" />

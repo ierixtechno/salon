@@ -1,10 +1,10 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">Organization Settings</h2>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <div class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}
@@ -33,8 +33,8 @@
                         </div>
                         <div>
                             <x-input-label for="contact_phone" value="Contact phone" />
-                            <x-text-input id="contact_phone" class="block mt-1 w-full" type="text" name="contact_phone"
-                                :value="old('contact_phone', $profile->contact_phone)" />
+                            <x-phone-input id="contact_phone" name="contact_phone" class="block w-full" :value="old('contact_phone', $profile->contact_phone)" />
+                            <x-input-error :messages="$errors->get('contact_phone')" class="mt-2" />
                         </div>
                     </div>
 

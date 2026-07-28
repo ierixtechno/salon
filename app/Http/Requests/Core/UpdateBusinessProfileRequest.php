@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Core;
 
+use App\Rules\IndianMobileNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateBusinessProfileRequest extends FormRequest
@@ -17,7 +18,7 @@ class UpdateBusinessProfileRequest extends FormRequest
             'display_name' => ['required', 'string', 'max:255'],
             'legal_name' => ['nullable', 'string', 'max:255'],
             'contact_email' => ['nullable', 'string', 'email', 'max:255'],
-            'contact_phone' => ['nullable', 'string', 'max:30'],
+            'contact_phone' => ['nullable', new IndianMobileNumber],
             'address' => ['nullable', 'string', 'max:2000'],
             'cancellation_policy' => ['nullable', 'string', 'max:5000'],
             'loyalty_points_per_100' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],

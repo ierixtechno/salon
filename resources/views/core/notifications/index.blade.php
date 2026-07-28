@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">My Notifications</x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        <div class="px-4 sm:px-6 lg:px-8 space-y-4">
             @forelse ($notifications as $notification)
                 <div class="bg-white shadow-sm rounded-lg p-4 flex items-start justify-between gap-4 {{ $notification->read_at ? 'opacity-60' : '' }}">
                     <div>

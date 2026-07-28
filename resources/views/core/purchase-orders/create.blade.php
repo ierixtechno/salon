@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">New Purchase Order</x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm rounded-lg p-6">
                 @if ($suppliers->isEmpty() || $products->isEmpty())
                     <p class="text-sm text-gray-500">

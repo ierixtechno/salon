@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">Transfer Stock</x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm rounded-lg p-6">
                 @if ($branches->count() < 2)
                     <p class="text-sm text-gray-500">You need at least two branches to transfer stock between them.</p>

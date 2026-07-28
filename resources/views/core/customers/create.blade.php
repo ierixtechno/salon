@@ -1,10 +1,10 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">New Customer</h2>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <form method="POST" action="{{ route('customers.store') }}" class="space-y-4">
                     @csrf
@@ -18,7 +18,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="phone" value="Phone" />
-                            <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone')" />
+                            <x-phone-input id="phone" class="block w-full" :value="old('phone')" />
                             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                         </div>
                         <div>
@@ -36,7 +36,13 @@
                         </div>
                         <div>
                             <x-input-label for="gender" value="Gender (optional)" />
-                            <x-text-input id="gender" class="block mt-1 w-full" type="text" name="gender" :value="old('gender')" />
+                            <select id="gender" name="gender" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">Select&hellip;</option>
+                                @foreach (\App\Domain\Core\Models\Customer::GENDERS as $gender)
+                                    <option value="{{ $gender }}" @selected(old('gender') === $gender)>{{ ucfirst($gender) }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                         </div>
                     </div>
 

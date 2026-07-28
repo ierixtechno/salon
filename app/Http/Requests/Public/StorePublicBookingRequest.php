@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Rules\IndianMobileNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,7 +30,7 @@ class StorePublicBookingRequest extends FormRequest
             'service_variant_id' => ['nullable', 'integer', Rule::exists('service_variants', 'id')->where('tenant_id', $tenantId)->where('is_active', true)],
             'starts_at' => ['required', 'date', 'after:now', 'before:'.now()->addDays(30)->toIso8601String()],
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]{7,20}$/'],
+            'phone' => ['required', new IndianMobileNumber],
             'email' => ['nullable', 'email', 'max:255'],
             'marketing_consent' => ['nullable', 'boolean'],
             'website' => ['nullable', 'string'],

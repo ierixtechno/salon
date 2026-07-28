@@ -1,10 +1,10 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">New Branch</h2>
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <form method="POST" action="{{ route('branches.store') }}" class="space-y-4">
                     @csrf
@@ -23,12 +23,6 @@
                     </div>
 
                     <div>
-                        <x-input-label for="timezone" value="Timezone (optional — inherits organization default)" />
-                        <x-text-input id="timezone" class="block mt-1 w-full" type="text" name="timezone" :value="old('timezone')" placeholder="e.g. Asia/Kolkata" />
-                        <x-input-error :messages="$errors->get('timezone')" class="mt-2" />
-                    </div>
-
-                    <div>
                         <x-input-label for="address" value="Address" />
                         <textarea id="address" name="address" rows="2"
                             class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('address') }}</textarea>
@@ -38,7 +32,12 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="state" value="State (for GST)" />
-                            <x-text-input id="state" class="block mt-1 w-full" type="text" name="state" :value="old('state')" placeholder="e.g. Karnataka" />
+                            <select id="state" name="state" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">Select&hellip;</option>
+                                @foreach (config('india.states') as $state)
+                                    <option value="{{ $state }}" @selected(old('state') === $state)>{{ $state }}</option>
+                                @endforeach
+                            </select>
                             <x-input-error :messages="$errors->get('state')" class="mt-2" />
                         </div>
                         <div>

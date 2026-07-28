@@ -131,7 +131,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="phone" value="Phone" />
-                            <x-text-input id="phone" class="block mt-1 w-full" type="tel" name="phone" :value="old('phone')" required />
+                            <x-phone-input id="phone" class="block w-full" :value="old('phone')" required />
                             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                         </div>
                         <div>

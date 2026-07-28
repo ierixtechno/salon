@@ -1,8 +1,8 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">New Hair Consultation — {{ $customer->name }}</x-slot>
 
     <div class="py-8">
-        <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm rounded-lg p-6">
                 @if ($branches->isEmpty())
                     <p class="text-sm text-gray-500">No branch has the Salon module enabled yet.</p>

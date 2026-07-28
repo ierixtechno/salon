@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Core;
 
+use App\Domain\Core\Models\Customer;
+use App\Rules\IndianMobileNumber;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCustomerRequest extends FormRequest
 {
@@ -16,9 +19,9 @@ class StoreCustomerRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'string', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['nullable', new IndianMobileNumber],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
-            'gender' => ['nullable', 'string', 'max:30'],
+            'gender' => ['nullable', Rule::in(Customer::GENDERS)],
             'tags' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:100'],
         ];
