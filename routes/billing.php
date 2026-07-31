@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 | method — see that controller's class docblock.
 */
 Route::middleware('can:tenant.billing.manage')->prefix('billing')->name('billing.')->group(function () {
+    Route::get('plans', [TenantBillingController::class, 'plans'])->name('plans.index');
+    Route::post('plans/{plan}/upgrade', [TenantBillingController::class, 'upgrade'])->name('plans.upgrade');
+
     Route::get('quotations', [TenantBillingController::class, 'quotations'])->name('quotations.index');
     Route::get('quotations/{quotation}', [TenantBillingController::class, 'showQuotation'])->name('quotations.show');
     Route::post('quotations/{quotation}/checkout', [TenantBillingController::class, 'createCheckout'])->name('quotations.checkout');

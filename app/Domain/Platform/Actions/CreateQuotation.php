@@ -26,10 +26,11 @@ class CreateQuotation
         ?PlatformAdmin $createdBy,
         ?string $amountOverride = null,
         ?string $notes = null,
+        bool $isUpgrade = false,
     ): Quotation {
         abort_unless($plan->is_active, 422, 'Cannot quote an inactive plan.');
 
-        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes) {
+        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade) {
             $quotationNumber = $this->nextPlatformNumber('quotation');
 
             $quotation = Quotation::create([
@@ -40,6 +41,7 @@ class CreateQuotation
                 'amount' => $amountOverride ?? $plan->price,
                 'notes' => $notes,
                 'status' => 'pending',
+                'is_upgrade' => $isUpgrade,
             ]);
 
             $this->notifyTenant($tenant, "A new quotation ({$quotationNumber}) is awaiting your review.", $quotation->id);

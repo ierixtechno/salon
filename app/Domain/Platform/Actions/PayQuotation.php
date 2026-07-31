@@ -6,8 +6,10 @@ use App\Domain\Core\Actions\SendNotification;
 use App\Domain\Platform\Actions\Concerns\GeneratesPlatformSequenceNumbers;
 use App\Domain\Platform\Models\PlatformInvoice;
 use App\Domain\Platform\Models\Quotation;
+use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantSubscription;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -59,15 +61,14 @@ class PayQuotation
                 $quotation->tenant->update(['status' => 'active']);
             }
 
+            $endsAt = $this->resolveEndsAt($quotation, $plan);
+
             TenantSubscription::updateOrCreate(
                 ['tenant_id' => $quotation->tenant_id, 'subscription_plan_id' => $plan->id],
                 [
                     'status' => 'active',
                     'starts_at' => now(),
-                    'ends_at' => match ($plan->billing_interval) {
-                        'yearly' => now()->addYear(),
-                        default => now()->addMonth(),
-                    },
+                    'ends_at' => $endsAt,
                     'trial_ends_at' => null,
                 ],
             );
@@ -84,6 +85,34 @@ class PayQuotation
         Tenant::forgetSubscriptionCache($quotation->tenant_id);
 
         return $invoice;
+    }
+
+    /**
+     * A normal payment starts a fresh cycle from today. A prorated upgrade
+     * (RequestPlanUpgrade) does the opposite on purpose — the tenant is
+     * finishing out their *existing* cycle on the new plan, so the renewal
+     * date must not move. The old plan's TenantSubscription row is marked
+     * 'cancelled' (superseded mid-cycle, not naturally expired) so
+     * currentSubscription() cleanly picks up the new one.
+     */
+    private function resolveEndsAt(Quotation $quotation, SubscriptionPlan $plan): Carbon
+    {
+        $freshCycleEnd = fn () => match ($plan->billing_interval) {
+            'yearly' => now()->addYear(),
+            default => now()->addMonth(),
+        };
+
+        if (! $quotation->is_upgrade) {
+            return $freshCycleEnd();
+        }
+
+        $previousSubscription = $quotation->tenant->currentSubscription();
+
+        if ($previousSubscription && $previousSubscription->subscription_plan_id !== $plan->id) {
+            $previousSubscription->update(['status' => 'cancelled']);
+        }
+
+        return $previousSubscription?->ends_at ?? $freshCycleEnd();
     }
 
     private function notifyTenant(Quotation $quotation, string $invoiceNumber, int $invoiceId): void

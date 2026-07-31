@@ -8,51 +8,72 @@
         </div>
     </x-slot>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-100">
-                    <tr>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Plan</th>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Price</th>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Billing</th>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Modules</th>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Features</th>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Subscribed tenants</th>
-                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Status</th>
-                        <th class="px-5 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @forelse ($plans as $plan)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-5 py-3">
-                                <a href="{{ route('platform.subscription-plans.edit', $plan) }}" class="font-medium text-gray-900 hover:text-indigo-600">
-                                    {{ $plan->name }}
-                                </a>
-                                <div class="text-xs text-gray-400">{{ $plan->code }}</div>
-                            </td>
-                            <td class="px-5 py-3 text-gray-600">{{ $plan->price == 0 ? 'Free' : '₹'.number_format($plan->price, 2) }}</td>
-                            <td class="px-5 py-3 text-gray-600 capitalize">{{ $plan->billing_interval }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $plan->modules_count }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $plan->features_count }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $plan->tenant_subscriptions_count }}</td>
-                            <td class="px-5 py-3">
-                                <x-platform.status-badge :status="$plan->is_active ? 'active' : 'cancelled'" />
-                            </td>
-                            <td class="px-5 py-3 text-right">
-                                <a href="{{ route('platform.subscription-plans.edit', $plan) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-                                    Edit
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-5 py-10 text-center text-gray-400">No subscription plans yet.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    @if ($plans->isEmpty())
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-10 text-center text-gray-400">
+            No subscription plans yet.
         </div>
-    </div>
+    @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach ($plans as $plan)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ $plan->name }}</h3>
+                            <p class="text-xs text-gray-400">{{ $plan->code }}</p>
+                        </div>
+                        <x-platform.status-badge :status="$plan->is_active ? 'active' : 'cancelled'" />
+                    </div>
+
+                    <div class="mb-5">
+                        @if ($plan->price == 0)
+                            <span class="text-3xl font-bold text-gray-900">Free</span>
+                        @else
+                            <span class="text-3xl font-bold text-gray-900">₹{{ number_format($plan->price, 2) }}</span>
+                            <span class="text-sm text-gray-500">/ {{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }}</span>
+                        @endif
+                    </div>
+
+                    <div class="mb-5">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Modules included</p>
+                        @if ($plan->modules->isEmpty())
+                            <p class="text-sm text-gray-400">None</p>
+                        @else
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach ($plan->modules as $module)
+                                    <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                                        {{ $module->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mb-6 flex-1">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Features included</p>
+                        @if ($plan->features->isEmpty())
+                            <p class="text-sm text-gray-400">None</p>
+                        @else
+                            <ul class="space-y-1.5">
+                                @foreach ($plan->features as $feature)
+                                    <li class="flex items-start gap-2 text-sm text-gray-700">
+                                        <svg class="h-4 w-4 shrink-0 text-green-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                        {{ $feature->name }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <span class="text-xs text-gray-400">{{ $plan->tenant_subscriptions_count }} subscribed {{ Str::plural('tenant', $plan->tenant_subscriptions_count) }}</span>
+                        <a href="{{ route('platform.subscription-plans.edit', $plan) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                            Edit →
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 </x-platform-layout>

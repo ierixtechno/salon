@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Core;
 
 use App\Domain\Platform\Actions\PayQuotation;
+use App\Domain\Platform\Actions\RequestPlanUpgrade;
 use App\Domain\Platform\Contracts\PaymentGatewayProvider;
 use App\Domain\Platform\Models\PlatformInvoice;
 use App\Domain\Platform\Models\Quotation;
+use App\Domain\Platform\Models\SubscriptionPlan;
+use App\Domain\Platform\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\ConfirmQuotationPaymentRequest;
 use Illuminate\Contracts\View\View;
@@ -22,6 +25,29 @@ use Illuminate\Support\Facades\Auth;
  */
 class TenantBillingController extends Controller
 {
+    public function plans(): View
+    {
+        $tenant = Tenant::findOrFail(Auth::user()->tenant_id);
+
+        return view('core.billing.plans.index', [
+            'plans' => SubscriptionPlan::where('is_active', true)
+                ->with(['features', 'modules'])
+                ->orderBy('price')
+                ->get(),
+            'currentSubscription' => $tenant->currentSubscription(),
+        ]);
+    }
+
+    public function upgrade(SubscriptionPlan $plan, RequestPlanUpgrade $action): RedirectResponse
+    {
+        $tenant = Tenant::findOrFail(Auth::user()->tenant_id);
+
+        $quotation = $action->execute($tenant, $plan);
+
+        return redirect()->route('billing.quotations.show', $quotation)
+            ->with('status', 'Upgrade quotation created — pay to complete the switch.');
+    }
+
     public function quotations(): View
     {
         return view('core.billing.quotations.index', [

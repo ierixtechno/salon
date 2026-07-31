@@ -18,8 +18,7 @@ class SubscriptionPlanController extends Controller
     public function index(): View
     {
         return view('platform.subscription-plans.index', [
-            'plans' => SubscriptionPlan::withCount('features')
-                ->withCount('modules')
+            'plans' => SubscriptionPlan::with(['features', 'modules'])
                 ->withCount('tenantSubscriptions')
                 ->orderBy('price')
                 ->get(),

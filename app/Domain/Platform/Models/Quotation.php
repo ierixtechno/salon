@@ -19,7 +19,7 @@ class Quotation extends Model
 
     protected $fillable = [
         'tenant_id', 'subscription_plan_id', 'platform_admin_id',
-        'quotation_number', 'amount', 'notes', 'status',
+        'quotation_number', 'amount', 'notes', 'status', 'is_upgrade',
         'razorpay_order_id', 'paid_at', 'cancelled_at',
     ];
 
@@ -27,6 +27,7 @@ class Quotation extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'is_upgrade' => 'boolean',
             'paid_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
