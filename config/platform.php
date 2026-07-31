@@ -53,19 +53,25 @@ return [
     | Applies to StyloBiz billing its own tenants (Quotation/PlatformInvoice)
     | — a different, newer path than the tenant-level POS invoicing GST
     | (Service::tax_rate_percent, CLAUDE.md §21) already built in Phase 6.
-    | CGST+SGST only, split evenly, mirroring that same Phase 6 precedent —
-    | IGST is deliberately not implemented anywhere in this codebase yet
-    | (D-003 in docs/decisions/README.md), since there's no reliable way to
-    | compare a tenant's state against the platform's registered state
-    | (Tenant has no state field, and a tenant can have branches in several).
     | 18% is the standard GST rate for software/SaaS services in India
     | (SAC 998313). gstin stays blank until Super Admin has a real one —
     | same "fill in later" precedent as the Razorpay keys.
+    |
+    | 'state' is the platform's own registered state (Tenant::billing_state
+    | is compared against this — see CreateQuotation) to determine
+    | CGST+SGST (same state as the platform) vs IGST (different state).
+    | Unlike Phase 6's tenant-to-customer invoicing — which still only does
+    | CGST+SGST, IGST deliberately deferred there per D-003 in
+    | docs/decisions/README.md, since a tenant's own customers' state isn't
+    | tracked — Platform Billing DOES need both, because StyloBiz's tenants
+    | are spread across India while the platform itself has one fixed home
+    | state.
     |
     */
 
     'gst_rate_percent' => (float) env('PLATFORM_GST_RATE_PERCENT', 18),
     'gstin' => env('PLATFORM_GSTIN'),
     'gst_sac_code' => env('PLATFORM_GST_SAC_CODE', '998313'),
+    'state' => env('PLATFORM_STATE', 'Haryana'),
 
 ];

@@ -50,6 +50,7 @@ class PayQuotation
                 'subtotal' => $quotation->amount,
                 'cgst_amount' => $quotation->cgst_amount,
                 'sgst_amount' => $quotation->sgst_amount,
+                'igst_amount' => $quotation->igst_amount,
                 'gst_rate_percent' => $quotation->gst_rate_percent,
                 'payment_method' => $paymentMethod,
                 'payment_reference' => $paymentReference,

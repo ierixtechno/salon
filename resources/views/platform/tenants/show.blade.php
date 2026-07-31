@@ -36,6 +36,35 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="font-semibold text-gray-900 mb-4">Billing details (for GST)</h2>
+            <form method="POST" action="{{ route('platform.tenants.billing-state', $tenant) }}" class="space-y-3">
+                @csrf
+                @method('PATCH')
+                <div class="flex flex-wrap items-center gap-3">
+                    <select name="billing_state" class="border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Select state&hellip;</option>
+                        @foreach (config('india.states') as $state)
+                            <option value="{{ $state }}" @selected($tenant->billing_state === $state)>{{ $state }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="gstin" value="{{ old('gstin', $tenant->gstin) }}" maxlength="15" placeholder="Tenant GSTIN (optional)"
+                        class="uppercase border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <button type="submit" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition">
+                        Update
+                    </button>
+                </div>
+                <x-input-error :messages="$errors->get('billing_state')" />
+                <x-input-error :messages="$errors->get('gstin')" />
+            </form>
+            <p class="text-xs text-gray-500 mt-3">
+                State is compared against the platform's own state ({{ config('platform.state') }}) to determine
+                CGST+SGST (same state) vs IGST (different state) — must be set before a quotation can be created for
+                this tenant. GSTIN, if provided, is shown as the recipient GSTIN on this tenant's invoices so they can
+                claim GST.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 class="font-semibold text-gray-900 mb-4">Modules</h2>
             <form method="POST" action="{{ route('platform.tenants.modules', $tenant) }}">
                 @csrf

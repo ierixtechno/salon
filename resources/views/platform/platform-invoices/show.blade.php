@@ -5,6 +5,9 @@
         <div>
             <h3 class="font-semibold text-gray-900">{{ $invoice->tenant->name }}</h3>
             <p class="text-sm text-gray-500">{{ $invoice->plan->name }}</p>
+            @if ($invoice->tenant->gstin)
+                <p class="text-xs text-gray-400 mt-0.5">Recipient GSTIN: {{ $invoice->tenant->gstin }}</p>
+            @endif
         </div>
 
         <div class="grid grid-cols-2 gap-4 text-sm">
@@ -24,8 +27,12 @@
 
         <dl class="text-sm text-gray-600 pt-4 border-t border-gray-100 space-y-1">
             <div class="flex justify-between"><dt>Subtotal</dt><dd>₹{{ number_format($invoice->subtotal, 2) }}</dd></div>
-            <div class="flex justify-between"><dt>CGST ({{ number_format($invoice->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($invoice->cgst_amount, 2) }}</dd></div>
-            <div class="flex justify-between"><dt>SGST ({{ number_format($invoice->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($invoice->sgst_amount, 2) }}</dd></div>
+            @if ($invoice->igst_amount > 0)
+                <div class="flex justify-between"><dt>IGST ({{ number_format($invoice->gst_rate_percent, 2) }}%)</dt><dd>₹{{ number_format($invoice->igst_amount, 2) }}</dd></div>
+            @else
+                <div class="flex justify-between"><dt>CGST ({{ number_format($invoice->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($invoice->cgst_amount, 2) }}</dd></div>
+                <div class="flex justify-between"><dt>SGST ({{ number_format($invoice->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($invoice->sgst_amount, 2) }}</dd></div>
+            @endif
             <div class="flex justify-between font-semibold text-gray-900 text-base"><dt>Total paid</dt><dd>₹{{ number_format($invoice->amount, 2) }}</dd></div>
         </dl>
 

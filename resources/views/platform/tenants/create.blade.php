@@ -26,6 +26,26 @@
                 <x-input-error :messages="$errors->get('modules')" class="mt-2" />
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <x-input-label for="billing_state" value="Billing state (for GST, optional)" />
+                    <select id="billing_state" name="billing_state" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                        <option value="">Select&hellip;</option>
+                        @foreach (config('india.states') as $state)
+                            <option value="{{ $state }}" @selected(old('billing_state') === $state)>{{ $state }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Determines CGST+SGST vs IGST. Can be set later.</p>
+                    <x-input-error :messages="$errors->get('billing_state')" class="mt-2" />
+                </div>
+                <div>
+                    <x-input-label for="gstin" value="Tenant GSTIN (optional)" />
+                    <x-text-input id="gstin" class="block mt-1 w-full uppercase" type="text" name="gstin" :value="old('gstin')" maxlength="15" placeholder="e.g. 06ABCDE1234F1Z5" />
+                    <p class="text-xs text-gray-500 mt-1">Shown on this tenant's invoices as the recipient GSTIN, so they can claim GST.</p>
+                    <x-input-error :messages="$errors->get('gstin')" class="mt-2" />
+                </div>
+            </div>
+
             <div class="mt-6 pt-5 border-t border-gray-100">
                 <div>
                     <x-input-label for="owner_name" value="Owner name" />

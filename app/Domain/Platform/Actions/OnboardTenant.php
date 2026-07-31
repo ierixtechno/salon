@@ -39,6 +39,8 @@ class OnboardTenant
                 'status' => 'pending_payment',
                 'timezone' => $data['timezone'] ?? config('platform.default_timezone'),
                 'currency' => strtoupper($data['currency'] ?? config('platform.default_currency')),
+                'billing_state' => $data['billing_state'] ?? null,
+                'gstin' => $data['gstin'] ?? null,
             ]);
 
             // Modules picked at signup are informational only now — they're

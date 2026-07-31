@@ -62,7 +62,7 @@ class TenantBillingController extends Controller
     {
         abort_unless($quotation->tenant_id === Auth::user()->tenant_id, 404);
 
-        $quotation->load('plan.modules');
+        $quotation->load('plan.modules', 'tenant');
 
         return view('core.billing.quotations.show', ['quotation' => $quotation]);
     }
@@ -121,7 +121,7 @@ class TenantBillingController extends Controller
     {
         abort_unless($invoice->tenant_id === Auth::user()->tenant_id, 404);
 
-        $invoice->load('plan');
+        $invoice->load('plan', 'tenant');
 
         return view('core.billing.invoices.show', ['invoice' => $invoice]);
     }

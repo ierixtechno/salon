@@ -96,6 +96,10 @@ function onboard(array $overrides = []): User
         'owner_name' => 'Owner',
         'owner_email' => fake()->unique()->safeEmail(),
         'owner_password' => 'password123',
+        // Same state as the platform by default, so existing tests keep
+        // getting CGST+SGST (not IGST) unless they explicitly override
+        // this to exercise the inter-state path — see CreateQuotation.
+        'billing_state' => config('platform.state'),
     ], $overrides));
 
     if ($activated) {

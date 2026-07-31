@@ -16,7 +16,7 @@ class Tenant extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'status', 'timezone', 'currency', 'trial_ends_at', 'suspended_at',
+        'name', 'slug', 'status', 'timezone', 'currency', 'billing_state', 'gstin', 'trial_ends_at', 'suspended_at',
     ];
 
     // Laravel's factory-name convention assumes App\Models\X; models under

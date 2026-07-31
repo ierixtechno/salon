@@ -6,6 +6,7 @@ use App\Domain\Platform\Models\PlatformAdmin;
 use App\Domain\Platform\Models\PlatformInvoice;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\SubscriptionPlan;
+use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantModule;
 use App\Domain\Platform\Models\TenantSubscription;
 
@@ -103,6 +104,65 @@ test('a created quotation has a correct GST breakdown (CGST+SGST, snapshotted ra
         (float) $quotation->amount + $quotation->cgst_amount + $quotation->sgst_amount,
         2
     ));
+});
+
+test('a quotation for a tenant in a different state than the platform is charged IGST instead of CGST+SGST', function () {
+    config(['platform.gst_rate_percent' => 18, 'platform.state' => 'Haryana']);
+
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard(['modules' => ['salon'], 'billing_state' => 'Maharashtra']);
+    $plan = growthPlanWithModules(); // price 999
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ])->assertRedirect();
+
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    expect((float) $quotation->cgst_amount)->toBe(0.0);
+    expect((float) $quotation->sgst_amount)->toBe(0.0);
+    // Hand-computed: 999 base at the full 18% as a single IGST line.
+    expect((float) $quotation->igst_amount)->toBe(179.82);
+    expect((float) $quotation->total_amount)->toBe(1178.82);
+});
+
+test('creating a quotation for a tenant with no billing state set is rejected', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard(['billing_state' => null]);
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ])->assertStatus(422);
+
+    expect(Quotation::where('tenant_id', $owner->tenant_id)->exists())->toBeFalse();
+});
+
+test('a super admin can set a tenant\'s billing state and GSTIN from the tenant detail page', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard(['billing_state' => null]);
+
+    $this->actingAs($admin, 'platform')
+        ->patch("/platform/tenants/{$owner->tenant_id}/billing-state", [
+            'billing_state' => 'Punjab',
+            'gstin' => '03ABCDE1234F1Z5',
+        ])
+        ->assertRedirect();
+
+    $tenant = Tenant::findOrFail($owner->tenant_id);
+    expect($tenant->billing_state)->toBe('Punjab');
+    expect($tenant->gstin)->toBe('03ABCDE1234F1Z5');
+});
+
+test('a super admin cannot save a malformed GSTIN for a tenant', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+
+    $this->actingAs($admin, 'platform')
+        ->patch("/platform/tenants/{$owner->tenant_id}/billing-state", ['gstin' => 'not-a-gstin'])
+        ->assertSessionHasErrors('gstin');
 });
 
 test('a tenant admin sees a quotation created for them', function () {

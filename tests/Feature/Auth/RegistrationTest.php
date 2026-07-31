@@ -20,6 +20,8 @@ test('signing up creates a tenant and an owner, pending payment (no free trial)'
         'owner_email' => 'alice@glow.test',
         'owner_password' => 'password123',
         'owner_password_confirmation' => 'password123',
+        'billing_state' => 'Haryana',
+        'gstin' => '06ABCDE1234F1Z5',
     ]);
 
     $this->assertAuthenticated();
@@ -34,6 +36,10 @@ test('signing up creates a tenant and an owner, pending payment (no free trial)'
     // Admin — see OnboardTenant), even though the account can't use them
     // until it's paid.
     expect($owner->tenant->hasModuleEnabled('salon'))->toBeTrue();
+    // Captured so CreateQuotation can bill this tenant correctly, and so
+    // their GSTIN appears as the recipient on their invoices.
+    expect($owner->tenant->billing_state)->toBe('Haryana');
+    expect($owner->tenant->gstin)->toBe('06ABCDE1234F1Z5');
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($owner->tenant_id);
     expect($owner->fresh()->hasRole('Owner'))->toBeTrue();
@@ -53,8 +59,58 @@ test('onboarding requires at least one module', function () {
         'owner_email' => 'alice@glow.test',
         'owner_password' => 'password123',
         'owner_password_confirmation' => 'password123',
+        'billing_state' => 'Haryana',
     ]);
 
     $response->assertSessionHasErrors('modules');
     $this->assertGuest();
+});
+
+test('onboarding requires a billing state', function () {
+    $response = $this->post('/register', [
+        'business_name' => 'Glow Salon',
+        'modules' => ['salon'],
+        'owner_name' => 'Alice Owner',
+        'owner_email' => 'alice@glow.test',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+    ]);
+
+    $response->assertSessionHasErrors('billing_state');
+    $this->assertGuest();
+});
+
+test('onboarding rejects a malformed GSTIN', function () {
+    $response = $this->post('/register', [
+        'business_name' => 'Glow Salon',
+        'modules' => ['salon'],
+        'owner_name' => 'Alice Owner',
+        'owner_email' => 'alice@glow.test',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+        'billing_state' => 'Haryana',
+        'gstin' => 'not-a-gstin',
+    ]);
+
+    $response->assertSessionHasErrors('gstin');
+    $this->assertGuest();
+});
+
+test('onboarding does not require a GSTIN', function () {
+    $response = $this->post('/register', [
+        'business_name' => 'Glow Salon',
+        'modules' => ['salon'],
+        'owner_name' => 'Alice Owner',
+        'owner_email' => 'alice@glow.test',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+        'billing_state' => 'Haryana',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('dashboard', absolute: false));
+
+    $owner = User::withoutGlobalScope(TenantScope::class)
+        ->where('email', 'alice@glow.test')->firstOrFail();
+    expect($owner->tenant->gstin)->toBeNull();
 });

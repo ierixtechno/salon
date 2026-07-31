@@ -13,6 +13,25 @@
                 <x-text-input id="business_name" class="block mt-1 w-full" type="text" name="business_name" :value="old('business_name')" required autofocus />
                 <x-input-error :messages="$errors->get('business_name')" class="mt-2" />
             </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <x-input-label for="billing_state" value="State (for GST)" />
+                    <select id="billing_state" name="billing_state" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required>
+                        <option value="">Select&hellip;</option>
+                        @foreach (config('india.states') as $state)
+                            <option value="{{ $state }}" @selected(old('billing_state') === $state)>{{ $state }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('billing_state')" class="mt-2" />
+                </div>
+                <div>
+                    <x-input-label for="gstin" value="GSTIN (optional)" />
+                    <x-text-input id="gstin" class="block mt-1 w-full uppercase" type="text" name="gstin" :value="old('gstin')" maxlength="15" placeholder="e.g. 06ABCDE1234F1Z5" />
+                    <p class="text-xs text-gray-500 mt-1">If you're GST-registered, we'll show this on your invoices so you can claim GST.</p>
+                    <x-input-error :messages="$errors->get('gstin')" class="mt-2" />
+                </div>
+            </div>
         </fieldset>
 
         <fieldset class="mb-6">

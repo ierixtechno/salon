@@ -14,7 +14,7 @@ class PlatformInvoice extends Model
 {
     protected $fillable = [
         'tenant_id', 'quotation_id', 'subscription_plan_id',
-        'invoice_number', 'amount', 'subtotal', 'cgst_amount', 'sgst_amount', 'gst_rate_percent',
+        'invoice_number', 'amount', 'subtotal', 'cgst_amount', 'sgst_amount', 'igst_amount', 'gst_rate_percent',
         'payment_method', 'payment_reference', 'paid_at',
     ];
 
@@ -25,6 +25,7 @@ class PlatformInvoice extends Model
             'subtotal' => 'decimal:2',
             'cgst_amount' => 'decimal:2',
             'sgst_amount' => 'decimal:2',
+            'igst_amount' => 'decimal:2',
             'gst_rate_percent' => 'decimal:2',
             'paid_at' => 'datetime',
         ];

@@ -9,6 +9,7 @@ use App\Domain\Platform\Models\PlatformAuditLog;
 use App\Domain\Platform\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Platform\CreateTenantRequest;
+use App\Http\Requests\Platform\UpdateTenantBillingStateRequest;
 use App\Http\Requests\Platform\UpdateTenantModulesRequest;
 use App\Http\Requests\Platform\UpdateTenantStatusRequest;
 use Illuminate\Contracts\View\View;
@@ -80,6 +81,31 @@ class TenantController extends Controller
         );
 
         return back()->with('status', 'Tenant status updated.');
+    }
+
+    public function updateBillingState(UpdateTenantBillingStateRequest $request, Tenant $tenant): RedirectResponse
+    {
+        $previousState = $tenant->billing_state;
+        $previousGstin = $tenant->gstin;
+
+        $tenant->update([
+            'billing_state' => $request->validated('billing_state'),
+            'gstin' => $request->validated('gstin'),
+        ]);
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'tenant.billing_state_changed',
+            'Tenant',
+            $tenant->id,
+            $tenant->id,
+            [
+                'billing_state' => ['from' => $previousState, 'to' => $tenant->billing_state],
+                'gstin' => ['from' => $previousGstin, 'to' => $tenant->gstin],
+            ],
+        );
+
+        return back()->with('status', 'Billing details updated.');
     }
 
     public function updateModules(UpdateTenantModulesRequest $request, Tenant $tenant, UpdateTenantModules $updateTenantModules): RedirectResponse

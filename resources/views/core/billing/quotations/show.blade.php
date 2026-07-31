@@ -40,10 +40,18 @@
 
                 <dl class="text-sm text-gray-600 pt-4 border-t border-gray-100 space-y-1">
                     <div class="flex justify-between"><dt>Subtotal</dt><dd>₹{{ number_format($quotation->amount, 2) }}</dd></div>
-                    <div class="flex justify-between"><dt>CGST ({{ number_format($quotation->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($quotation->cgst_amount, 2) }}</dd></div>
-                    <div class="flex justify-between"><dt>SGST ({{ number_format($quotation->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($quotation->sgst_amount, 2) }}</dd></div>
+                    @if ($quotation->igst_amount > 0)
+                        <div class="flex justify-between"><dt>IGST ({{ number_format($quotation->gst_rate_percent, 2) }}%)</dt><dd>₹{{ number_format($quotation->igst_amount, 2) }}</dd></div>
+                    @else
+                        <div class="flex justify-between"><dt>CGST ({{ number_format($quotation->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($quotation->cgst_amount, 2) }}</dd></div>
+                        <div class="flex justify-between"><dt>SGST ({{ number_format($quotation->gst_rate_percent / 2, 2) }}%)</dt><dd>₹{{ number_format($quotation->sgst_amount, 2) }}</dd></div>
+                    @endif
                     <div class="flex justify-between font-semibold text-gray-900 text-base"><dt>Total</dt><dd>₹{{ number_format($quotation->total_amount, 2) }}</dd></div>
                 </dl>
+
+                @if ($quotation->tenant->gstin)
+                    <p class="text-xs text-gray-400">Your GSTIN: {{ $quotation->tenant->gstin }}</p>
+                @endif
 
                 @if ($quotation->notes)
                     <div class="text-sm">
