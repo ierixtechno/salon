@@ -85,7 +85,7 @@
                                 <td class="px-5 py-3 font-medium text-gray-900">{{ $subscription->tenant->name }}</td>
                                 <td class="px-5 py-3 text-gray-600">{{ $subscription->plan->name }}</td>
                                 <td class="px-5 py-3 text-gray-500">{{ $subscription->ends_at->format('d M Y') }}</td>
-                                <td class="px-5 py-3 text-gray-600">₹{{ number_format($subscription->plan->price, 2) }}</td>
+                                <td class="px-5 py-3 text-gray-600">₹{{ number_format($subscription->plan->price * (1 + config('platform.gst_rate_percent') / 100), 2) }}</td>
                             </tr>
                         @empty
                             <tr>

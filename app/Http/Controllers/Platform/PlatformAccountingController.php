@@ -33,7 +33,12 @@ class PlatformAccountingController extends Controller
             'currentMonthTotal' => $currentMonthInvoices->sum('amount'),
             'previousMonths' => $previousMonths,
             'renewingNextMonth' => $renewingNextMonth,
-            'expectedNextMonthTotal' => $renewingNextMonth->sum(fn ($subscription) => (float) $subscription->plan->price),
+            // Tax-inclusive, to stay consistent with totalIncome/currentMonthTotal
+            // above (both sum PlatformInvoice.amount, which is tax-inclusive —
+            // see CreateQuotation/PayQuotation).
+            'expectedNextMonthTotal' => $renewingNextMonth->sum(
+                fn ($subscription) => (float) $subscription->plan->price * (1 + config('platform.gst_rate_percent') / 100)
+            ),
         ]);
     }
 

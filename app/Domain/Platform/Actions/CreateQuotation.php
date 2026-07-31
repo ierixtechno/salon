@@ -32,13 +32,27 @@ class CreateQuotation
 
         return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade) {
             $quotationNumber = $this->nextPlatformNumber('quotation');
+            $amount = (float) ($amountOverride ?? $plan->price);
+
+            // GST on Platform Billing (config/platform.php) — CGST+SGST
+            // split evenly, mirroring the Phase 6 tenant-invoice precedent.
+            // Snapshotted here so a later rate change never affects a
+            // quotation already created (CLAUDE.md §45).
+            $gstRatePercent = (float) config('platform.gst_rate_percent');
+            $cgstAmount = round($amount * ($gstRatePercent / 2) / 100, 2);
+            $sgstAmount = $cgstAmount;
+            $totalAmount = round($amount + $cgstAmount + $sgstAmount, 2);
 
             $quotation = Quotation::create([
                 'tenant_id' => $tenant->id,
                 'subscription_plan_id' => $plan->id,
                 'platform_admin_id' => $createdBy?->id,
                 'quotation_number' => $quotationNumber,
-                'amount' => $amountOverride ?? $plan->price,
+                'amount' => $amount,
+                'cgst_amount' => $cgstAmount,
+                'sgst_amount' => $sgstAmount,
+                'gst_rate_percent' => $gstRatePercent,
+                'total_amount' => $totalAmount,
                 'notes' => $notes,
                 'status' => 'pending',
                 'is_upgrade' => $isUpgrade,

@@ -42,7 +42,15 @@ class PayQuotation
                 'quotation_id' => $quotation->id,
                 'subscription_plan_id' => $quotation->subscription_plan_id,
                 'invoice_number' => $invoiceNumber,
-                'amount' => $quotation->amount,
+                // The invoice records what was actually collected —
+                // total_amount (tax-inclusive), not the pre-tax `amount`.
+                // subtotal/cgst/sgst/rate are copied verbatim so the
+                // invoice is a self-contained historical record.
+                'amount' => $quotation->total_amount,
+                'subtotal' => $quotation->amount,
+                'cgst_amount' => $quotation->cgst_amount,
+                'sgst_amount' => $quotation->sgst_amount,
+                'gst_rate_percent' => $quotation->gst_rate_percent,
                 'payment_method' => $paymentMethod,
                 'payment_reference' => $paymentReference,
                 'paid_at' => now(),

@@ -73,7 +73,8 @@ class TenantBillingController extends Controller
         abort_if($quotation->status !== 'pending', 409, 'This quotation is no longer payable.');
 
         try {
-            $order = $provider->createOrder(receiptId: $quotation->quotation_number, amount: $quotation->amount);
+            // Charge the tax-inclusive total, not the pre-GST amount.
+            $order = $provider->createOrder(receiptId: $quotation->quotation_number, amount: $quotation->total_amount);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -83,7 +84,7 @@ class TenantBillingController extends Controller
         return response()->json([
             'order_id' => $order['order_id'],
             'key' => $order['key'],
-            'amount' => $quotation->amount,
+            'amount' => $quotation->total_amount,
         ]);
     }
 

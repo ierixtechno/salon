@@ -80,6 +80,31 @@ test('a platform admin can override the quotation amount', function () {
     expect((float) $quotation->amount)->toBe(499.0);
 });
 
+test('a created quotation has a correct GST breakdown (CGST+SGST, snapshotted rate)', function () {
+    config(['platform.gst_rate_percent' => 18]);
+
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard(['modules' => ['salon']]);
+    $plan = growthPlanWithModules(); // price 999
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ]);
+
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    expect((float) $quotation->gst_rate_percent)->toBe(18.0);
+    // Hand-computed: 999 base at 18% -> 89.91 CGST + 89.91 SGST -> 1178.82 total.
+    expect((float) $quotation->cgst_amount)->toBe(89.91);
+    expect((float) $quotation->sgst_amount)->toBe(89.91);
+    expect((float) $quotation->total_amount)->toBe(1178.82);
+    expect((float) $quotation->total_amount)->toBe(round(
+        (float) $quotation->amount + $quotation->cgst_amount + $quotation->sgst_amount,
+        2
+    ));
+});
+
 test('a tenant admin sees a quotation created for them', function () {
     $admin = PlatformAdmin::factory()->create();
     $owner = onboard();
@@ -113,12 +138,14 @@ test('paying a quotation creates an invoice, syncs tenant modules, and activates
     ]);
     $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
 
-    $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/checkout")
+    $checkoutResponse = $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/checkout")
         ->assertOk()
         ->assertJsonStructure(['order_id', 'key', 'amount']);
 
     $quotation->refresh();
     expect($quotation->razorpay_order_id)->not->toBeNull();
+    // Razorpay must be charged the tax-inclusive total, not the pre-GST amount.
+    expect((float) $checkoutResponse->json('amount'))->toBe((float) $quotation->total_amount);
 
     $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/confirm", [
         'razorpay_order_id' => $quotation->razorpay_order_id,
@@ -133,7 +160,10 @@ test('paying a quotation creates an invoice, syncs tenant modules, and activates
     $invoice = PlatformInvoice::where('quotation_id', $quotation->id)->first();
     expect($invoice)->not->toBeNull();
     expect($invoice->invoice_number)->toStartWith('PINV/');
-    expect((float) $invoice->amount)->toBe((float) $quotation->amount);
+    // Invoice.amount records what was actually collected — the
+    // tax-inclusive total, not the pre-GST base amount.
+    expect((float) $invoice->amount)->toBe((float) $quotation->total_amount);
+    expect((float) $invoice->subtotal)->toBe((float) $quotation->amount);
 
     $enabledCodes = TenantModule::where('tenant_id', $owner->tenant_id)
         ->where('enabled', true)

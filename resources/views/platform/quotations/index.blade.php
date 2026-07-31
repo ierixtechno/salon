@@ -45,7 +45,7 @@
                             </td>
                             <td class="px-5 py-3 text-gray-600">{{ $quotation->tenant->name }}</td>
                             <td class="px-5 py-3 text-gray-600">{{ $quotation->plan->name }}</td>
-                            <td class="px-5 py-3 text-gray-600">₹{{ number_format($quotation->amount, 2) }}</td>
+                            <td class="px-5 py-3 text-gray-600">₹{{ number_format($quotation->total_amount, 2) }}</td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium capitalize {{ $statusStyles[$quotation->status] ?? $statusStyles['cancelled'] }}">
                                     <span class="h-1.5 w-1.5 rounded-full bg-current"></span>

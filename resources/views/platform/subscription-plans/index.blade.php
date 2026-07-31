@@ -29,7 +29,7 @@
                             <span class="text-3xl font-bold text-gray-900">Free</span>
                         @else
                             <span class="text-3xl font-bold text-gray-900">₹{{ number_format($plan->price, 2) }}</span>
-                            <span class="text-sm text-gray-500">/ {{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }}</span>
+                            <span class="text-sm text-gray-500">/ {{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }} + GST</span>
                         @endif
                     </div>
 

@@ -45,4 +45,27 @@ return [
     'default_timezone' => env('PLATFORM_DEFAULT_TIMEZONE', 'Asia/Kolkata'),
     'default_currency' => env('PLATFORM_DEFAULT_CURRENCY', 'INR'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | GST on Platform Billing
+    |--------------------------------------------------------------------------
+    |
+    | Applies to StyloBiz billing its own tenants (Quotation/PlatformInvoice)
+    | — a different, newer path than the tenant-level POS invoicing GST
+    | (Service::tax_rate_percent, CLAUDE.md §21) already built in Phase 6.
+    | CGST+SGST only, split evenly, mirroring that same Phase 6 precedent —
+    | IGST is deliberately not implemented anywhere in this codebase yet
+    | (D-003 in docs/decisions/README.md), since there's no reliable way to
+    | compare a tenant's state against the platform's registered state
+    | (Tenant has no state field, and a tenant can have branches in several).
+    | 18% is the standard GST rate for software/SaaS services in India
+    | (SAC 998313). gstin stays blank until Super Admin has a real one —
+    | same "fill in later" precedent as the Razorpay keys.
+    |
+    */
+
+    'gst_rate_percent' => (float) env('PLATFORM_GST_RATE_PERCENT', 18),
+    'gstin' => env('PLATFORM_GSTIN'),
+    'gst_sac_code' => env('PLATFORM_GST_SAC_CODE', '998313'),
+
 ];

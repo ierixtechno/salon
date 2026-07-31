@@ -41,6 +41,16 @@ test('a tenant can request a prorated upgrade to a higher-priced plan in the sam
     expect($quotation->subscription_plan_id)->toBe($pro->id);
     expect((float) $quotation->amount)->toBeGreaterThan(0);
     expect((float) $quotation->amount)->toBeLessThan((float) $pro->price);
+
+    // A prorated upgrade goes through the same CreateQuotation path, so it
+    // must carry the same GST breakdown as any other quotation.
+    expect((float) $quotation->gst_rate_percent)->toBe((float) config('platform.gst_rate_percent'));
+    expect((float) $quotation->cgst_amount)->toBe(round($quotation->amount * ($quotation->gst_rate_percent / 2) / 100, 2));
+    expect((float) $quotation->sgst_amount)->toBe((float) $quotation->cgst_amount);
+    expect((float) $quotation->total_amount)->toBe(round(
+        (float) $quotation->amount + $quotation->cgst_amount + $quotation->sgst_amount,
+        2
+    ));
 });
 
 test('paying a prorated upgrade preserves the renewal date, supersedes the old plan, and syncs modules', function () {

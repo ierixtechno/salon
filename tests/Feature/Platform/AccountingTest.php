@@ -81,7 +81,10 @@ test('the next-month projection counts a tenant only once even with multiple act
 
     $response = $this->actingAs($admin, 'platform')->get('/platform/accounting');
 
+    // The next-month projection is tax-inclusive (see PlatformAccountingController).
+    $gstMultiplier = 1 + config('platform.gst_rate_percent') / 100;
+
     $response->assertOk()
-        ->assertSee('₹'.number_format((float) $growth->price, 2), false)
-        ->assertDontSee('₹'.number_format((float) ($growth->price + $pro->price), 2), false);
+        ->assertSee('₹'.number_format((float) $growth->price * $gstMultiplier, 2), false)
+        ->assertDontSee('₹'.number_format((float) ($growth->price + $pro->price) * $gstMultiplier, 2), false);
 });
