@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <span>Dashboard</span>
-            <a href="{{ route('platform.income.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Month-wise income &rarr;</a>
+            <a href="{{ route('platform.accounting.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Accounting &rarr;</a>
         </div>
     </x-slot>
 

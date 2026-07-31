@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Platform\PlatformAccountingController;
 use App\Http\Controllers\Platform\PlatformAuthController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
-use App\Http\Controllers\Platform\PlatformIncomeController;
 use App\Http\Controllers\Platform\PlatformInvoiceController;
 use App\Http\Controllers\Platform\QuotationController;
 use App\Http\Controllers\Platform\SubscriptionPlanController;
@@ -29,7 +29,7 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::post('logout', [PlatformAuthController::class, 'destroy'])->name('logout');
 
         Route::get('dashboard', [PlatformDashboardController::class, 'index'])->name('dashboard');
-        Route::get('income', [PlatformIncomeController::class, 'index'])->name('income.index');
+        Route::get('accounting', [PlatformAccountingController::class, 'index'])->name('accounting.index');
 
         Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');
         Route::get('tenants/create', [TenantController::class, 'create'])->name('tenants.create');
