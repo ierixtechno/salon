@@ -13,7 +13,7 @@ class PlatformDashboardController extends Controller
     {
         return view('platform.dashboard', [
             'counts' => [
-                'trial' => Tenant::where('status', 'trial')->count(),
+                'pending_payment' => Tenant::where('status', 'pending_payment')->count(),
                 'active' => Tenant::where('status', 'active')->count(),
                 'suspended' => Tenant::where('status', 'suspended')->count(),
                 'cancelled' => Tenant::where('status', 'cancelled')->count(),

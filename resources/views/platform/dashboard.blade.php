@@ -20,7 +20,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @php
             $stats = [
-                ['label' => 'Trial', 'value' => $counts['trial'], 'accent' => 'text-amber-600 bg-amber-50', 'icon' => 'clock'],
+                ['label' => 'Pending Payment', 'value' => $counts['pending_payment'], 'accent' => 'text-blue-600 bg-blue-50', 'icon' => 'clock'],
                 ['label' => 'Active', 'value' => $counts['active'], 'accent' => 'text-green-600 bg-green-50', 'icon' => 'check'],
                 ['label' => 'Suspended', 'value' => $counts['suspended'], 'accent' => 'text-orange-600 bg-orange-50', 'icon' => 'pause'],
                 ['label' => 'Cancelled', 'value' => $counts['cancelled'], 'accent' => 'text-gray-500 bg-gray-100', 'icon' => 'x'],

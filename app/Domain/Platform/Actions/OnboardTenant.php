@@ -3,10 +3,8 @@
 namespace App\Domain\Platform\Actions;
 
 use App\Domain\Platform\Models\Module;
-use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantModule;
-use App\Domain\Platform\Models\TenantSubscription;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,12 +13,16 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Self-service tenant signup: creates the tenant, starts its trial
- * subscription, enables the modules the signup chose, seeds that tenant's
- * own Owner/Manager/Staff roles (roles are team/tenant-scoped — see
- * docs/04-RBAC.md), and creates the owner user. All-or-nothing (CLAUDE.md
- * §23) — a partial tenant with no owner, or an owner with no roles, must
- * never be left behind.
+ * Self-service tenant signup: creates the tenant and owner login only —
+ * there is no free trial. The tenant is created 'pending_payment' and
+ * stays fully locked out (EnforceSubscriptionAccess) until Super Admin
+ * creates its first Quotation and it's paid (PayQuotation flips it to
+ * 'active'). The owner CAN log in immediately, so they can see their
+ * pending status and eventually pay — see AccountAccessController. Seeds
+ * that tenant's own Owner/Manager/Staff roles (roles are team/tenant-scoped
+ * — see docs/04-RBAC.md). All-or-nothing (CLAUDE.md §23) — a partial
+ * tenant with no owner, or an owner with no roles, must never be left
+ * behind.
  *
  * Super Admin retains full authority to change module/plan assignment
  * afterward (CLAUDE.md §7) — this is a starting point, not a permanent
@@ -34,14 +36,15 @@ class OnboardTenant
             $tenant = Tenant::create([
                 'name' => $data['business_name'],
                 'slug' => $this->uniqueSlug($data['business_name']),
-                'status' => 'trial',
+                'status' => 'pending_payment',
                 'timezone' => $data['timezone'] ?? config('platform.default_timezone'),
                 'currency' => strtoupper($data['currency'] ?? config('platform.default_currency')),
-                'trial_ends_at' => now()->addDays((int) config('platform.trial_days')),
             ]);
 
+            // Modules picked at signup are informational only now — they're
+            // not enforced (the tenant can't use anything until paid), but
+            // they tell Super Admin what to quote this lead for.
             $this->enableModules($tenant, $data['modules']);
-            $this->startTrialSubscription($tenant);
 
             return $this->createOwner($tenant, $data);
         });
@@ -70,19 +73,6 @@ class OnboardTenant
                 'enabled_at' => now(),
             ]);
         }
-    }
-
-    private function startTrialSubscription(Tenant $tenant): void
-    {
-        $plan = SubscriptionPlan::where('code', 'trial')->firstOrFail();
-
-        TenantSubscription::create([
-            'tenant_id' => $tenant->id,
-            'subscription_plan_id' => $plan->id,
-            'status' => 'trialing',
-            'starts_at' => now(),
-            'trial_ends_at' => $tenant->trial_ends_at,
-        ]);
     }
 
     private function createOwner(Tenant $tenant, array $data): User

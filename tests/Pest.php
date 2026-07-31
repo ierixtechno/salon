@@ -1,6 +1,9 @@
 <?php
 
 use App\Domain\Platform\Actions\OnboardTenant;
+use App\Domain\Platform\Models\SubscriptionPlan;
+use App\Domain\Platform\Models\Tenant;
+use App\Domain\Platform\Models\TenantSubscription;
 use App\Models\User;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\ModuleSeeder;
@@ -64,14 +67,28 @@ expect()->extend('toBeOne', function () {
 */
 
 /**
- * Onboards a full tenant + owner (roles, trial subscription, modules) via
- * the real OnboardTenant action, so feature tests exercise actual
- * permission-bearing users rather than bare factory Users with no RBAC
- * context.
+ * Onboards a full tenant + owner (roles, modules) via the real OnboardTenant
+ * action, so feature tests exercise actual permission-bearing users rather
+ * than bare factory Users with no RBAC context.
+ *
+ * Real signups now start 'pending_payment' with no subscription at all
+ * (EnforceSubscriptionAccess blocks everything until paid — see
+ * OnboardTenant). Since almost every existing test is exercising ordinary
+ * in-app behavior, not the activation gate itself, this helper synthesizes
+ * an already-active tenant by default (skipping the real Quotation/pay
+ * ceremony for speed) so the other ~200 tests keep testing what they were
+ * testing. Pass `'activated' => false` to get a genuinely pending tenant, or
+ * `'subscription_ends_at' => now()->subDays(...)` to land directly in the
+ * grace/blocked window, for tests that exercise the gate itself.
  */
 function onboard(array $overrides = []): User
 {
-    return app(OnboardTenant::class)->execute(array_merge([
+    $activated = $overrides['activated'] ?? true;
+    $subscriptionEndsAt = $overrides['subscription_ends_at'] ?? now()->addMonth();
+    $subscriptionPlanCode = $overrides['subscription_plan_code'] ?? 'growth';
+    unset($overrides['activated'], $overrides['subscription_ends_at'], $overrides['subscription_plan_code']);
+
+    $owner = app(OnboardTenant::class)->execute(array_merge([
         'business_name' => fake()->unique()->company(),
         'timezone' => 'Asia/Kolkata',
         'currency' => 'INR',
@@ -80,4 +97,19 @@ function onboard(array $overrides = []): User
         'owner_email' => fake()->unique()->safeEmail(),
         'owner_password' => 'password123',
     ], $overrides));
+
+    if ($activated) {
+        $tenant = Tenant::findOrFail($owner->tenant_id);
+        $tenant->update(['status' => 'active']);
+
+        TenantSubscription::create([
+            'tenant_id' => $tenant->id,
+            'subscription_plan_id' => SubscriptionPlan::where('code', $subscriptionPlanCode)->firstOrFail()->id,
+            'status' => 'active',
+            'starts_at' => now()->subMonth(),
+            'ends_at' => $subscriptionEndsAt,
+        ]);
+    }
+
+    return $owner;
 }

@@ -1,6 +1,6 @@
 <x-onboarding-layout>
     <h1 class="text-xl font-semibold text-gray-900 mb-1">Set up your business</h1>
-    <p class="text-sm text-gray-600 mb-6">Start a free {{ config('platform.trial_days') }}-day trial — no card required.</p>
+    <p class="text-sm text-gray-600 mb-6">Create your account now — we'll send you an invoice to activate it.</p>
 
     <form method="POST" action="{{ route('onboarding.store') }}">
         @csrf
@@ -67,7 +67,7 @@
             </a>
 
             <x-primary-button class="w-full sm:w-auto justify-center">
-                Start free trial
+                Create account
             </x-primary-button>
         </div>
     </form>

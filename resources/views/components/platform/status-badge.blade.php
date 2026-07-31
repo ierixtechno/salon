@@ -2,6 +2,7 @@
 
 @php
     $styles = [
+        'pending_payment' => 'bg-blue-500/10 text-blue-600',
         'trial' => 'bg-amber-500/10 text-amber-600',
         'active' => 'bg-green-500/10 text-green-600',
         'suspended' => 'bg-orange-500/10 text-orange-600',
@@ -9,7 +10,7 @@
     ];
 @endphp
 
-<span {{ $attributes->merge(['class' => 'inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium capitalize '.($styles[$status] ?? $styles['cancelled'])]) }}>
+<span {{ $attributes->merge(['class' => 'inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium '.($styles[$status] ?? $styles['cancelled'])]) }}>
     <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-    {{ $status }}
+    {{ ucwords(str_replace('_', ' ', $status)) }}
 </span>

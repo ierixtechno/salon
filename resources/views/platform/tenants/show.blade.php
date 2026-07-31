@@ -18,8 +18,8 @@
                 @csrf
                 @method('PATCH')
                 <select name="status" class="border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    @foreach (['trial', 'active', 'suspended', 'cancelled'] as $status)
-                        <option value="{{ $status }}" @selected($tenant->status === $status)>{{ ucfirst($status) }}</option>
+                    @foreach (['pending_payment', 'trial', 'active', 'suspended', 'cancelled'] as $status)
+                        <option value="{{ $status }}" @selected($tenant->status === $status)>{{ ucwords(str_replace('_', ' ', $status)) }}</option>
                     @endforeach
                 </select>
                 <button type="submit" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition">

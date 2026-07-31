@@ -18,7 +18,7 @@ class EnsureTenantActive
     {
         $tenant = $request->user('web')?->tenant;
 
-        if ($tenant && ! $tenant->isActive()) {
+        if ($tenant && $tenant->isBlocked()) {
             auth('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

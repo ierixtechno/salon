@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AttachRequestId;
+use App\Http\Middleware\EnforceSubscriptionAccess;
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\ResolveTenantFromSlug;
@@ -24,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // RunsCampaignAutomation). Shared hosting runs this via the
         // standard `php artisan schedule:run` cron entry (CLAUDE.md §64).
         $schedule->command('marketing:run-automations')->dailyAt('08:00');
+
+        // CLAUDE.md §44: exact-day matching (see the command's docblock)
+        // keeps this idempotent per tenant per day.
+        $schedule->command('subscriptions:process-renewals')->dailyAt('08:15');
 
         // CLAUDE.md §34/§36: don't let exported PII bundles sit on disk
         // past their stated 7-day availability window.
@@ -60,6 +65,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('tenant', [
             SetPermissionsTeamFromTenant::class,
             EnsureTenantActive::class,
+            EnforceSubscriptionAccess::class,
         ]);
 
         // An unauthenticated hit on a platform:: route must bounce to the

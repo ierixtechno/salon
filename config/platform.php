@@ -18,11 +18,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Trial length
+    | Super Admin console brand name
     |--------------------------------------------------------------------------
+    |
+    | Deliberately separate from APP_NAME/config('app.name') — that name is
+    | shown to tenants (salon/beauty/spa businesses using the app), while
+    | this one is shown only inside the Platform (Super Admin) guard.
+    |
     */
 
-    'trial_days' => env('PLATFORM_TRIAL_DAYS', 14),
+    'brand_name' => env('PLATFORM_BRAND_NAME', 'StyloBiz'),
 
     /*
     |--------------------------------------------------------------------------

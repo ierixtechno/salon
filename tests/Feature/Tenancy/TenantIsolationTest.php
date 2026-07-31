@@ -1,6 +1,8 @@
 <?php
 
+use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
+use App\Domain\Platform\Models\TenantSubscription;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -63,13 +65,29 @@ test('a suspended tenant cannot access authenticated tenant routes', function ()
     $this->assertGuest();
 });
 
-test('a trial tenant can access authenticated tenant routes', function () {
-    $tenant = Tenant::factory()->create(); // defaults to trial
+test('an active tenant with a current subscription can access authenticated tenant routes', function () {
+    $tenant = Tenant::factory()->active()->create();
+    TenantSubscription::create([
+        'tenant_id' => $tenant->id,
+        'subscription_plan_id' => SubscriptionPlan::where('code', 'growth')->firstOrFail()->id,
+        'status' => 'active',
+        'starts_at' => now()->subMonth(),
+        'ends_at' => now()->addMonth(),
+    ]);
     $user = User::factory()->forTenant($tenant)->create();
 
     $response = $this->actingAs($user)->get('/dashboard');
 
     $response->assertOk();
+});
+
+test('a tenant with no subscription yet is redirected to the account access page', function () {
+    $tenant = Tenant::factory()->create(['status' => 'pending_payment']);
+    $user = User::factory()->forTenant($tenant)->create();
+
+    $response = $this->actingAs($user)->get('/dashboard');
+
+    $response->assertRedirect(route('account.access'));
 });
 
 test('super admin cross-tenant relations are explicit, not a blanket scope bypass', function () {

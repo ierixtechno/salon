@@ -6,6 +6,7 @@ use App\Domain\Core\Actions\SendNotification;
 use App\Domain\Platform\Actions\Concerns\GeneratesPlatformSequenceNumbers;
 use App\Domain\Platform\Models\PlatformInvoice;
 use App\Domain\Platform\Models\Quotation;
+use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantSubscription;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
@@ -31,7 +32,7 @@ class PayQuotation
         // must not double-invoice/double-sync (CLAUDE.md §24/§37).
         abort_if($quotation->status !== 'pending', 409, 'This quotation is no longer payable.');
 
-        return DB::transaction(function () use ($quotation, $paymentMethod, $paymentReference) {
+        $invoice = DB::transaction(function () use ($quotation, $paymentMethod, $paymentReference) {
             $invoiceNumber = $this->nextPlatformNumber('invoice');
 
             $invoice = PlatformInvoice::create([
@@ -50,6 +51,14 @@ class PayQuotation
             $plan = $quotation->plan;
             $this->updateTenantModules->execute($quotation->tenant, $plan->modules->pluck('code')->all());
 
+            // First-ever payment activates a still-pending tenant (see
+            // OnboardTenant — signups no longer get a free trial). Renewals
+            // never touch Tenant.status again after this, only
+            // TenantSubscription below.
+            if ($quotation->tenant->status === 'pending_payment') {
+                $quotation->tenant->update(['status' => 'active']);
+            }
+
             TenantSubscription::updateOrCreate(
                 ['tenant_id' => $quotation->tenant_id, 'subscription_plan_id' => $plan->id],
                 [
@@ -67,6 +76,14 @@ class PayQuotation
 
             return $invoice;
         });
+
+        // Outside the transaction so the cache is only cleared once the
+        // write has actually committed — busts EnforceSubscriptionAccess's
+        // cached state so this request's *next* page load is unlocked
+        // immediately, no re-login required.
+        Tenant::forgetSubscriptionCache($quotation->tenant_id);
+
+        return $invoice;
     }
 
     private function notifyTenant(Quotation $quotation, string $invoiceNumber, int $invoiceId): void

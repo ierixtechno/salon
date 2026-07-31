@@ -15,7 +15,7 @@ class UpdateTenantStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', Rule::in(['trial', 'active', 'suspended', 'cancelled'])],
+            'status' => ['required', Rule::in(['pending_payment', 'trial', 'active', 'suspended', 'cancelled'])],
         ];
     }
 }

@@ -62,10 +62,18 @@ class Tenant extends Model
         return $this->hasMany(TenantSubscription::class);
     }
 
+    /**
+     * 'expired' is included deliberately — ProcessSubscriptionRenewals
+     * cosmetically flips a lapsed row to 'expired' for reporting, but the
+     * row is still the tenant's "current" (most relevant) subscription for
+     * grace-period/blocked-state computation (EnforceSubscriptionAccess
+     * always recomputes the real state from ends_at, never trusts this
+     * status column alone).
+     */
     public function currentSubscription(): ?TenantSubscription
     {
         return $this->subscriptions()
-            ->whereIn('status', ['trialing', 'active'])
+            ->whereIn('status', ['trialing', 'active', 'expired'])
             ->latest('starts_at')
             ->first();
     }
@@ -108,5 +116,35 @@ class Tenant extends Model
     public function isActive(): bool
     {
         return in_array($this->status, ['trial', 'active'], true);
+    }
+
+    /**
+     * The narrow "Super Admin explicitly suspended/cancelled this tenant"
+     * check used by EnsureTenantActive's hard logout. Deliberately does NOT
+     * include 'pending_payment' — those tenants must still be able to log
+     * in and see their account status (EnforceSubscriptionAccess handles
+     * that gating separately, with a softer landing page instead of a
+     * forced logout).
+     */
+    public function isBlocked(): bool
+    {
+        return in_array($this->status, ['suspended', 'cancelled'], true);
+    }
+
+    /**
+     * EnforceSubscriptionAccess's resolved state is cheap to compute but
+     * checked on effectively every tenant request, so it's cached the same
+     * way module-enablement is (see hasModuleEnabled() above). PayQuotation
+     * calls this the moment a payment lands so the tenant's very next
+     * request reflects the unlock immediately.
+     */
+    public static function forgetSubscriptionCache(int $tenantId): void
+    {
+        Cache::forget(self::subscriptionCacheKey($tenantId));
+    }
+
+    public static function subscriptionCacheKey(int $tenantId): string
+    {
+        return "tenant:{$tenantId}:subscription-access-state";
     }
 }

@@ -83,6 +83,8 @@
                     </div>
                 </header>
 
+                <x-subscription-banner />
+
                 <!-- Page Content -->
                 <main class="flex-1">
                     {{ $slot }}
