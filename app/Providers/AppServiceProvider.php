@@ -23,6 +23,9 @@ use App\Domain\Core\Models\Supplier;
 use App\Domain\Core\Models\WaitlistEntry;
 use App\Domain\Core\Notifications\Providers\NullSmsProvider;
 use App\Domain\Core\Notifications\Providers\NullWhatsAppProvider;
+use App\Domain\Platform\Contracts\PaymentGatewayProvider;
+use App\Domain\Platform\Payments\NullPaymentGatewayProvider;
+use App\Domain\Platform\Payments\RazorpayPaymentGatewayProvider;
 use App\Policies\AppointmentPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CustomerPolicy;
@@ -46,6 +49,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Razorpay\Api\Api;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -67,6 +71,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(WhatsAppProvider::class, function (Application $app) {
             return match (config('notifications.whatsapp.driver')) {
                 default => new NullWhatsAppProvider,
+            };
+        });
+
+        $this->app->bind(PaymentGatewayProvider::class, function (Application $app) {
+            return match (config('payments.driver')) {
+                'razorpay' => new RazorpayPaymentGatewayProvider(new Api(
+                    config('services.razorpay.key'),
+                    config('services.razorpay.secret'),
+                )),
+                default => new NullPaymentGatewayProvider,
             };
         });
     }

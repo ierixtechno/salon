@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Blank until you sign up at razorpay.com and generate test-mode keys
+    // (rzp_test_...) — see config/payments.php's PAYMENTS_DRIVER.
+    'razorpay' => [
+        'key' => env('RAZORPAY_KEY_ID'),
+        'secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+    ],
+
 ];

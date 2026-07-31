@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Platform\PlatformAuthController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
+use App\Http\Controllers\Platform\PlatformIncomeController;
+use App\Http\Controllers\Platform\PlatformInvoiceController;
+use App\Http\Controllers\Platform\QuotationController;
 use App\Http\Controllers\Platform\SubscriptionPlanController;
 use App\Http\Controllers\Platform\TenantController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +29,7 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::post('logout', [PlatformAuthController::class, 'destroy'])->name('logout');
 
         Route::get('dashboard', [PlatformDashboardController::class, 'index'])->name('dashboard');
+        Route::get('income', [PlatformIncomeController::class, 'index'])->name('income.index');
 
         Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');
         Route::get('tenants/create', [TenantController::class, 'create'])->name('tenants.create');
@@ -35,7 +39,18 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::patch('tenants/{tenant}/modules', [TenantController::class, 'updateModules'])->name('tenants.modules');
 
         Route::get('subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        Route::get('subscription-plans/create', [SubscriptionPlanController::class, 'create'])->name('subscription-plans.create');
+        Route::post('subscription-plans', [SubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
         Route::get('subscription-plans/{subscription_plan}/edit', [SubscriptionPlanController::class, 'edit'])->name('subscription-plans.edit');
         Route::put('subscription-plans/{subscription_plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+
+        Route::get('quotations', [QuotationController::class, 'index'])->name('quotations.index');
+        Route::get('quotations/create', [QuotationController::class, 'create'])->name('quotations.create');
+        Route::post('quotations', [QuotationController::class, 'store'])->name('quotations.store');
+        Route::get('quotations/{quotation}', [QuotationController::class, 'show'])->name('quotations.show');
+        Route::patch('quotations/{quotation}/cancel', [QuotationController::class, 'cancel'])->name('quotations.cancel');
+
+        Route::get('invoices', [PlatformInvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('invoices/{invoice}', [PlatformInvoiceController::class, 'show'])->name('invoices.show');
     });
 });

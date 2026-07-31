@@ -5,7 +5,7 @@ namespace App\Http\Requests\Platform;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateSubscriptionPlanRequest extends FormRequest
+class StoreSubscriptionPlanRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,6 +15,7 @@ class UpdateSubscriptionPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'code' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:subscription_plans,code'],
             'name' => ['required', 'string', 'max:255'],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'billing_interval' => ['required', Rule::in(['trial', 'monthly', 'yearly'])],

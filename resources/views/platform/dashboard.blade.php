@@ -1,5 +1,21 @@
 <x-platform-layout>
-    <x-slot name="header">Dashboard</x-slot>
+    <x-slot name="header">
+        <div class="flex items-center justify-between">
+            <span>Dashboard</span>
+            <a href="{{ route('platform.income.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Month-wise income &rarr;</a>
+        </div>
+    </x-slot>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm p-5 text-white">
+            <span class="text-sm font-medium text-emerald-100">Total subscription income</span>
+            <div class="mt-2 text-3xl font-bold">₹{{ number_format($totalIncome, 2) }}</div>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-sm p-5 text-white">
+            <span class="text-sm font-medium text-indigo-100">This month's income</span>
+            <div class="mt-2 text-3xl font-bold">₹{{ number_format($currentMonthIncome, 2) }}</div>
+        </div>
+    </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @php

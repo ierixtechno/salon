@@ -19,6 +19,7 @@ class PermissionSeeder extends Seeder
         $permissions = [
             // Phase 1: platform/tenant administration
             'tenant.settings.manage',
+            'tenant.billing.manage',
             'branches.view',
             'branches.create',
             'branches.update',

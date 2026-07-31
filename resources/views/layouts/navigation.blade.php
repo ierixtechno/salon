@@ -44,6 +44,10 @@
     $organizationActive = $branchesActive || $employeesActive || $orgSettingsActive || $dataExportActive;
 
     $myWorkspaceActive = request()->routeIs('notifications.my') || request()->routeIs('attendance.my') || request()->routeIs('leave.my') || request()->routeIs('commission.my');
+
+    $billingQuotationsActive = request()->routeIs('billing.quotations.*');
+    $billingInvoicesActive = request()->routeIs('billing.invoices.*');
+    $billingActive = $billingQuotationsActive || $billingInvoicesActive;
 @endphp
 
 <nav class="flex-1 px-3 py-4 space-y-1">
@@ -453,6 +457,31 @@
             @endcan
         </x-nav-group>
     @endif
+
+    @can('tenant.billing.manage')
+        <x-nav-group title="Billing" :active="$billingActive">
+            <a href="{{ route('billing.quotations.index') }}" class="{{ $navItemBase }} {{ $billingQuotationsActive ? $navItemActive : $navItemInactive }}">
+                @if ($billingQuotationsActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75M3.75 21h16.5a1.5 1.5 0 001.5-1.5V5.25a1.5 1.5 0 00-1.5-1.5H8.25a1.5 1.5 0 00-1.06.44L3.44 7.94A1.5 1.5 0 003 9v10.5a1.5 1.5 0 001.5 1.5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3.75v3.75a1.5 1.5 0 01-1.5 1.5H3" />
+                </svg>
+                {{ __('Quotations') }}
+            </a>
+
+            <a href="{{ route('billing.invoices.index') }}" class="{{ $navItemBase }} {{ $billingInvoicesActive ? $navItemActive : $navItemInactive }}">
+                @if ($billingInvoicesActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182C10.55 7.72 11.275 7.5 12 7.5c.768 0 1.536.219 2.121.659L15 8.818" />
+                </svg>
+                {{ __('Invoices') }}
+            </a>
+        </x-nav-group>
+    @endcan
 
     <x-nav-group title="My Workspace" :active="$myWorkspaceActive">
         <a href="{{ route('notifications.my') }}" class="{{ $navItemBase }} {{ request()->routeIs('notifications.my') ? $navItemActive : $navItemInactive }}">

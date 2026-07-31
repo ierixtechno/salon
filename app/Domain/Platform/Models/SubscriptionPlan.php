@@ -25,6 +25,11 @@ class SubscriptionPlan extends Model
             ->withTimestamps();
     }
 
+    public function modules(): BelongsToMany
+    {
+        return $this->belongsToMany(Module::class, 'plan_modules')->withTimestamps();
+    }
+
     public function tenantSubscriptions(): HasMany
     {
         return $this->hasMany(TenantSubscription::class);
