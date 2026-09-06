@@ -2,6 +2,8 @@
 
 Companion to [10-SHARED-HOSTING.md](10-SHARED-HOSTING.md) (design intent) — this is the actionable checklist for standing up and operating a production instance. Target: shared hosting with cPanel-style access, MySQL, cron, and no persistent worker process, per CLAUDE.md §64.
 
+Deploying to actual cPanel hosting specifically? See [CPANEL-DEPLOYMENT-STEPS.md](CPANEL-DEPLOYMENT-STEPS.md) for the click-by-click UI steps (folder layout, Git™ Version Control, MySQL Databases, Cron Jobs, SSL) — this file stays the source of truth for the `.env` checklist, backup, and restore.
+
 ## 1. Server requirements
 
 - PHP 8.4 (matching `composer.json`), with the extensions Laravel/this app need: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `zip` (used by the Phase 14 data export ZIP).
