@@ -5,8 +5,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+// No separate marketing homepage exists yet — root sends visitors to the
+// tenant login (guest-only, so an already-authenticated user is bounced
+// straight to /dashboard by the 'guest' middleware). Super Admin has its
+// own separate entry point at /platform/login (not linked from here).
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // 'tenant' group = auth:web + RBAC team resolution + tenant status check
