@@ -13,10 +13,10 @@
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex">
             <!-- Branding panel (hidden on small screens) -->
-            <div class="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-rose-600/20 via-slate-900 to-slate-900"></div>
-                <div class="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-pink-500/20 blur-3xl"></div>
-                <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-rose-400/10 blur-3xl"></div>
+            <div class="hidden lg:flex lg:w-1/2 relative bg-slate-900 bg-cover bg-center overflow-hidden"
+                style="background-image: url('{{ asset('images/login-background-portrait.jpg') }}')">
+                {{-- Darkening scrim so white text stays legible over the photo. --}}
+                <div class="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/40 to-slate-900/85"></div>
 
                 <div class="relative z-10 flex flex-col justify-between p-12 w-full">
                     <div class="flex items-center gap-2.5 text-white font-semibold tracking-tight text-lg">
@@ -28,13 +28,13 @@
                         <h2 class="text-3xl font-bold text-white leading-tight">
                             Run every tenant from one place.
                         </h2>
-                        <p class="mt-4 text-slate-300 text-sm leading-relaxed">
+                        <p class="mt-4 text-slate-200 text-sm leading-relaxed">
                             Manage tenants, modules, subscriptions, and platform-wide configuration — kept entirely
                             separate from the salons, parlours, and spas running on top of it.
                         </p>
                     </div>
 
-                    <p class="text-xs text-slate-500">{{ config('platform.brand_name') }} Platform Console</p>
+                    <p class="text-xs text-slate-300">{{ config('platform.brand_name') }} Platform Console</p>
                 </div>
             </div>
 

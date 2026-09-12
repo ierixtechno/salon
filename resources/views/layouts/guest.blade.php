@@ -16,17 +16,15 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        {{-- bg-cover on mobile (the image's height binds, so it always
-             fills the tall viewport with only side-cropping, which looks
-             fine at that narrow width) but bg-contain from lg: up — at
-             typical desktop aspect ratios, cover was cropping this wide
-             image's left/right edges (exactly the face/spa content that
-             makes it worth using). contain shows the whole image, at the
-             cost of a plain-colour band above/below on very wide screens
-             — bg-pink-50 is picked to blend with the image's own light
-             pink edges rather than read as a hard cutoff. --}}
+        {{-- This is the PWA's actual first screen — manifest start_url is
+             "/", which always redirects to login. Portrait photo, so
+             bg-cover suits narrow/mobile viewports (where most PWA
+             launches happen) but still over-crops top/bottom on wide
+             desktop windows the same way the old landscape photo
+             over-cropped left/right — bg-contain from lg: up avoids
+             that, letterboxed with a matching light pink. --}}
         <div class="min-h-screen relative flex items-center justify-center px-4 py-10 sm:py-14 bg-pink-50 bg-cover lg:bg-contain lg:bg-no-repeat bg-center"
-            style="background-image: url('{{ asset('images/login-background.jpg') }}')">
+            style="background-image: url('{{ asset('images/login-background-portrait.jpg') }}')">
             <div class="relative z-10 w-full max-w-sm">
                 <a href="/" class="flex justify-center mb-6">
                     <img src="{{ asset('images/logo-lockup.png') }}" alt="{{ config('app.name') }}" class="h-14 sm:h-16 w-auto drop-shadow-sm">
