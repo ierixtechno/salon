@@ -16,7 +16,16 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen relative flex items-center justify-center px-4 py-10 sm:py-14 bg-pink-50 bg-cover bg-center"
+        {{-- bg-cover on mobile (the image's height binds, so it always
+             fills the tall viewport with only side-cropping, which looks
+             fine at that narrow width) but bg-contain from lg: up — at
+             typical desktop aspect ratios, cover was cropping this wide
+             image's left/right edges (exactly the face/spa content that
+             makes it worth using). contain shows the whole image, at the
+             cost of a plain-colour band above/below on very wide screens
+             — bg-pink-50 is picked to blend with the image's own light
+             pink edges rather than read as a hard cutoff. --}}
+        <div class="min-h-screen relative flex items-center justify-center px-4 py-10 sm:py-14 bg-pink-50 bg-cover lg:bg-contain lg:bg-no-repeat bg-center"
             style="background-image: url('{{ asset('images/login-background.jpg') }}')">
             <div class="relative z-10 w-full max-w-sm">
                 <a href="/" class="flex justify-center mb-6">

@@ -24,7 +24,7 @@
             <!-- Sidebar -->
             <aside
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-                class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:flex lg:flex-col lg:shrink-0 overflow-y-auto">
+                class="fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-rose-950 via-rose-950 to-fuchsia-950 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:flex lg:flex-col lg:shrink-0 overflow-y-auto">
 
                 <div class="flex items-center h-16 px-6 border-b border-white/10 shrink-0">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 text-white font-semibold tracking-tight">
