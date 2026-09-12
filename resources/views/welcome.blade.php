@@ -16,9 +16,17 @@
         {{-- The PWA's actual first screen — manifest start_url is "/",
              which lands here for anyone not already signed in (an
              authenticated visitor is sent straight to /dashboard by the
-             route itself, see routes/web.php). --}}
-        <div class="min-h-screen relative flex flex-col items-center justify-end px-4 pb-10 pt-14 sm:pb-14 bg-pink-50 bg-cover bg-top"
-            style="background-image: url('{{ asset('images/login-background-portrait.jpg') }}')">
+             route itself, see routes/web.php). The installed app opens
+             this exact same URL in standalone mode — there's no separate
+             "PWA-only" surface — so it needs to look right in a regular
+             desktop browser tab too, not just on a phone: portrait photo
+             below lg:, the desktop-shaped landscape one from lg: up. --}}
+        <div class="min-h-screen relative flex flex-col items-center justify-end lg:justify-center px-4 pb-10 pt-14 sm:pb-14 bg-pink-50">
+            <div class="absolute inset-0 bg-cover bg-top lg:hidden"
+                style="background-image: url('{{ asset('images/login-background-portrait.jpg') }}')"></div>
+            <div class="absolute inset-0 bg-cover bg-center hidden lg:block"
+                style="background-image: url('{{ asset('images/login-background.jpg') }}')"></div>
+
             <div class="relative z-10 w-full max-w-sm text-center">
                 <img src="{{ asset('images/logo-lockup.png') }}" alt="{{ config('app.name') }}" class="h-14 sm:h-16 w-auto mx-auto mb-6 drop-shadow-sm">
 
