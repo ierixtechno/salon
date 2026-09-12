@@ -28,6 +28,8 @@
                 <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl shadow-pink-200/50 ring-1 ring-white px-6 py-8 sm:px-10">
                     {{ $slot }}
                 </div>
+
+                <x-copyright class="text-gray-500" />
             </div>
         </div>
     </body>

@@ -31,8 +31,9 @@
                 </div>
             </main>
 
-            <footer class="py-6 text-center text-xs text-gray-400">
+            <footer class="pt-6 text-center text-xs text-gray-400">
                 Powered by {{ config('app.name') }}
+                <x-copyright class="text-gray-400 !py-2" />
             </footer>
         </div>
     </body>

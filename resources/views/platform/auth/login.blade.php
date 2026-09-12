@@ -83,6 +83,8 @@
                             Sign in
                         </button>
                     </form>
+
+                    <x-copyright class="text-gray-400" />
                 </div>
             </div>
         </div>
