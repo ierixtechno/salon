@@ -38,6 +38,7 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::patch('tenants/{tenant}/status', [TenantController::class, 'updateStatus'])->name('tenants.status');
         Route::patch('tenants/{tenant}/modules', [TenantController::class, 'updateModules'])->name('tenants.modules');
         Route::patch('tenants/{tenant}/billing-state', [TenantController::class, 'updateBillingState'])->name('tenants.billing-state');
+        Route::post('tenants/{tenant}/whatsapp-credits', [TenantController::class, 'topUpWhatsappCredits'])->name('tenants.whatsapp-credits');
 
         Route::get('subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
         Route::get('subscription-plans/create', [SubscriptionPlanController::class, 'create'])->name('subscription-plans.create');

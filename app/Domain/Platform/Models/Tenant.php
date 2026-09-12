@@ -3,6 +3,7 @@
 namespace App\Domain\Platform\Models;
 
 use App\Domain\Core\Models\Branch;
+use App\Domain\Core\Models\WhatsappCreditTransaction;
 use App\Domain\Core\Scopes\TenantScope;
 use App\Models\User;
 use Database\Factories\TenantFactory;
@@ -129,6 +130,17 @@ class Tenant extends Model
     public function isBlocked(): bool
     {
         return in_array($this->status, ['suspended', 'cancelled'], true);
+    }
+
+    /**
+     * A credit count, not money — 1 credit = 1 WhatsApp message actually
+     * sent. Always derived from the whatsapp_credit_transactions ledger
+     * (CLAUDE.md §20), never a mutable column. See ChargeWhatsappCredit
+     * (the debit side) and TopUpWhatsappCredits (the credit side).
+     */
+    public function whatsappCreditBalance(): int
+    {
+        return (int) WhatsappCreditTransaction::where('tenant_id', $this->id)->sum('amount');
     }
 
     /**

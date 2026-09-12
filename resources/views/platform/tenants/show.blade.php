@@ -65,6 +65,31 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="font-semibold text-gray-900 mb-4">WhatsApp credits</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Current balance: <span class="font-semibold text-gray-900">{{ number_format($whatsappCreditBalance) }}</span>
+                {{ Str::plural('credit', $whatsappCreditBalance) }}
+            </p>
+            <form method="POST" action="{{ route('platform.tenants.whatsapp-credits', $tenant) }}" class="space-y-3">
+                @csrf
+                <div class="flex flex-wrap items-center gap-3">
+                    <input type="number" name="amount" min="1" placeholder="Credits to add" required
+                        class="w-40 border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <input type="text" name="reason" placeholder="Reason (optional, e.g. purchase reference)" maxlength="255"
+                        class="flex-1 min-w-[12rem] border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <button type="submit" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition">
+                        Add credits
+                    </button>
+                </div>
+                <x-input-error :messages="$errors->get('amount')" />
+            </form>
+            <p class="text-xs text-gray-500 mt-3">
+                1 credit = 1 WhatsApp message sent. Add credits here after the tenant pays for them outside the app —
+                there's no in-app checkout for this.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 class="font-semibold text-gray-900 mb-4">Modules</h2>
             <form method="POST" action="{{ route('platform.tenants.modules', $tenant) }}">
                 @csrf

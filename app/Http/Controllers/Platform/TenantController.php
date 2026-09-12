@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Domain\Platform\Actions\OnboardTenant;
+use App\Domain\Platform\Actions\TopUpWhatsappCredits;
 use App\Domain\Platform\Actions\UpdateTenantModules;
 use App\Domain\Platform\Models\Module;
 use App\Domain\Platform\Models\PlatformAuditLog;
 use App\Domain\Platform\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Platform\CreateTenantRequest;
+use App\Http\Requests\Platform\TopUpWhatsappCreditsRequest;
 use App\Http\Requests\Platform\UpdateTenantBillingStateRequest;
 use App\Http\Requests\Platform\UpdateTenantModulesRequest;
 use App\Http\Requests\Platform\UpdateTenantStatusRequest;
@@ -59,6 +61,7 @@ class TenantController extends Controller
                 ->get()
                 ->pluck('module.code'),
             'subscription' => $tenant->currentSubscription(),
+            'whatsappCreditBalance' => $tenant->whatsappCreditBalance(),
         ]);
     }
 
@@ -106,6 +109,24 @@ class TenantController extends Controller
         );
 
         return back()->with('status', 'Billing details updated.');
+    }
+
+    public function topUpWhatsappCredits(TopUpWhatsappCreditsRequest $request, Tenant $tenant, TopUpWhatsappCredits $topUp): RedirectResponse
+    {
+        $amount = $request->validated('amount');
+
+        $topUp->execute($tenant, $amount, Auth::guard('platform')->user(), $request->validated('reason'));
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'tenant.whatsapp_credits_topped_up',
+            'Tenant',
+            $tenant->id,
+            $tenant->id,
+            ['amount' => $amount, 'reason' => $request->validated('reason')],
+        );
+
+        return back()->with('status', "Added {$amount} WhatsApp credits.");
     }
 
     public function updateModules(UpdateTenantModulesRequest $request, Tenant $tenant, UpdateTenantModules $updateTenantModules): RedirectResponse

@@ -6,6 +6,7 @@ use App\Domain\Core\Actions\SendCampaign;
 use App\Domain\Core\Models\Campaign;
 use App\Domain\Core\Models\CustomerSegment;
 use App\Domain\Core\Models\NotificationTemplate;
+use App\Domain\Platform\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreCampaignRequest;
 use Illuminate\Contracts\View\View;
@@ -25,6 +26,7 @@ class CampaignController extends Controller
     {
         return view('core.campaigns.index', [
             'campaigns' => Campaign::with(['template', 'segment'])->withCount('recipients')->latest()->paginate(20),
+            'whatsappCreditBalance' => Tenant::find(Auth::user()->tenant_id)?->whatsappCreditBalance() ?? 0,
         ]);
     }
 

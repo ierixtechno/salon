@@ -8,7 +8,9 @@ use App\Domain\Core\Scopes\TenantScope;
 use App\Domain\Platform\Actions\CreateQuotation;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\TenantSubscription;
+use App\Domain\Platform\Support\ResolveSubscriptionAccessState;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\PermissionRegistrar;
 use Throwable;
@@ -41,6 +43,7 @@ class ProcessSubscriptionRenewals extends Command
 
         $reminders = 0;
         $expiries = 0;
+        $blocks = 0;
 
         $subscriptions = TenantSubscription::whereIn('status', ['active', 'expired'])
             ->with(['tenant', 'plan'])
@@ -70,6 +73,16 @@ class ProcessSubscriptionRenewals extends Command
                     $this->sendReminder($subscription, 'expired. You have 7 days of read-only access — renew now to restore full access.');
                     $this->ensurePendingQuotation($subscription);
                     $expiries++;
+                } elseif ($subscription->ends_at->isSameDay(today()->subDays(ResolveSubscriptionAccessState::GRACE_DAYS + 1))) {
+                    // Today is the first fully-blocked day (grace just ran
+                    // out). EnforceSubscriptionAccess already recomputes
+                    // this live and would redirect them regardless — this
+                    // step's job is purely to force an immediate logout on
+                    // every device rather than waiting for their existing
+                    // session to naturally expire.
+                    $this->sendReminder($subscription, 'and its 7-day grace period have ended. You have been logged out everywhere — renew now to restore access.');
+                    $this->forceLogout($subscription);
+                    $blocks++;
                 }
             } catch (Throwable $e) {
                 // One tenant's problem (e.g. its plan was deactivated
@@ -83,7 +96,7 @@ class ProcessSubscriptionRenewals extends Command
             }
         }
 
-        $this->info("Renewal reminders sent: {$reminders}. Expiry notices sent: {$expiries}.");
+        $this->info("Renewal reminders sent: {$reminders}. Expiry notices sent: {$expiries}. Tenants force-logged-out: {$blocks}.");
 
         return self::SUCCESS;
     }
@@ -124,6 +137,25 @@ class ProcessSubscriptionRenewals extends Command
                 referenceType: 'TenantSubscription',
                 referenceId: $subscription->id,
             ));
+    }
+
+    /**
+     * Deletes every database-session row belonging to this tenant's
+     * users — the database session driver treats a missing row as "not
+     * logged in", so this is a real, immediate logout on every device,
+     * not just a redirect on their current request. Safe to call even if
+     * SESSION_DRIVER isn't 'database' (the table is still Laravel's
+     * default; a no-op query if nothing matches).
+     */
+    private function forceLogout(TenantSubscription $subscription): void
+    {
+        $userIds = $subscription->tenant->users()->pluck('id');
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        DB::table('sessions')->whereIn('user_id', $userIds)->delete();
     }
 
     private function ensurePendingQuotation(TenantSubscription $subscription): void

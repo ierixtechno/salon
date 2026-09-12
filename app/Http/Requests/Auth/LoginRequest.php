@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Domain\Platform\Models\Tenant;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -47,6 +48,24 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Credentials are correct, but a tenant that has never paid must
+        // not be able to use the app at all — log straight back out
+        // rather than letting a session exist just to immediately bounce
+        // to the account-access page every request. A lapsed-but-
+        // previously-active tenant (grace/blocked) is a different case
+        // entirely and is deliberately NOT blocked here — see
+        // EnforceSubscriptionAccess for that flow, which still needs
+        // login to work so they can see their status and pay.
+        $tenantId = Auth::user()->tenant_id;
+        if ($tenantId && Tenant::find($tenantId)?->status === 'pending_payment') {
+            Auth::logout();
+            RateLimiter::clear($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => "Your account is pending payment. We'll email you once your invoice is ready — you can log in once it's paid.",
             ]);
         }
 

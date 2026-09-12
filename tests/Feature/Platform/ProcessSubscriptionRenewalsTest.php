@@ -5,6 +5,8 @@ use App\Domain\Core\Scopes\TenantScope;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\TenantSubscription;
+use App\Domain\Platform\Support\ResolveSubscriptionAccessState;
+use Illuminate\Support\Facades\DB;
 
 function renewalNotifications(int $tenantId)
 {
@@ -65,6 +67,44 @@ test('a distinct expiry notice is sent the day a subscription lapses, and its st
 
     $subscription = TenantSubscription::where('tenant_id', $owner->tenant_id)->firstOrFail();
     expect($subscription->status)->toBe('expired');
+});
+
+test('a tenant is force-logged-out everywhere the day its grace period fully runs out', function () {
+    $owner = onboard(['subscription_ends_at' => now()->subDays(ResolveSubscriptionAccessState::GRACE_DAYS + 1)]);
+
+    DB::table('sessions')->insert([
+        'id' => 'test-session-id',
+        'user_id' => $owner->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'test',
+        'payload' => base64_encode('irrelevant'),
+        'last_activity' => now()->timestamp,
+    ]);
+
+    $this->artisan('subscriptions:process-renewals')->assertSuccessful();
+
+    expect(DB::table('sessions')->where('user_id', $owner->id)->exists())->toBeFalse();
+
+    $notifications = renewalNotifications($owner->tenant_id);
+    expect($notifications)->toHaveCount(1);
+    expect($notifications->first()->body)->toContain('logged out');
+});
+
+test('force-logout does not fire before the grace period has fully run out', function () {
+    $owner = onboard(['subscription_ends_at' => now()->subDays(ResolveSubscriptionAccessState::GRACE_DAYS)]);
+
+    DB::table('sessions')->insert([
+        'id' => 'test-session-id-2',
+        'user_id' => $owner->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'test',
+        'payload' => base64_encode('irrelevant'),
+        'last_activity' => now()->timestamp,
+    ]);
+
+    $this->artisan('subscriptions:process-renewals')->assertSuccessful();
+
+    expect(DB::table('sessions')->where('user_id', $owner->id)->exists())->toBeTrue();
 });
 
 test('an already-pending quotation is not duplicated by the expiry safety net', function () {
