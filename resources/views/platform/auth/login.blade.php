@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @include('partials.favicons')
         <title>Platform Login · {{ config('platform.brand_name') }}</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -13,17 +14,13 @@
         <div class="min-h-screen flex">
             <!-- Branding panel (hidden on small screens) -->
             <div class="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-slate-900 to-slate-900"></div>
-                <div class="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl"></div>
-                <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-indigo-400/10 blur-3xl"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-rose-600/20 via-slate-900 to-slate-900"></div>
+                <div class="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-pink-500/20 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-rose-400/10 blur-3xl"></div>
 
                 <div class="relative z-10 flex flex-col justify-between p-12 w-full">
                     <div class="flex items-center gap-2.5 text-white font-semibold tracking-tight text-lg">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500">
-                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </span>
+                        <x-application-logo class="h-9 w-9 shrink-0" />
                         {{ config('platform.brand_name') }}
                     </div>
 
@@ -42,14 +39,10 @@
             </div>
 
             <!-- Form panel -->
-            <div class="flex flex-1 items-center justify-center px-6 py-12 bg-slate-50 lg:bg-white">
+            <div class="flex flex-1 items-center justify-center px-6 py-12 bg-gradient-to-br from-pink-50 via-rose-50 to-white lg:bg-white lg:bg-none">
                 <div class="w-full max-w-sm">
                     <div class="lg:hidden flex items-center gap-2.5 justify-center mb-8 text-slate-900 font-semibold tracking-tight text-lg">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
-                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </span>
+                        <x-application-logo class="h-9 w-9 shrink-0" />
                         {{ config('platform.brand_name') }}
                     </div>
 

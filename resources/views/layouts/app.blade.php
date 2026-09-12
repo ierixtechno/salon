@@ -4,8 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @include('partials.favicons')
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'StyloBiz') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -27,8 +28,8 @@
 
                 <div class="flex items-center h-16 px-6 border-b border-white/10 shrink-0">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 text-white font-semibold tracking-tight">
-                        <x-application-logo class="h-8 w-8 fill-current text-white" />
-                        <span class="truncate">{{ config('app.name', 'Beauty SaaS') }}</span>
+                        <x-application-logo class="h-8 w-8 shrink-0" />
+                        <span class="truncate">{{ config('app.name', 'StyloBiz') }}</span>
                     </a>
                 </div>
 

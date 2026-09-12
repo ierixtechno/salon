@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @include('partials.favicons')
 
         <title>Platform · {{ config('platform.brand_name') }}</title>
 
@@ -26,11 +27,7 @@
 
                 <div class="flex items-center h-16 px-6 border-b border-white/10">
                     <a href="{{ route('platform.dashboard') }}" class="flex items-center gap-2.5 text-white font-semibold tracking-tight">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500">
-                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </span>
+                        <x-application-logo class="h-8 w-8 shrink-0" />
                         <span>{{ config('platform.brand_name') }}</span>
                     </a>
                 </div>
