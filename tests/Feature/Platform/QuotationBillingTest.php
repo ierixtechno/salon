@@ -392,6 +392,118 @@ test('a tenant admin cannot view or pay another tenant quotation or invoice', fu
     $this->actingAs($ownerB, 'web')->get("/billing/invoices/{$invoice->id}")->assertNotFound();
 });
 
+test('a platform admin can record a manual (offline) payment, which activates a pending tenant just like an online payment', function () {
+    $owner = onboard(['activated' => false, 'modules' => ['salon']]);
+    $admin = PlatformAdmin::factory()->create();
+    $plan = growthPlanWithModules(); // bundles salon + beauty
+
+    // Blocked pre-payment — this is the whole reason the manual-payment
+    // path is needed (the tenant can't reach the online checkout itself).
+    $this->post('/login', ['email' => $owner->email, 'password' => 'password123'])
+        ->assertSessionHasErrors('email');
+    $this->assertGuest('web');
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    $this->actingAs($admin, 'platform')->post("/platform/quotations/{$quotation->id}/record-payment", [
+        'payment_method' => 'bank_transfer',
+        'payment_reference' => 'UTR123456789',
+    ])->assertRedirect();
+
+    $quotation->refresh();
+    expect($quotation->status)->toBe('paid');
+    expect($quotation->paid_at)->not->toBeNull();
+
+    $invoice = PlatformInvoice::where('quotation_id', $quotation->id)->first();
+    expect($invoice)->not->toBeNull();
+    expect($invoice->payment_method)->toBe('bank_transfer');
+    expect($invoice->payment_reference)->toBe('UTR123456789');
+
+    $enabledCodes = TenantModule::where('tenant_id', $owner->tenant_id)
+        ->where('enabled', true)
+        ->with('module')
+        ->get()
+        ->pluck('module.code')
+        ->all();
+    expect($enabledCodes)->toEqualCanonicalizing(['salon', 'beauty']);
+
+    expect(Tenant::findOrFail($owner->tenant_id)->status)->toBe('active');
+
+    // The tenant, previously blocked from logging in pre-payment, can now
+    // log in — this is the whole point of the manual-payment path.
+    $this->post('/login', ['email' => $owner->email, 'password' => 'password123'])
+        ->assertRedirect(route('dashboard'));
+});
+
+test('a manual payment cannot be recorded twice on the same quotation', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    $this->actingAs($admin, 'platform')->post("/platform/quotations/{$quotation->id}/record-payment", [
+        'payment_method' => 'cash',
+    ])->assertRedirect();
+
+    $this->actingAs($admin, 'platform')->post("/platform/quotations/{$quotation->id}/record-payment", [
+        'payment_method' => 'cash',
+    ])->assertStatus(409);
+
+    expect(PlatformInvoice::where('quotation_id', $quotation->id)->count())->toBe(1);
+});
+
+test('recording a manual payment requires a valid payment method', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    $this->actingAs($admin, 'platform')->post("/platform/quotations/{$quotation->id}/record-payment", [
+        'payment_method' => 'bitcoin',
+    ])->assertSessionHasErrors('payment_method');
+
+    expect($quotation->fresh()->status)->toBe('pending');
+});
+
+test('a tenant cannot record their own payment manually', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id,
+        'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    // Logging into the 'web' guard does not clear a separately-authenticated
+    // 'platform' guard session (both are real, independent Laravel guards) —
+    // log the admin out explicitly so this exercises a plain tenant user
+    // who was never platform-authenticated, not "an admin also logged in
+    // as this tenant".
+    $this->app['auth']->guard('platform')->logout();
+
+    $this->actingAs($owner, 'web')->post("/platform/quotations/{$quotation->id}/record-payment", [
+        'payment_method' => 'cash',
+    ])->assertRedirect(route('platform.login'));
+
+    expect($quotation->fresh()->status)->toBe('pending');
+});
+
 test('an unauthenticated guest cannot access tenant billing routes', function () {
     $owner = onboard();
     $plan = growthPlanWithModules();

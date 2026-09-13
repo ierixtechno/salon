@@ -72,7 +72,43 @@
         @endif
 
         @if ($quotation->status === 'pending')
-            <div class="flex items-center justify-between mt-6 pt-5 border-t border-gray-100">
+            <div class="border-t border-gray-100 pt-5 mt-6">
+                <h4 class="font-semibold text-gray-900 text-sm">Record payment</h4>
+                <p class="text-xs text-gray-500 mt-1">
+                    Use this once you've received payment outside the app (bank transfer, UPI, cash, cheque) —
+                    the tenant can't pay their own first invoice in-app since login is blocked until it's paid.
+                </p>
+                <form method="POST" action="{{ route('platform.quotations.record-payment', $quotation) }}" class="mt-3 space-y-3" onsubmit="return confirm('Record this payment and activate the tenant?')">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="payment_method" class="block text-xs font-medium text-gray-600 mb-1">Payment method</label>
+                            <select id="payment_method" name="payment_method" required class="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="bank_transfer">Bank transfer</option>
+                                <option value="upi">UPI</option>
+                                <option value="cash">Cash</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="other">Other</option>
+                            </select>
+                            @error('payment_method')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="payment_reference" class="block text-xs font-medium text-gray-600 mb-1">Reference (optional)</label>
+                            <input type="text" id="payment_reference" name="payment_reference" placeholder="e.g. UTR / transaction ID" class="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @error('payment_reference')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <button type="submit" class="inline-flex items-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition">
+                        Record payment &amp; activate tenant
+                    </button>
+                </form>
+            </div>
+
+            <div class="flex items-center justify-between pt-5 border-t border-gray-100">
                 <a href="{{ route('platform.quotations.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
                     &larr; Back to quotations
                 </a>

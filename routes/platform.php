@@ -50,6 +50,7 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('quotations/create', [QuotationController::class, 'create'])->name('quotations.create');
         Route::post('quotations', [QuotationController::class, 'store'])->name('quotations.store');
         Route::get('quotations/{quotation}', [QuotationController::class, 'show'])->name('quotations.show');
+        Route::post('quotations/{quotation}/record-payment', [QuotationController::class, 'recordPayment'])->name('quotations.record-payment');
         Route::patch('quotations/{quotation}/cancel', [QuotationController::class, 'cancel'])->name('quotations.cancel');
 
         Route::get('invoices', [PlatformInvoiceController::class, 'index'])->name('invoices.index');

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Platform;
 
 use App\Domain\Platform\Actions\CancelQuotation;
 use App\Domain\Platform\Actions\CreateQuotation;
+use App\Domain\Platform\Actions\PayQuotation;
 use App\Domain\Platform\Models\PlatformAuditLog;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Platform\RecordManualQuotationPaymentRequest;
 use App\Http\Requests\Platform\StoreQuotationRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -61,6 +63,43 @@ class QuotationController extends Controller
         $quotation->load(['tenant', 'plan.modules', 'createdBy', 'invoice']);
 
         return view('platform.quotations.show', ['quotation' => $quotation]);
+    }
+
+    /**
+     * A tenant cannot pay their own first invoice in-app (login is blocked
+     * until the first invoice is paid — see LoginRequest), and most of this
+     * business's actual clients pay by bank transfer/UPI/cash outside the
+     * app anyway. This lets Super Admin attest that an off-platform payment
+     * was received and drive it through the exact same PayQuotation action
+     * the Razorpay flow uses — same invoice generation, module sync, and
+     * tenant activation, just skipping the online gateway signature check
+     * because there is no gateway involved.
+     */
+    public function recordPayment(RecordManualQuotationPaymentRequest $request, Quotation $quotation, PayQuotation $action): RedirectResponse
+    {
+        abort_if($quotation->status !== 'pending', 409, 'This quotation is no longer payable.');
+
+        $invoice = $action->execute(
+            $quotation,
+            $request->validated('payment_method'),
+            $request->validated('payment_reference'),
+        );
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'quotation.paid_manually',
+            'Quotation',
+            $quotation->id,
+            $quotation->tenant_id,
+            [
+                'payment_method' => $request->validated('payment_method'),
+                'payment_reference' => $request->validated('payment_reference'),
+                'invoice_id' => $invoice->id,
+            ],
+        );
+
+        return redirect()->route('platform.quotations.show', $quotation)
+            ->with('status', 'Payment recorded — invoice generated and tenant activated.');
     }
 
     public function cancel(Quotation $quotation, CancelQuotation $action): RedirectResponse
