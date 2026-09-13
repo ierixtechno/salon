@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Platform;
 
+use App\Domain\Platform\Actions\CreateQuotation;
 use App\Domain\Platform\Actions\OnboardTenant;
 use App\Domain\Platform\Actions\TopUpWhatsappCredits;
 use App\Domain\Platform\Actions\UpdateTenantModules;
 use App\Domain\Platform\Models\Module;
 use App\Domain\Platform\Models\PlatformAuditLog;
+use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Platform\CreateTenantRequest;
@@ -31,12 +33,30 @@ class TenantController extends Controller
     {
         return view('platform.tenants.create', [
             'modules' => Module::orderBy('name')->get(),
+            'plans' => SubscriptionPlan::where('is_active', true)->with('modules')->orderBy('price')->get(),
         ]);
     }
 
-    public function store(CreateTenantRequest $request, OnboardTenant $onboardTenant): RedirectResponse
+    /**
+     * Picking a plan here skips the separate "Quotations > Create" step —
+     * the quotation is generated in the same request, right after the
+     * tenant. Leaving the plan blank keeps the original two-step flow
+     * (manual modules now, a quotation created later).
+     */
+    public function store(CreateTenantRequest $request, OnboardTenant $onboardTenant, CreateQuotation $createQuotation): RedirectResponse
     {
-        $owner = $onboardTenant->execute($request->validated());
+        $data = $request->validated();
+        $plan = isset($data['subscription_plan_id']) ? SubscriptionPlan::find($data['subscription_plan_id']) : null;
+
+        // No plan chosen -> modules weren't asked for, nothing to derive.
+        // Plan chosen -> the plan's own modules stand in for the manual
+        // picker (PayQuotation would overwrite them to this exact set on
+        // payment anyway, so asking twice adds nothing).
+        if ($plan) {
+            $data['modules'] = $plan->modules->pluck('code')->all();
+        }
+
+        $owner = $onboardTenant->execute($data);
 
         PlatformAuditLog::record(
             Auth::guard('platform')->user(),
@@ -46,8 +66,32 @@ class TenantController extends Controller
             $owner->tenant_id,
         );
 
-        return redirect()->route('platform.tenants.show', $owner->tenant_id)
-            ->with('status', 'Tenant created.');
+        if (! $plan) {
+            return redirect()->route('platform.tenants.show', $owner->tenant_id)
+                ->with('status', 'Tenant created.');
+        }
+
+        $tenant = Tenant::findOrFail($owner->tenant_id);
+
+        $quotation = $createQuotation->execute(
+            tenant: $tenant,
+            plan: $plan,
+            createdBy: Auth::guard('platform')->user(),
+            amountOverride: $data['quotation_amount'] ?? null,
+            notes: $data['quotation_notes'] ?? null,
+        );
+
+        PlatformAuditLog::record(
+            Auth::guard('platform')->user(),
+            'quotation.created',
+            'Quotation',
+            $quotation->id,
+            $tenant->id,
+            ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount],
+        );
+
+        return redirect()->route('platform.quotations.show', $quotation)
+            ->with('status', 'Tenant created — quotation generated, ready to record payment.');
     }
 
     public function show(Tenant $tenant): View

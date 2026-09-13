@@ -518,3 +518,97 @@ test('an unauthenticated guest cannot access tenant billing routes', function ()
     $this->get('/billing/quotations')->assertRedirect('/login');
     $this->get("/billing/quotations/{$quotation->id}")->assertRedirect('/login');
 });
+
+test('creating a tenant without a plan behaves exactly as before (manual modules, no quotation)', function () {
+    $admin = PlatformAdmin::factory()->create();
+
+    $response = $this->actingAs($admin, 'platform')->post('/platform/tenants', [
+        'business_name' => 'No Plan Yet Salon',
+        'modules' => ['salon'],
+        'owner_name' => 'Owner',
+        'owner_email' => 'noplan@example.com',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+    ]);
+
+    $tenant = Tenant::where('name', 'No Plan Yet Salon')->firstOrFail();
+    $response->assertRedirect(route('platform.tenants.show', $tenant->id));
+    expect($tenant->status)->toBe('pending_payment');
+    expect(Quotation::where('tenant_id', $tenant->id)->exists())->toBeFalse();
+});
+
+test('creating a tenant with a plan selected skips the separate quotation step', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $plan = growthPlanWithModules(); // bundles salon + beauty
+
+    $response = $this->actingAs($admin, 'platform')->post('/platform/tenants', [
+        'business_name' => 'One Step Salon',
+        'subscription_plan_id' => $plan->id,
+        'billing_state' => config('platform.state'),
+        'owner_name' => 'Owner',
+        'owner_email' => 'onestep@example.com',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+    ]);
+
+    $tenant = Tenant::where('name', 'One Step Salon')->firstOrFail();
+    $quotation = Quotation::where('tenant_id', $tenant->id)->firstOrFail();
+
+    $response->assertRedirect(route('platform.quotations.show', $quotation));
+    expect($quotation->subscription_plan_id)->toBe($plan->id);
+    expect((float) $quotation->amount)->toBe((float) $plan->price);
+    expect($quotation->status)->toBe('pending');
+
+    // Modules weren't asked for — they're derived from the plan so the
+    // tenant record isn't left with an empty module set pre-payment.
+    $initialCodes = TenantModule::where('tenant_id', $tenant->id)
+        ->with('module')->get()->pluck('module.code')->all();
+    expect($initialCodes)->toEqualCanonicalizing(['salon', 'beauty']);
+
+    // The whole point: it's immediately payable from here, no detour
+    // through "Quotations > Create" needed.
+    $this->actingAs($admin, 'platform')->post("/platform/quotations/{$quotation->id}/record-payment", [
+        'payment_method' => 'upi',
+    ])->assertRedirect();
+
+    expect(Tenant::findOrFail($tenant->id)->status)->toBe('active');
+});
+
+test('creating a tenant with a plan but no billing state is rejected before anything is created', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/tenants', [
+        'business_name' => 'Missing State Salon',
+        'subscription_plan_id' => $plan->id,
+        'owner_name' => 'Owner',
+        'owner_email' => 'missingstate@example.com',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+    ])->assertSessionHasErrors('billing_state');
+
+    expect(Tenant::where('name', 'Missing State Salon')->exists())->toBeFalse();
+});
+
+test('creating a tenant with a plan honours an amount override on the auto-generated quotation', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/tenants', [
+        'business_name' => 'Discounted Salon',
+        'subscription_plan_id' => $plan->id,
+        'billing_state' => config('platform.state'),
+        'quotation_amount' => 499,
+        'quotation_notes' => 'First-month discount',
+        'owner_name' => 'Owner',
+        'owner_email' => 'discounted@example.com',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+    ])->assertRedirect();
+
+    $tenant = Tenant::where('name', 'Discounted Salon')->firstOrFail();
+    $quotation = Quotation::where('tenant_id', $tenant->id)->firstOrFail();
+
+    expect((float) $quotation->amount)->toBe(499.0);
+    expect($quotation->notes)->toBe('First-month discount');
+});
