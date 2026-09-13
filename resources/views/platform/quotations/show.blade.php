@@ -73,6 +73,10 @@
 
         @if ($quotation->status === 'pending')
             <div class="border-t border-gray-100 pt-5 mt-6">
+                <x-upi-qr-code :quotation="$quotation" />
+            </div>
+
+            <div class="border-t border-gray-100 pt-5 mt-6">
                 <h4 class="font-semibold text-gray-900 text-sm">Record payment</h4>
                 <p class="text-xs text-gray-500 mt-1">
                     Use this once you've received payment outside the app (bank transfer, UPI, cash, cheque) —

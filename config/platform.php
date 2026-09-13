@@ -74,4 +74,23 @@ return [
     'gst_sac_code' => env('PLATFORM_GST_SAC_CODE', '998313'),
     'state' => env('PLATFORM_STATE', 'Haryana'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | UPI QR payment (manual reconciliation)
+    |--------------------------------------------------------------------------
+    |
+    | A scannable UPI QR on a pending Quotation — needs no payment gateway
+    | integration at all, just the business's own UPI VPA. Not
+    | auto-reconciled (there's no webhook for a plain UPI transfer the way
+    | there is for Razorpay — see ProcessRazorpayWebhookPayment): Super
+    | Admin still confirms the payment landed and uses the existing
+    | "Record payment" action (QuotationController::recordPayment)
+    | afterward. Blank until a real VPA is configured — see
+    | BuildUpiPaymentUri, which returns null (QR hidden) until then.
+    |
+    */
+
+    'upi_vpa' => env('PLATFORM_UPI_VPA'),
+    'upi_payee_name' => env('PLATFORM_UPI_PAYEE_NAME', env('PLATFORM_BRAND_NAME', 'StyloBiz')),
+
 ];

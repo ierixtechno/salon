@@ -77,6 +77,8 @@
                             Pay Now
                         </button>
                     </div>
+
+                    <x-upi-qr-code :quotation="$quotation" />
                 @endif
 
                 <div class="pt-2">

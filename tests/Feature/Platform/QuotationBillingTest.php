@@ -612,3 +612,66 @@ test('creating a tenant with a plan honours an amount override on the auto-gener
     expect((float) $quotation->amount)->toBe(499.0);
     expect($quotation->notes)->toBe('First-month discount');
 });
+
+test('the UPI QR code is hidden on both quotation pages when no VPA is configured', function () {
+    config(['platform.upi_vpa' => null]);
+
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id, 'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    $this->actingAs($admin, 'platform')->get("/platform/quotations/{$quotation->id}")
+        ->assertOk()->assertDontSee('data-upi-qr', false);
+
+    $this->actingAs($owner, 'web')->get("/billing/quotations/{$quotation->id}")
+        ->assertOk()->assertDontSee('data-upi-qr', false);
+});
+
+test('the UPI QR code appears on both quotation pages for a pending quotation once a VPA is configured', function () {
+    config(['platform.upi_vpa' => 'nexbiz@okicici', 'platform.upi_payee_name' => 'NexBiz Technology']);
+
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id, 'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    $this->actingAs($admin, 'platform')->get("/platform/quotations/{$quotation->id}")
+        ->assertOk()->assertSee('data-upi-qr', false)->assertSee('nexbiz@okicici', false);
+
+    $this->actingAs($owner, 'web')->get("/billing/quotations/{$quotation->id}")
+        ->assertOk()->assertSee('data-upi-qr', false)->assertSee('nexbiz@okicici', false);
+});
+
+test('the UPI QR code does not appear once the quotation is paid', function () {
+    config(['platform.upi_vpa' => 'nexbiz@okicici']);
+    $this->app->bind(PaymentGatewayProvider::class, FakeVerifiedPaymentGatewayProvider::class);
+
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/quotations', [
+        'tenant_id' => $owner->tenant_id, 'subscription_plan_id' => $plan->id,
+    ]);
+    $quotation = Quotation::where('tenant_id', $owner->tenant_id)->firstOrFail();
+
+    $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/checkout");
+    $quotation->refresh();
+    $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/confirm", [
+        'razorpay_order_id' => $quotation->razorpay_order_id,
+        'razorpay_payment_id' => 'pay_fake_123',
+        'razorpay_signature' => 'sig_fake',
+    ]);
+
+    $this->actingAs($admin, 'platform')->get("/platform/quotations/{$quotation->id}")
+        ->assertOk()->assertDontSee('data-upi-qr', false);
+});
