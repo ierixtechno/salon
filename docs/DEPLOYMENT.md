@@ -10,7 +10,7 @@ Deploying to actual cPanel hosting specifically? See [CPANEL-DEPLOYMENT-STEPS.md
 - MySQL 8.0+.
 - Composer 2.
 - Node/npm only at build time, to run `npm run build` (Vite) — not required on the production server itself if you build assets locally/in CI and upload `public/build`.
-- Cron access (one entry — see §4).
+- Cron access (one entry — see §5).
 
 ## 2. First deployment
 
@@ -66,15 +66,30 @@ Existing tenants' roles don't automatically pick up newly-added permissions from
 | `SESSION_SECURE_COOKIE` | `true` | Only send session/CSRF cookies over HTTPS. Left blank in `.env.example` (auto-detect) for local `http://` dev. |
 | `SESSION_SAME_SITE` | `lax` (default) | Already safe; only change if you have a specific cross-site embedding need. |
 | `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` | your own values | Never deploy with the example defaults. |
-| `QUEUE_CONNECTION` | `database` | Shared-hosting compatible — no persistent worker needed (see §4). |
+| `QUEUE_CONNECTION` | `database` | Shared-hosting compatible — no persistent worker needed (see §5). |
 | `CACHE_STORE` | `database` | Same reasoning; swappable to Redis/Memcached later without code changes. |
 | `MAIL_MAILER` | a real transport (`smtp`, `ses`, etc.) | `.env.example` defaults to `log`, which just writes emails to the log file instead of sending them. |
 | `NOTIFICATIONS_SMS_DRIVER` / `NOTIFICATIONS_WHATSAPP_DRIVER` | `null` until compliance is in place | CLAUDE.md §36 — only point these at a real provider once DLT/TRAI (SMS) and WhatsApp Business API registration are actually done. `null` logs instead of sending; safe default. |
-| `FILESYSTEM_DISK` | `local` | Private uploads (expense receipts, data exports) stay off the public web root — see §6 for what this means for backups. |
+| `FILESYSTEM_DISK` | `local` | Private uploads (expense receipts, data exports) stay off the public web root — see §7 for what this means for backups. |
+| `PAYMENTS_DRIVER` | `razorpay` once you have real keys | `.env.example` defaults to `null` — checkout shows a clear "not configured yet" error instead of crashing until you set this. |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | your Razorpay checkout keys | From the Razorpay dashboard → Settings → API Keys. Use `rzp_test_...` keys first to prove the whole flow end-to-end before switching to live keys. |
+| `RAZORPAY_WEBHOOK_SECRET` | your Razorpay webhook secret | See §4 below — a *separate* secret from the checkout keys above. |
 
 Also confirm the web server (Apache/Nginx) document root points at `public/`, not the project root — `.env`, `storage/`, and `app/` must never be web-accessible.
 
-## 4. Cron & queue (no persistent worker)
+## 4. Razorpay webhook setup
+
+The tenant billing checkout (`billing/quotations/{id}/checkout`) confirms payment two ways: the browser reports success back to the app the instant checkout completes, **and** Razorpay calls the app directly on its own server — a resilience backup so a payment is never lost even if the customer's browser closes right after paying. The second path needs a one-time setup in the Razorpay dashboard, separate from the checkout keys in §3:
+
+1. **Razorpay dashboard → Settings → Webhooks → Add New Webhook.**
+2. **Webhook URL:** `https://yourdomain.com/webhooks/razorpay`
+3. **Active events:** tick `payment.captured` (nothing else is needed).
+4. Razorpay shows you a **webhook secret** at this point — copy it into `.env` as `RAZORPAY_WEBHOOK_SECRET`, then `php artisan config:cache`.
+5. Test-mode and live-mode each have their own webhook secret — when you eventually switch `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` from test to live, come back and add a **second** webhook entry for live mode too, and update `.env` with the live-mode secret.
+
+Until `RAZORPAY_WEBHOOK_SECRET` is set, the endpoint safely refuses to process anything (HTTP 503) rather than silently doing nothing — the browser-side confirm alone still works fine in the meantime.
+
+## 5. Cron & queue (no persistent worker)
 
 Add exactly one cron entry (cPanel: Cron Jobs), running every minute:
 
@@ -90,12 +105,12 @@ This drives everything already registered in `bootstrap/app.php`'s `withSchedule
 
 If your host *does* support a long-running process (VPS/cloud), prefer a real `php artisan queue:work` under Supervisor instead of the cron-driven version above — CLAUDE.md §65 explicitly wants that swap to be config/ops-only, and it is (remove the scheduled `queue:work` entry, run a persistent worker instead).
 
-## 5. Logs & monitoring
+## 6. Logs & monitoring
 
 - `storage/logs/laravel.log` (or your configured `LOG_CHANNEL`) — every entry is tagged with `request_id`, and `tenant_id`/`user_id` once resolved (Phase 14's `AttachRequestId` / `SetPermissionsTeamFromTenant`). When a user reports an issue, ask for the `X-Request-Id` response header value (visible in browser devtools) or have them note the time — it's not surfaced in the UI by default.
 - Watch disk usage under `storage/app/private` — expense attachments and data exports accumulate there (the latter self-prunes after 7 days via `data-exports:prune`; the former has no automatic cleanup yet — CLAUDE.md §34 tenant storage quota tracking is not implemented).
 
-## 6. Backup
+## 7. Backup
 
 Three things need backing up. None of this is automated by the app itself — shared hosting typically provides its own backup tooling (cPanel "Backup Wizard" or similar); the commands below are for a manual/scripted backup or to verify what your host's tool is actually covering.
 
@@ -117,7 +132,7 @@ Store all three somewhere other than the same server/disk (off-site or a separat
 
 **Suggested cadence:** daily database dump, weekly file backup (uploads change far less often than transactional data), retained at least 30 days.
 
-## 7. Restore
+## 8. Restore
 
 1. Provision a fresh app checkout (same commit/tag as when the backup was taken, or newer — never older, since older code may not understand newer migrations already applied to the dumped database).
 2. Restore `.env` from its backup (or reconstruct it from the checklist in §3 plus your saved secrets).
@@ -133,7 +148,7 @@ Store all three somewhere other than the same server/disk (off-site or a separat
 6. `php artisan config:cache && php artisan route:cache && php artisan view:cache`.
 7. Re-point DNS/cron/webserver at the restored instance, confirm `php artisan schedule:run` cron is active, and smoke-test: Super Admin login, one tenant login, one booking flow.
 
-## 8. What's deliberately out of scope here
+## 9. What's deliberately out of scope here
 
 - Automated, scheduled backups triggered by the app itself — this is host/infrastructure responsibility, not application code, consistent with CLAUDE.md §64 (no mandatory daemon).
 - A staging-environment setup guide — assumed to mirror production minus real payment/SMS credentials.

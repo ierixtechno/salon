@@ -50,6 +50,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'resolve-tenant' => ResolveTenantFromSlug::class,
         ]);
 
+        // Provider webhooks carry no CSRF token (the caller is Razorpay's
+        // server, not a browser with our session) — authenticity comes
+        // from the provider's own signature check instead (CLAUDE.md §31),
+        // done inside RazorpayWebhookController itself.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/razorpay',
+        ]);
+
         // Every response, every route, including the public booking
         // surface — response header hardening (CLAUDE.md §14) and the
         // request-correlation id (CLAUDE.md §41) apply universally, not

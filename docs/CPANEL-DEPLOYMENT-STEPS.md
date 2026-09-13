@@ -121,7 +121,7 @@ chmod -R 775 storage bootstrap/cache
 ```
 * * * * * cd /home/yourcpaneluser/salon && php artisan schedule:run >> /dev/null 2>&1
 ```
-If plain `php` on the cron line doesn't resolve to PHP 8.3+, use the full path shown in MultiPHP Manager for your chosen version, e.g. `/usr/local/bin/ea-php83` instead of `php`. This one cron line drives everything in DEPLOYMENT.md §4 — the marketing automations, export pruning, and the database-queue worker (there's no persistent worker process on shared hosting, so this is how `DeliverNotification`/`GenerateTenantDataExport` jobs actually run).
+If plain `php` on the cron line doesn't resolve to PHP 8.3+, use the full path shown in MultiPHP Manager for your chosen version, e.g. `/usr/local/bin/ea-php83` instead of `php`. This one cron line drives everything in DEPLOYMENT.md §5 — the marketing automations, export pruning, and the database-queue worker (there's no persistent worker process on shared hosting, so this is how `DeliverNotification`/`GenerateTenantDataExport` jobs actually run).
 
 ## 10. HTTPS
 
