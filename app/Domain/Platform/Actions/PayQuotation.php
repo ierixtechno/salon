@@ -2,7 +2,6 @@
 
 namespace App\Domain\Platform\Actions;
 
-use App\Domain\Core\Actions\SendNotification;
 use App\Domain\Platform\Actions\Concerns\GeneratesPlatformSequenceNumbers;
 use App\Domain\Platform\Models\PlatformInvoice;
 use App\Domain\Platform\Models\Quotation;
@@ -11,7 +10,6 @@ use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantSubscription;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\PermissionRegistrar;
 
 /**
  * The core of the billing flow: turns a paid Quotation into an immutable
@@ -66,7 +64,8 @@ class PayQuotation
             // OnboardTenant — signups no longer get a free trial). Renewals
             // never touch Tenant.status again after this, only
             // TenantSubscription below.
-            if ($quotation->tenant->status === 'pending_payment') {
+            $firstActivation = $quotation->tenant->status === 'pending_payment';
+            if ($firstActivation) {
                 $quotation->tenant->update(['status' => 'active']);
             }
 
@@ -82,7 +81,7 @@ class PayQuotation
                 ],
             );
 
-            $this->notifyTenant($quotation, $invoiceNumber, $invoice->id);
+            app(NotifyTenantBillingContacts::class)->paymentReceived($quotation, $invoice, $endsAt, $firstActivation);
 
             return $invoice;
         });
@@ -122,28 +121,5 @@ class PayQuotation
         }
 
         return $previousSubscription?->ends_at ?? $freshCycleEnd();
-    }
-
-    private function notifyTenant(Quotation $quotation, string $invoiceNumber, int $invoiceId): void
-    {
-        $tenant = $quotation->tenant;
-        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
-
-        $tenant->users()
-            ->get()
-            ->filter(fn ($user) => $user->can('tenant.billing.manage'))
-            ->each(function ($user) use ($tenant, $invoiceNumber, $invoiceId) {
-                app(SendNotification::class)->execute(
-                    tenantId: $tenant->id,
-                    channel: 'in_app',
-                    recipientType: 'user',
-                    recipientId: $user->id,
-                    toAddress: null,
-                    subject: 'Payment received',
-                    body: "Your payment was received. Invoice {$invoiceNumber} is available.",
-                    referenceType: 'PlatformInvoice',
-                    referenceId: $invoiceId,
-                );
-            });
     }
 }

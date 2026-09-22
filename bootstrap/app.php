@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Platform\Support\RecordErrorLog;
 use App\Http\Middleware\AttachRequestId;
 use App\Http\Middleware\EnforceSubscriptionAccess;
 use App\Http\Middleware\EnsureModuleEnabled;
@@ -33,6 +34,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // CLAUDE.md §34/§36: don't let exported PII bundles sit on disk
         // past their stated 7-day availability window.
         $schedule->command('data-exports:prune')->dailyAt('03:00');
+
+        // CLAUDE.md §67: daily database + uploads backup. Runs before the
+        // other 02:xx-03:xx housekeeping so it captures the day's data
+        // before anything is pruned; withoutOverlapping() guards a slow
+        // run (a large database) against the next day's firing. A failed
+        // run emails Super Admin and shows red on Platform > Backups.
+        $schedule->command('backup:run')->dailyAt('02:00')->withoutOverlapping(180);
+
+        // Error-log housekeeping + the once-a-day summary email to Super
+        // Admin (skipped entirely on a day with nothing to report).
+        $schedule->command('error-logs:prune')->dailyAt('03:30');
+        $schedule->command('error-logs:send-digest')->dailyAt('07:30');
 
         // Shared hosting has no persistent `queue:work` process (CLAUDE.md
         // §43/§64) — this drains the database queue (DeliverNotification,
@@ -95,6 +108,14 @@ return Application::configure(basePath: dirname(__DIR__))
             : route('dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Every reported exception also lands in the Platform error log
+        // (Super Admin > Error log, plus the daily digest email). Returns
+        // nothing, so Laravel's normal reporting to the log file still
+        // happens too — this adds to it, never replaces it.
+        $exceptions->report(function (Throwable $e): void {
+            app(RecordErrorLog::class)->record($e);
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

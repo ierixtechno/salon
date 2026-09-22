@@ -37,6 +37,11 @@
                         $navItemBase = 'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150';
                         $navItemActive = 'bg-pink-500/15 text-pink-200';
                         $navItemInactive = 'text-rose-100/80 hover:bg-white/5 hover:text-white';
+                        // Warning badges — both guarded internally, so a
+                        // release uploaded before `migrate` has run just
+                        // shows no badge instead of breaking this page.
+                        $openErrorCount = \App\Domain\Platform\Support\PlatformHealth::openErrorCount();
+                        $backupStale = \App\Domain\Platform\Support\PlatformHealth::backupIsStale();
                     @endphp
 
                     <a href="{{ route('platform.dashboard') }}"
@@ -103,6 +108,34 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                         </svg>
                         Accounting
+                    </a>
+
+                    <a href="{{ route('platform.error-logs.index') }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('platform.error-logs.*') ? $navItemActive : $navItemInactive }}">
+                        @if (request()->routeIs('platform.error-logs.*'))
+                            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
+                        @endif
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        Error log
+                        @if ($openErrorCount > 0)
+                            <span class="ml-auto inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">{{ $openErrorCount > 99 ? '99+' : $openErrorCount }}</span>
+                        @endif
+                    </a>
+
+                    <a href="{{ route('platform.backups.index') }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('platform.backups.*') ? $navItemActive : $navItemInactive }}">
+                        @if (request()->routeIs('platform.backups.*'))
+                            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
+                        @endif
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                        </svg>
+                        Backups
+                        @if ($backupStale)
+                            <span class="ml-auto h-2.5 w-2.5 rounded-full bg-red-500" title="No recent successful backup"></span>
+                        @endif
                     </a>
                 </nav>
 

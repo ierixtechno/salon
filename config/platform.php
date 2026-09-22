@@ -31,6 +31,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Support contact shown in billing emails
+    |--------------------------------------------------------------------------
+    |
+    | Optional. When set, quotation/payment/renewal emails end with
+    | "Questions? Write to <address>". Left blank rather than defaulting to
+    | MAIL_FROM_ADDRESS, since that is often a no-reply placeholder nobody
+    | actually reads.
+    |
+    */
+
+    'support_email' => env('PLATFORM_SUPPORT_EMAIL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default tenant timezone/currency
     |--------------------------------------------------------------------------
     |

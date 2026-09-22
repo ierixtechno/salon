@@ -8,11 +8,24 @@ use App\Domain\Platform\Models\TenantSubscription;
 use App\Domain\Platform\Support\ResolveSubscriptionAccessState;
 use Illuminate\Support\Facades\DB;
 
+// In-app rows only — every reminder now also goes out as an email row
+// (see NotifyTenantBillingContacts), asserted separately below, and
+// counting both here would make "exactly one reminder" read as two.
 function renewalNotifications(int $tenantId)
 {
     return NotificationLog::withoutGlobalScope(TenantScope::class)
         ->where('tenant_id', $tenantId)
+        ->where('channel', 'in_app')
         ->where('subject', 'Subscription renewal')
+        ->get();
+}
+
+function renewalEmails(int $tenantId)
+{
+    return NotificationLog::withoutGlobalScope(TenantScope::class)
+        ->where('tenant_id', $tenantId)
+        ->where('channel', 'email')
+        ->where('reference_type', 'TenantSubscription')
         ->get();
 }
 

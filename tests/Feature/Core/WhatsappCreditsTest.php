@@ -131,3 +131,28 @@ test('a failed WhatsApp send does not debit any credit', function () {
     expect($log->status)->toBe('failed');
     expect($tenant->whatsappCreditBalance())->toBe(10);
 });
+
+test('with no real WhatsApp provider configured, a message is skipped and no credit is ever charged', function () {
+    // The default binding (NOTIFICATIONS_WHATSAPP_DRIVER=null) — deliberately
+    // NOT overridden with a fake, this is exactly what production runs
+    // until a real provider is registered.
+    $admin = PlatformAdmin::factory()->create();
+    $owner = onboard();
+    $tenant = Tenant::findOrFail($owner->tenant_id);
+
+    $this->actingAs($admin, 'platform')
+        ->post("/platform/tenants/{$tenant->id}/whatsapp-credits", ['amount' => 10]);
+
+    $log = makeQueuedWhatsappLog($tenant->id, $owner->id);
+
+    (new DeliverNotification($log->id))->handle(
+        app(SmsProvider::class),
+        app(WhatsAppProvider::class),
+        app(ChargeWhatsappCredit::class),
+    );
+
+    $log->refresh();
+    expect($log->status)->toBe('skipped');
+    expect($log->error_message)->toContain('No WhatsApp provider is configured');
+    expect($tenant->whatsappCreditBalance())->toBe(10);
+});

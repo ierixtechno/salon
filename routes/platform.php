@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Platform\BackupController;
+use App\Http\Controllers\Platform\ErrorLogController;
 use App\Http\Controllers\Platform\PlatformAccountingController;
 use App\Http\Controllers\Platform\PlatformAuthController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
@@ -55,5 +57,15 @@ Route::prefix('platform')->name('platform.')->group(function () {
 
         Route::get('invoices', [PlatformInvoiceController::class, 'index'])->name('invoices.index');
         Route::get('invoices/{invoice}', [PlatformInvoiceController::class, 'show'])->name('invoices.show');
+
+        // Operations: application error log and backups (Super Admin only).
+        Route::get('error-logs', [ErrorLogController::class, 'index'])->name('error-logs.index');
+        Route::get('error-logs/{error_log}', [ErrorLogController::class, 'show'])->name('error-logs.show');
+        Route::patch('error-logs/{error_log}/resolve', [ErrorLogController::class, 'resolve'])->name('error-logs.resolve');
+        Route::patch('error-logs/{error_log}/reopen', [ErrorLogController::class, 'reopen'])->name('error-logs.reopen');
+
+        Route::get('backups', [BackupController::class, 'index'])->name('backups.index');
+        Route::post('backups', [BackupController::class, 'run'])->name('backups.run');
+        Route::get('backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
     });
 });

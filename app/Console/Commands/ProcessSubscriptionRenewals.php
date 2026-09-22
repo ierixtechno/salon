@@ -2,17 +2,16 @@
 
 namespace App\Console\Commands;
 
-use App\Domain\Core\Actions\SendNotification;
 use App\Domain\Core\Models\NotificationLog;
 use App\Domain\Core\Scopes\TenantScope;
 use App\Domain\Platform\Actions\CreateQuotation;
+use App\Domain\Platform\Actions\NotifyTenantBillingContacts;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\TenantSubscription;
 use App\Domain\Platform\Support\ResolveSubscriptionAccessState;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
 /**
@@ -120,23 +119,10 @@ class ProcessSubscriptionRenewals extends Command
 
     private function sendReminder(TenantSubscription $subscription, string $message): void
     {
-        $tenant = $subscription->tenant;
-        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
-
-        $tenant->users()
-            ->get()
-            ->filter(fn ($user) => $user->can('tenant.billing.manage'))
-            ->each(fn ($user) => app(SendNotification::class)->execute(
-                tenantId: $tenant->id,
-                channel: 'in_app',
-                recipientType: 'user',
-                recipientId: $user->id,
-                toAddress: null,
-                subject: 'Subscription renewal',
-                body: "Your {$subscription->plan->name} subscription {$message}",
-                referenceType: 'TenantSubscription',
-                referenceId: $subscription->id,
-            ));
+        // In-app and email both — a renewing tenant may not have opened
+        // the app lately, and an in-app notification alone would never
+        // reach them (see NotifyTenantBillingContacts).
+        app(NotifyTenantBillingContacts::class)->renewalReminder($subscription, $message);
     }
 
     /**

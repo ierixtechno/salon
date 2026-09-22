@@ -2,14 +2,12 @@
 
 namespace App\Domain\Platform\Actions;
 
-use App\Domain\Core\Actions\SendNotification;
 use App\Domain\Platform\Actions\Concerns\GeneratesPlatformSequenceNumbers;
 use App\Domain\Platform\Models\PlatformAdmin;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Bills a specific tenant for a subscription plan. Amount defaults to the
@@ -76,38 +74,9 @@ class CreateQuotation
                 'is_upgrade' => $isUpgrade,
             ]);
 
-            $this->notifyTenant($tenant, "A new quotation ({$quotationNumber}) is awaiting your review.", $quotation->id);
+            app(NotifyTenantBillingContacts::class)->quotationCreated($quotation);
 
             return $quotation;
         });
-    }
-
-    /**
-     * Notifies every tenant user with tenant.billing.manage (Owner-only
-     * today) via the existing in-app notification pipeline. tenant()->users()
-     * already bypasses TenantScope (see Tenant model), and SendNotification
-     * takes an explicit tenantId — safe to call from this platform-guard
-     * context.
-     */
-    private function notifyTenant(Tenant $tenant, string $body, int $referenceId): void
-    {
-        app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
-
-        $tenant->users()
-            ->get()
-            ->filter(fn ($user) => $user->can('tenant.billing.manage'))
-            ->each(function ($user) use ($tenant, $body, $referenceId) {
-                app(SendNotification::class)->execute(
-                    tenantId: $tenant->id,
-                    channel: 'in_app',
-                    recipientType: 'user',
-                    recipientId: $user->id,
-                    toAddress: null,
-                    subject: 'Billing update',
-                    body: $body,
-                    referenceType: 'Quotation',
-                    referenceId: $referenceId,
-                );
-            });
     }
 }

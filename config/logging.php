@@ -129,4 +129,17 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Platform error-log retention
+    |--------------------------------------------------------------------------
+    |
+    | Separate from the log *files* above (rotated by LOG_DAILY_DAYS): this is
+    | how long an entry stays in the Super Admin > Error log table after the
+    | error was last seen. See PruneErrorLogs and RecordErrorLog.
+    |
+    */
+
+    'error_log_retention_days' => (int) env('ERROR_LOG_RETENTION_DAYS', 90),
+
 ];

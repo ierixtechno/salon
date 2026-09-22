@@ -6,6 +6,7 @@ use App\Domain\Core\Actions\ChargeWhatsappCredit;
 use App\Domain\Core\Contracts\SmsProvider;
 use App\Domain\Core\Contracts\WhatsAppProvider;
 use App\Domain\Core\Models\NotificationLog;
+use App\Domain\Core\Notifications\Providers\NullWhatsAppProvider;
 use App\Domain\Core\Scopes\TenantScope;
 use App\Mail\NotificationMail;
 use Illuminate\Bus\Queueable;
@@ -49,6 +50,20 @@ class DeliverNotification implements ShouldQueue
             return;
         }
 
+        // The null driver (the default until a real WhatsApp Business API
+        // provider is registered — CLAUDE.md §36) reports "success" without
+        // sending anything. Letting that through would debit a real credit
+        // for a message that never left the server, so a tenant topped up
+        // before a provider exists would watch their balance drain for
+        // nothing. Skipped, honestly labelled, and never charged.
+        if ($log->channel === 'whatsapp' && $whatsAppProvider instanceof NullWhatsAppProvider) {
+            $log->status = 'skipped';
+            $log->error_message = 'No WhatsApp provider is configured yet — message not sent, no credit charged.';
+            $log->save();
+
+            return;
+        }
+
         if ($log->channel === 'whatsapp' && ! $whatsappCredit->hasBalance($log->tenant_id)) {
             $log->status = 'skipped';
             $log->error_message = 'Insufficient WhatsApp credits.';
@@ -77,6 +92,13 @@ class DeliverNotification implements ShouldQueue
             $log->status = 'failed';
             $log->error_message = $e->getMessage();
             $log->save();
+
+            // Recorded on the row for the tenant/operator to see, but not
+            // rethrown (no auto-retry — see class docblock). Reported too,
+            // so a broken SMTP server or provider outage shows up in the
+            // Platform error log and the daily digest instead of hiding
+            // as a pile of individually-"failed" notification rows.
+            report($e);
         }
     }
 
