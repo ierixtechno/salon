@@ -1,6 +1,6 @@
 <x-platform-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-4">
             <span>Backups</span>
             <form method="POST" action="{{ route('platform.backups.run') }}">
                 @csrf
