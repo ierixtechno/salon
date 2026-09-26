@@ -36,7 +36,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 class="font-semibold text-gray-900 mb-4">Billing details (for GST)</h2>
+            <h2 class="font-semibold text-gray-900 mb-4">Contact &amp; billing details (for GST)</h2>
             <form method="POST" action="{{ route('platform.tenants.billing-state', $tenant) }}" class="space-y-3">
                 @csrf
                 @method('PATCH')
@@ -53,6 +53,12 @@
                         Update
                     </button>
                 </div>
+                <div class="flex items-center gap-3">
+                    <label for="phone" class="text-sm text-gray-500 w-28">Mobile number</label>
+                    <input type="tel" id="phone" name="phone" value="{{ old('phone', $tenant->phone) }}" maxlength="10" placeholder="10-digit mobile"
+                        class="border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <x-input-error :messages="$errors->get('phone')" />
                 <x-input-error :messages="$errors->get('billing_state')" />
                 <x-input-error :messages="$errors->get('gstin')" />
             </form>
@@ -62,6 +68,43 @@
                 this tenant. GSTIN, if provided, is shown as the recipient GSTIN on this tenant's invoices so they can
                 claim GST.
             </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="font-semibold text-gray-900 mb-4">Branches &amp; users</h2>
+            @if ($subscription)
+                @php
+                    $plan = $subscription->plan;
+                    $owned = $subscription->currentBranchCount();
+                    $userLimit = $tenant->userLimit();
+                @endphp
+                <dl class="space-y-2 text-sm mb-4">
+                    <div class="flex justify-between"><dt class="text-gray-500">Branches</dt><dd class="font-medium text-gray-900">{{ $tenant->branches()->where('is_active', true)->count() }} in use of {{ $owned }} allowed</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Users</dt><dd class="font-medium text-gray-900">{{ $tenant->activeUserCount() }} in use of {{ $userLimit ?? 'unlimited' }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">This plan sells extra branches</dt><dd class="font-medium text-gray-900">{{ $plan->sellsExtraBranches() ? '₹'.number_format($plan->additional_branch_price, 0).' each, up to '.$plan->maxBranches() : 'No' }}</dd></div>
+                </dl>
+                @if ($owned < $plan->maxBranches())
+                    <form method="POST" action="{{ route('platform.tenants.branches', $tenant) }}" class="space-y-3">
+                        @csrf
+                        <div class="flex flex-wrap items-center gap-3">
+                            <input type="number" name="additional" min="1" max="{{ $plan->maxBranches() - $owned }}" value="1" required
+                                class="w-24 border-gray-300 rounded-lg shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <span class="text-sm text-gray-500">additional branch(es)</span>
+                            <button type="submit" name="mode" value="quote" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition">Create pro-rata quotation</button>
+                            <button type="submit" name="mode" value="grant" onclick="return confirm('Add these branches free of charge?')" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Grant free</button>
+                        </div>
+                        <x-input-error :messages="$errors->get('additional')" />
+                    </form>
+                    <p class="text-xs text-gray-500 mt-3">
+                        A quotation charges the extra branches for the rest of the current billing period; the tenant (or you, via Record payment) settles it and the branches unlock.
+                        "Grant free" adds them immediately. The tenant's user limit rises with the branches.
+                    </p>
+                @else
+                    <p class="text-sm text-gray-500">This tenant is at the maximum branches for {{ $plan->name }}. To give more, raise the plan's "Maximum branches" (or its extra-branch price) under Subscription Plans.</p>
+                @endif
+            @else
+                <p class="text-sm text-gray-500">No active subscription yet — branches can be added once the tenant's first quotation is paid.</p>
+            @endif
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

@@ -88,6 +88,12 @@
                 <x-input-error :messages="$errors->get('owner_email')" class="mt-2" />
             </div>
 
+            <div class="mt-4">
+                <x-input-label for="owner_phone" value="Mobile number" />
+                <x-phone-input id="owner_phone" name="owner_phone" class="block w-full" :value="old('owner_phone')" required />
+                <x-input-error :messages="$errors->get('owner_phone')" class="mt-2" />
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
                     <x-input-label for="owner_password" value="Password" />

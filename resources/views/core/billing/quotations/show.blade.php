@@ -103,10 +103,11 @@
                     <x-upi-qr-code :quotation="$quotation" />
                 @endif
 
-                <div class="pt-2">
+                <div class="pt-2 flex items-center justify-between">
                     <a href="{{ route('billing.quotations.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
                         &larr; Back to quotations
                     </a>
+                    <a href="{{ route('billing.quotations.pdf', $quotation) }}" class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Download PDF</a>
                 </div>
             </div>
         </div>

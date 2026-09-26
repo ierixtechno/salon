@@ -27,6 +27,10 @@
                 <x-input-error :messages="$errors->get('subscription_plan_id')" class="mt-2" />
 
                 <x-branch-count-picker :plans="$plans" />
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Need more than the included branches? Choose a package that sells extra branches (its "Each additional branch" price is set under Subscription Plans) and a <strong>Number of branches</strong> box appears here. For an existing tenant, use <strong>Branches &amp; users</strong> on their page.
+                </p>
             </div>
 
             <div class="mt-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
@@ -84,6 +88,12 @@
                     <x-input-label for="owner_email" value="Owner email" />
                     <x-text-input id="owner_email" class="block mt-1 w-full" type="email" name="owner_email" :value="old('owner_email')" required />
                     <x-input-error :messages="$errors->get('owner_email')" class="mt-2" />
+                </div>
+
+                <div class="mt-4">
+                    <x-input-label for="owner_phone" value="Mobile number" />
+                    <x-phone-input id="owner_phone" name="owner_phone" class="block w-full" :value="old('owner_phone')" required />
+                    <x-input-error :messages="$errors->get('owner_phone')" class="mt-2" />
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">

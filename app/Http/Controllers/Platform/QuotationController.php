@@ -13,7 +13,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Platform\RecordManualQuotationPaymentRequest;
 use App\Http\Requests\Platform\StoreQuotationRequest;
 use Illuminate\Contracts\View\View;
+use App\Domain\Platform\Support\RenderQuotationPdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
 class QuotationController extends Controller
@@ -103,6 +105,14 @@ class QuotationController extends Controller
 
         return redirect()->route('platform.invoices.show', $invoice)
             ->with('status', 'Payment recorded — invoice generated, the quotation removed and the tenant activated.');
+    }
+
+    public function pdf(Quotation $quotation, RenderQuotationPdf $renderer): Response
+    {
+        return response($renderer->render($quotation), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str_replace(['/', '\\'], '-', $quotation->quotation_number).'.pdf"',
+        ]);
     }
 
     public function cancel(Quotation $quotation, CancelQuotation $action): RedirectResponse

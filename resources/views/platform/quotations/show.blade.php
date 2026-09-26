@@ -67,6 +67,10 @@
             </div>
         @endif
 
+        <div class="text-sm border-t border-gray-100 pt-4">
+            <a href="{{ route('platform.quotations.pdf', $quotation) }}" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Download PDF</a>
+        </div>
+
         @if ($quotation->status === 'paid' && $quotation->invoice)
             <div class="text-sm border-t border-gray-100 pt-4">
                 <a href="{{ route('platform.invoices.show', $quotation->invoice) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">

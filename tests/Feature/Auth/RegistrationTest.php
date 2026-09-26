@@ -21,7 +21,7 @@ function signupPayload(array $overrides = []): array
         'business_name' => 'Glow Salon',
         'subscription_plan_id' => salonPlan()->id,
         'owner_name' => 'Alice Owner',
-        'owner_email' => 'alice@glow.test',
+        'owner_phone' => '9876543210', 'owner_email' => 'alice@glow.test',
         'owner_password' => 'password123',
         'owner_password_confirmation' => 'password123',
         'billing_state' => 'Haryana',

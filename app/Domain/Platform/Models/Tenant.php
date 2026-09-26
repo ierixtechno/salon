@@ -17,7 +17,7 @@ class Tenant extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'status', 'timezone', 'currency', 'billing_state', 'gstin', 'trial_ends_at', 'suspended_at',
+        'name', 'slug', 'phone', 'status', 'timezone', 'currency', 'billing_state', 'gstin', 'trial_ends_at', 'suspended_at',
     ];
 
     // Laravel's factory-name convention assumes App\Models\X; models under
@@ -51,6 +51,12 @@ class Tenant extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class)->withoutGlobalScope(TenantScope::class);
+    }
+
+    /** Quotations, for showing what an unpaid tenant signed up for. */
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
     }
 
     public function tenantModules(): HasMany

@@ -41,6 +41,7 @@ class OnboardTenant
                 'status' => 'pending_payment',
                 'timezone' => $data['timezone'] ?? config('platform.default_timezone'),
                 'currency' => strtoupper($data['currency'] ?? config('platform.default_currency')),
+                'phone' => $data['owner_phone'] ?? null,
                 'billing_state' => $data['billing_state'] ?? null,
                 'gstin' => $data['gstin'] ?? null,
             ]);

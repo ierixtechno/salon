@@ -25,7 +25,7 @@ function newTenantPayload(SubscriptionPlan $plan, array $extra = []): array
 {
     return array_merge([
         'business_name' => 'Glow Salon', 'subscription_plan_id' => $plan->id,
-        'owner_name' => 'Alice', 'owner_email' => 'alice@glow.test',
+        'owner_name' => 'Alice', 'owner_phone' => '9876543210', 'owner_email' => 'alice@glow.test',
         'owner_password' => 'password123', 'owner_password_confirmation' => 'password123',
         'billing_state' => 'Haryana',
     ], $extra);

@@ -94,7 +94,7 @@ function onboard(array $overrides = []): User
         'currency' => 'INR',
         'modules' => ['salon'],
         'owner_name' => 'Owner',
-        'owner_email' => fake()->unique()->safeEmail(),
+        'owner_phone' => '9876543210', 'owner_email' => fake()->unique()->safeEmail(),
         'owner_password' => 'password123',
         // Same state as the platform by default, so existing tests keep
         // getting CGST+SGST (not IGST) unless they explicitly override

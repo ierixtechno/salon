@@ -17,7 +17,12 @@ use App\Http\Requests\Platform\UpdateTenantBillingStateRequest;
 use App\Http\Requests\Platform\UpdateTenantModulesRequest;
 use App\Http\Requests\Platform\UpdateTenantStatusRequest;
 use Illuminate\Contracts\View\View;
+use App\Domain\Platform\Actions\GrantBranches;
+use App\Domain\Platform\Actions\RequestExtraBranches;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -25,9 +30,23 @@ class TenantController extends Controller
 {
     public function index(): View
     {
-        return view('platform.tenants.index', [
-            'tenants' => Tenant::withCount('users')->latest()->paginate(20),
-        ]);
+        $tenants = Tenant::withCount('users')
+            ->with([
+                'subscriptions.plan',
+                'quotations' => fn ($q) => $q->where('status', 'pending')->latest()->with('plan'),
+            ])
+            ->latest()
+            ->paginate(20);
+
+        // The owner is the tenant's first user — one query for the whole page, not one per row.
+        $owners = User::withoutGlobalScopes()
+            ->whereIn('tenant_id', $tenants->pluck('id'))
+            ->orderBy('id')
+            ->get()
+            ->groupBy('tenant_id')
+            ->map->first();
+
+        return view('platform.tenants.index', ['tenants' => $tenants, 'owners' => $owners]);
     }
 
     public function create(): View
@@ -97,6 +116,34 @@ class TenantController extends Controller
         ]);
     }
 
+    /**
+     * Super Admin adds branches to a tenant's subscription: either a pro-rata
+     * quotation the tenant pays (mode=quote) or a free grant (mode=grant).
+     * Their user limit rises with the branches (SubscriptionPlan::userLimitFor).
+     */
+    public function addBranches(Request $request, Tenant $tenant, RequestExtraBranches $requestExtra, GrantBranches $grant): RedirectResponse
+    {
+        $data = $request->validate([
+            'additional' => ['required', 'integer', 'min:1', 'max:50'],
+            'mode' => ['required', Rule::in(['quote', 'grant'])],
+        ]);
+        $admin = Auth::guard('platform')->user();
+
+        if ($data['mode'] === 'grant') {
+            $total = $grant->execute($tenant, (int) $data['additional']);
+
+            PlatformAuditLog::record($admin, 'tenant.branches_granted', 'Tenant', $tenant->id, $tenant->id, ['added' => (int) $data['additional'], 'total_branches' => $total]);
+
+            return back()->with('status', "{$data['additional']} branch(es) added free of charge — {$tenant->name} now has {$total}.");
+        }
+
+        $quotation = $requestExtra->execute($tenant, (int) $data['additional']);
+
+        PlatformAuditLog::record($admin, 'quotation.created', 'Quotation', $quotation->id, $tenant->id, ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount, 'reason' => 'additional_branches']);
+
+        return redirect()->route('platform.quotations.show', $quotation)->with('status', 'Pro-rata quotation created for the additional branches. Record the payment here once received.');
+    }
+
     public function updateStatus(UpdateTenantStatusRequest $request, Tenant $tenant): RedirectResponse
     {
         $previousStatus = $tenant->status;
@@ -126,7 +173,7 @@ class TenantController extends Controller
         $tenant->update([
             'billing_state' => $request->validated('billing_state'),
             'gstin' => $request->validated('gstin'),
-        ]);
+        ] + ($request->exists('phone') ? ['phone' => $request->validated('phone')] : []));
 
         PlatformAuditLog::record(
             Auth::guard('platform')->user(),

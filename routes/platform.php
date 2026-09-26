@@ -48,10 +48,13 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('subscription-plans/{subscription_plan}/edit', [SubscriptionPlanController::class, 'edit'])->name('subscription-plans.edit');
         Route::put('subscription-plans/{subscription_plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
 
+        Route::post('tenants/{tenant}/branches', [TenantController::class, 'addBranches'])->name('tenants.branches');
+
         Route::get('quotations', [QuotationController::class, 'index'])->name('quotations.index');
         Route::get('quotations/create', [QuotationController::class, 'create'])->name('quotations.create');
         Route::post('quotations', [QuotationController::class, 'store'])->name('quotations.store');
         Route::get('quotations/{quotation}', [QuotationController::class, 'show'])->name('quotations.show');
+        Route::get('quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
         Route::post('quotations/{quotation}/record-payment', [QuotationController::class, 'recordPayment'])->name('quotations.record-payment');
         Route::patch('quotations/{quotation}/cancel', [QuotationController::class, 'cancel'])->name('quotations.cancel');
 

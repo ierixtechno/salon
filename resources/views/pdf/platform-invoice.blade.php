@@ -5,6 +5,7 @@
     <title>Invoice {{ $invoice->invoice_number }}</title>
     <style>
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #1f2937; }
+        .logo { height: 46px; margin-bottom: 6px; }
         h1 { font-size: 20px; margin: 0; color: #4338ca; }
         .muted { color: #6b7280; }
         .right { text-align: right; }
@@ -26,6 +27,9 @@
     <table class="head">
         <tr>
             <td>
+                @if ($supplier['logo'])
+                    <img class="logo" src="{{ $supplier['logo'] }}" alt="{{ $supplier['name'] }}">
+                @endif
                 <h1>{{ $supplier['name'] }}</h1>
                 <div class="muted">Tax Invoice</div>
                 @if ($supplier['gstin'])

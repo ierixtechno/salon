@@ -11,6 +11,7 @@ use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Support\RenderPlatformInvoicePdf;
+use App\Domain\Platform\Support\RenderQuotationPdf;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\ConfirmQuotationPaymentRequest;
 use Illuminate\Contracts\View\View;
@@ -161,6 +162,16 @@ class TenantBillingController extends Controller
         $invoice->load('plan', 'tenant');
 
         return view('core.billing.invoices.show', ['invoice' => $invoice]);
+    }
+
+    public function downloadQuotationPdf(Quotation $quotation, RenderQuotationPdf $renderer): Response
+    {
+        abort_unless($quotation->tenant_id === Auth::user()->tenant_id, 404);
+
+        return response($renderer->render($quotation), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str_replace(['/', '\\'], '-', $quotation->quotation_number).'.pdf"',
+        ]);
     }
 
     public function downloadInvoicePdf(PlatformInvoice $invoice, RenderPlatformInvoicePdf $renderer): Response

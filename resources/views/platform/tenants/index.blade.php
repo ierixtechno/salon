@@ -17,6 +17,9 @@
                 <thead class="bg-slate-100">
                     <tr>
                         <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Name</th>
+                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Email</th>
+                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Mobile</th>
+                        <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Plan</th>
                         <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Status</th>
                         <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Users</th>
                         <th class="text-left px-5 py-3 font-semibold uppercase text-xs tracking-wider text-slate-600">Created</th>
@@ -24,6 +27,14 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse ($tenants as $tenant)
+                        @php
+                            $subscription = $tenant->subscriptions
+                                ->whereIn('status', ['trialing', 'active', 'expired'])
+                                ->sortByDesc('starts_at')
+                                ->first();
+                            $pendingQuotation = $tenant->quotations->first();
+                            $owner = $owners->get($tenant->id);
+                        @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-5 py-3">
                                 <a href="{{ route('platform.tenants.show', $tenant) }}" class="flex items-center gap-3 group">
@@ -33,13 +44,26 @@
                                     <span class="font-medium text-gray-900 group-hover:text-indigo-600">{{ $tenant->name }}</span>
                                 </a>
                             </td>
+                            <td class="px-5 py-3 text-gray-600">{{ $owner?->email ?? '—' }}</td>
+                            <td class="px-5 py-3 text-gray-600 whitespace-nowrap">{{ $tenant->phone ? '+91 '.$tenant->phone : '—' }}</td>
+                            <td class="px-5 py-3 text-gray-700">
+                                @if ($subscription)
+                                    {{ $subscription->plan->name }}
+                                    <span class="block text-xs text-gray-400">{{ $subscription->currentBranchCount() }} {{ \Illuminate\Support\Str::plural('branch', $subscription->currentBranchCount()) }}</span>
+                                @elseif ($pendingQuotation)
+                                    {{ $pendingQuotation->plan->name }}
+                                    <span class="block text-xs text-amber-600">awaiting payment</span>
+                                @else
+                                    <span class="text-gray-400">—</span>
+                                @endif
+                            </td>
                             <td class="px-5 py-3"><x-platform.status-badge :status="$tenant->status" /></td>
                             <td class="px-5 py-3 text-gray-600">{{ $tenant->users_count }}</td>
                             <td class="px-5 py-3 text-gray-500">{{ $tenant->created_at->diffForHumans() }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-5 py-10 text-center text-gray-400">No tenants yet.</td>
+                            <td colspan="7" class="px-5 py-10 text-center text-gray-400">No tenants yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

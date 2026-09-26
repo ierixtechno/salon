@@ -191,7 +191,7 @@
                 <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6">
                     @if ($schedulerStale ?? false)
                         <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                            <strong>Scheduled jobs are not running.</strong> The server's cron entry has been silent for over 15 minutes, so emails, WhatsApp messages, renewals and backups are not being processed. Check the cron job (see docs/DEPLOYMENT.md &sect;5).
+                            <strong>Scheduled jobs are not running.</strong> The server's cron entry has been silent for over 15 minutes, so emails, WhatsApp messages, renewals and backups are not being processed. Add this to your server's cron jobs (cPanel &rarr; Cron Jobs), set to run every minute:<br><code class="mt-1 inline-block rounded bg-white/70 px-2 py-1 text-xs select-all">* * * * * cd {{ base_path() }} &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code>
                         </div>
                     @endif
                     @if ($diskLow ?? false)
