@@ -45,6 +45,7 @@ class QuotationController extends Controller
             amountOverride: $request->validated('amount'),
             notes: $request->validated('notes'),
             branchCount: $request->validated('branch_count'),
+            discountPercent: $request->filled('discount_percent') ? (float) $request->validated('discount_percent') : null,
         );
 
         PlatformAuditLog::record(
@@ -53,7 +54,7 @@ class QuotationController extends Controller
             'Quotation',
             $quotation->id,
             $tenant->id,
-            ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount],
+            ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount, 'discount_percent' => (float) $quotation->discount_percent],
         );
 
         return redirect()->route('platform.quotations.show', $quotation)->with('status', 'Quotation created.');

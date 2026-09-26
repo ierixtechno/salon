@@ -49,7 +49,10 @@
                                 <span class="text-sm font-semibold text-gray-900">{{ $plan->name }}</span>
                             </span>
                             <span class="text-right shrink-0">
-                                <span class="block text-sm font-semibold text-gray-900">&#8377;{{ number_format($plan->price, 0) }}</span>
+                                @if ($plan->hasPromo())
+                                    <span class="block text-xs text-gray-400 line-through">&#8377;{{ number_format($plan->compare_at_price, 0) }}</span>
+                                @endif
+                                <span class="block text-sm font-semibold text-gray-900">&#8377;{{ number_format($plan->price, 0) }}@if ($plan->hasPromo()) <span class="ml-1 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">{{ $plan->promoPercent() }}% OFF</span>@endif</span>
                                 <span class="block text-xs text-gray-500">/{{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }} + GST</span>
                             </span>
                         </span>

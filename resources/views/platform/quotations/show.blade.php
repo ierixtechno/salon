@@ -46,6 +46,10 @@
         </div>
 
         <dl class="text-sm text-gray-600 pt-4 border-t border-gray-100 space-y-1">
+            @if ((float) $quotation->discount_amount > 0)
+                <div class="flex justify-between"><dt>Plan price</dt><dd>₹{{ number_format($quotation->amount + $quotation->discount_amount, 2) }}</dd></div>
+                <div class="flex justify-between text-green-700"><dt>Discount ({{ rtrim(rtrim(number_format($quotation->discount_percent, 2), '0'), '.') }}%)</dt><dd>&minus;₹{{ number_format($quotation->discount_amount, 2) }}</dd></div>
+            @endif
             <div class="flex justify-between"><dt>Subtotal</dt><dd>₹{{ number_format($quotation->amount, 2) }}</dd></div>
             @if ($quotation->igst_amount > 0)
                 <div class="flex justify-between"><dt>IGST ({{ number_format($quotation->gst_rate_percent, 2) }}%)</dt><dd>₹{{ number_format($quotation->igst_amount, 2) }}</dd></div>

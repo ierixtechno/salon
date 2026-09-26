@@ -44,6 +44,13 @@
             </div>
 
             <div>
+                <x-input-label for="discount_percent" value="Discount % (optional)" />
+                <x-text-input id="discount_percent" class="block mt-1 w-full" type="number" step="0.01" min="0" max="100" name="discount_percent" :value="old('discount_percent')" placeholder="e.g. 10" />
+                <p class="text-xs text-gray-500 mt-1">Comes off the plan price before GST. Use it instead of a custom amount.</p>
+                <x-input-error :messages="$errors->get('discount_percent')" class="mt-2" />
+            </div>
+
+            <div>
                 <x-input-label for="notes" value="Notes (optional)" />
                 <textarea id="notes" name="notes" rows="2"
                     class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('notes') }}</textarea>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Platform;
 
 use App\Rules\BranchCountWithinPlan;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,6 +33,11 @@ class CreateTenantRequest extends FormRequest
     {
         return [
             'business_name' => ['required', 'string', 'max:255'],
+            'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100', function (string $attribute, mixed $value, Closure $fail) {
+                if ((float) $value > 0 && filled($this->input('quotation_amount'))) {
+                    $fail('Use either a discount percentage or a custom amount, not both.');
+                }
+            }],
             'branch_count' => ['nullable', 'integer', 'min:1', new BranchCountWithinPlan($this->input('subscription_plan_id'))],
             'subscription_plan_id' => ['required', 'integer', Rule::exists('subscription_plans', 'id')->where('is_active', true)],
             'owner_name' => ['required', 'string', 'max:255'],

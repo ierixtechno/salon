@@ -19,7 +19,7 @@ class Quotation extends Model
 
     protected $fillable = [
         'tenant_id', 'subscription_plan_id', 'branch_count', 'platform_admin_id',
-        'quotation_number', 'amount', 'notes', 'status', 'is_upgrade',
+        'quotation_number', 'amount', 'discount_percent', 'discount_amount', 'notes', 'status', 'is_upgrade',
         'cgst_amount', 'sgst_amount', 'igst_amount', 'gst_rate_percent', 'total_amount',
         'razorpay_order_id', 'paid_at', 'cancelled_at',
     ];
@@ -28,6 +28,8 @@ class Quotation extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'discount_percent' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'cgst_amount' => 'decimal:2',
             'sgst_amount' => 'decimal:2',
             'igst_amount' => 'decimal:2',

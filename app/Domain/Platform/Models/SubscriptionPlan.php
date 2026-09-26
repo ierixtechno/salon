@@ -8,17 +8,30 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
-    protected $fillable = ['code', 'name', 'price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'is_active'];
+    protected $fillable = ['code', 'name', 'price', 'compare_at_price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'compare_at_price' => 'decimal:2',
             'branch_limit' => 'integer',
             'additional_branch_price' => 'decimal:2',
             'max_branches' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /** True when a regular price is set above the charged price (an offer is running). */
+    public function hasPromo(): bool
+    {
+        return $this->compare_at_price !== null && (float) $this->compare_at_price > (float) $this->price;
+    }
+
+    /** Whole-number percentage off the regular price. */
+    public function promoPercent(): int
+    {
+        return $this->hasPromo() ? (int) round((1 - (float) $this->price / (float) $this->compare_at_price) * 100) : 0;
     }
 
     /** True when this plan sells branches beyond the included ones. */

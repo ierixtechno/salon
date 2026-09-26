@@ -27,6 +27,7 @@ class StoreSubscriptionPlanRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'billing_interval' => ['required', Rule::in(['trial', 'monthly', 'yearly'])],
+            'compare_at_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99', 'gt:price'],
             'branch_limit' => ['required', 'integer', 'min:1', 'max:1000'],
             'additional_branch_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'max_branches' => ['nullable', 'integer', 'min:1', 'max:1000', 'gte:branch_limit'],

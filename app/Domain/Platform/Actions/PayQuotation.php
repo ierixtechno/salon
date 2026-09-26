@@ -52,6 +52,8 @@ class PayQuotation
                 // invoice is a self-contained historical record.
                 'amount' => $quotation->total_amount,
                 'subtotal' => $quotation->amount,
+                'discount_percent' => $quotation->discount_percent,
+                'discount_amount' => $quotation->discount_amount,
                 'cgst_amount' => $quotation->cgst_amount,
                 'sgst_amount' => $quotation->sgst_amount,
                 'igst_amount' => $quotation->igst_amount,

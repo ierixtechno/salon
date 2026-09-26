@@ -112,7 +112,7 @@ test('if the quotation cannot be created, the whole signup is rolled back — no
     // been inserted. Proves those inserts are rolled back, not just skipped.
     $this->app->bind(CreateQuotation::class, fn () => new class extends CreateQuotation
     {
-        public function execute(Tenant $tenant, SubscriptionPlan $plan, ?PlatformAdmin $createdBy, ?string $amountOverride = null, ?string $notes = null, bool $isUpgrade = false): Quotation
+        public function execute(Tenant $tenant, SubscriptionPlan $plan, ?PlatformAdmin $createdBy, ?string $amountOverride = null, ?string $notes = null, bool $isUpgrade = false, ?int $branchCount = null, ?float $discountPercent = null): Quotation
         {
             expect(Tenant::whereKey($tenant->id)->exists())->toBeTrue(); // the tenant really was created first
 

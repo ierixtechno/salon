@@ -63,6 +63,7 @@ class TenantController extends Controller
                 amountOverride: $data['quotation_amount'] ?? null,
                 notes: $data['quotation_notes'] ?? null,
                 branchCount: $data['branch_count'] ?? null,
+                discountPercent: isset($data['discount_percent']) ? (float) $data['discount_percent'] : null,
             );
 
             PlatformAuditLog::record(
@@ -71,7 +72,7 @@ class TenantController extends Controller
                 'Quotation',
                 $quotation->id,
                 $owner->tenant_id,
-                ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount],
+                ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount, 'discount_percent' => (float) $quotation->discount_percent],
             );
 
             return $quotation;

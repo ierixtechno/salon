@@ -14,7 +14,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <x-input-label for="price" value="Price" />
+                    <x-input-label for="price" value="Price you charge" />
                     <x-text-input id="price" class="block mt-1 w-full" type="number" step="0.01" min="0" name="price" :value="old('price', $plan->price)" required />
                     <x-input-error :messages="$errors->get('price')" class="mt-2" />
                 </div>
@@ -28,6 +28,8 @@
                     <x-input-error :messages="$errors->get('billing_interval')" class="mt-2" />
                 </div>
             </div>
+            @include('platform.subscription-plans._regular-price')
+
             @include('platform.subscription-plans._branch-pricing')
 
             <div class="mt-4">

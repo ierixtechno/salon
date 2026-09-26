@@ -27,6 +27,7 @@ class CreateQuotation
         ?string $notes = null,
         bool $isUpgrade = false,
         ?int $branchCount = null,
+        ?float $discountPercent = null,
     ): Quotation {
         abort_unless($plan->is_active, 422, 'Cannot quote an inactive plan.');
         // GST determination needs a place of supply to compare against the
@@ -36,10 +37,17 @@ class CreateQuotation
         // silently pick the wrong tax treatment.
         abort_if(blank($tenant->billing_state), 422, "Set this tenant's billing state (for GST) before creating a quotation.");
 
-        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade, $branchCount) {
+        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade, $branchCount, $discountPercent) {
             $quotationNumber = $this->nextPlatformNumber('quotation');
             $branchCount = $plan->clampBranches($branchCount);
-            $amount = (float) ($amountOverride ?? $plan->priceForBranches($branchCount));
+            $discountPercent = round(max(0.0, min(100.0, (float) $discountPercent)), 2);
+            abort_if($amountOverride !== null && $discountPercent > 0, 422, 'Use either a custom amount or a discount percentage, not both.');
+
+            // A percentage discount is Super Admin's to grant (callers only pass it from
+            // Platform forms); it comes off the list price, before GST.
+            $listAmount = (float) ($amountOverride ?? $plan->priceForBranches($branchCount));
+            $discountAmount = round($listAmount * $discountPercent / 100, 2);
+            $amount = round($listAmount - $discountAmount, 2);
 
             // GST on Platform Billing (config/platform.php). Snapshotted
             // here so a later rate/state change never affects a quotation
@@ -68,6 +76,8 @@ class CreateQuotation
                 'platform_admin_id' => $createdBy?->id,
                 'quotation_number' => $quotationNumber,
                 'amount' => $amount,
+                'discount_percent' => $discountPercent,
+                'discount_amount' => $discountAmount,
                 'cgst_amount' => $cgstAmount,
                 'sgst_amount' => $sgstAmount,
                 'igst_amount' => $igstAmount,

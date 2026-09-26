@@ -39,6 +39,7 @@ class SubscriptionPlanController extends Controller
             'code' => $request->validated('code'),
             'name' => $request->validated('name'),
             'price' => $request->validated('price'),
+            'compare_at_price' => $request->validated('compare_at_price'),
             'billing_interval' => $request->validated('billing_interval'),
             'branch_limit' => $request->validated('branch_limit'),
             'additional_branch_price' => $request->validated('additional_branch_price'),
@@ -77,6 +78,7 @@ class SubscriptionPlanController extends Controller
         $subscriptionPlan->update([
             'name' => $request->validated('name'),
             'price' => $request->validated('price'),
+            'compare_at_price' => $request->validated('compare_at_price'),
             'billing_interval' => $request->validated('billing_interval'),
             'branch_limit' => $request->validated('branch_limit'),
             'additional_branch_price' => $request->validated('additional_branch_price'),

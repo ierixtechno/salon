@@ -25,12 +25,7 @@
                     </div>
 
                     <div class="mb-5">
-                        @if ($plan->price == 0)
-                            <span class="text-3xl font-bold text-gray-900">Free</span>
-                        @else
-                            <span class="text-3xl font-bold text-gray-900">₹{{ number_format($plan->price, 2) }}</span>
-                            <span class="text-sm text-gray-500">/ {{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }} + GST</span>
-                        @endif
+                        <x-plan-price :plan="$plan" />
                     </div>
 
                     <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif</p>

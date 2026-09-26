@@ -24,6 +24,10 @@
                 </div>
 
                 <dl class="text-sm text-gray-600 pt-4 border-t border-gray-100 space-y-1">
+                    @if ((float) $invoice->discount_amount > 0)
+                        <div class="flex justify-between"><dt>Plan price</dt><dd>₹{{ number_format($invoice->subtotal + $invoice->discount_amount, 2) }}</dd></div>
+                        <div class="flex justify-between text-green-700"><dt>Discount ({{ rtrim(rtrim(number_format($invoice->discount_percent, 2), '0'), '.') }}%)</dt><dd>&minus;₹{{ number_format($invoice->discount_amount, 2) }}</dd></div>
+                    @endif
                     <div class="flex justify-between"><dt>Subtotal</dt><dd>₹{{ number_format($invoice->subtotal, 2) }}</dd></div>
                     @if ($invoice->igst_amount > 0)
                         <div class="flex justify-between"><dt>IGST ({{ number_format($invoice->gst_rate_percent, 2) }}%)</dt><dd>₹{{ number_format($invoice->igst_amount, 2) }}</dd></div>

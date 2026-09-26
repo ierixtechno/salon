@@ -69,8 +69,15 @@
             <tr>
                 <td>{{ $invoice->plan->name }} subscription ({{ $invoice->plan->billing_interval }})</td>
                 <td>{{ $supplier['sac'] }}</td>
-                <td class="right">&#8377;{{ number_format($invoice->subtotal, 2) }}</td>
+                <td class="right">&#8377;{{ number_format($invoice->subtotal + $invoice->discount_amount, 2) }}</td>
             </tr>
+            @if ((float) $invoice->discount_amount > 0)
+                <tr>
+                    <td>Discount ({{ rtrim(rtrim(number_format($invoice->discount_percent, 2), '0'), '.') }}%)</td>
+                    <td></td>
+                    <td class="right">&minus;&#8377;{{ number_format($invoice->discount_amount, 2) }}</td>
+                </tr>
+            @endif
         </tbody>
     </table>
 
