@@ -10,10 +10,12 @@ use App\Domain\Core\Models\Invoice;
 use App\Domain\Core\Models\InvoiceLine;
 use App\Domain\Core\Models\Payment;
 use App\Domain\Core\Models\Service;
+use App\Domain\Core\Support\BuildPaymentLedger;
 use App\Domain\Platform\Models\Module;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -190,6 +192,66 @@ class ReportController extends Controller
         }
 
         return view('core.reports.expenses', compact('branches', 'branch', 'from', 'to', 'totals', 'byCategory', 'byBranch'));
+    }
+
+    /**
+     * Every rupee in and out, in one chronological register (see
+     * BuildPaymentLedger). A one-year cap keeps the read-time assembly
+     * bounded; use the CSV export for accountants.
+     */
+    public function ledger(Request $request, BuildPaymentLedger $builder): View|StreamedResponse
+    {
+        $branches = $this->accessibleBranches();
+        $branch = $this->resolveBranch($request, $branches);
+        $branchIds = $this->branchIds($branch, $branches);
+        [$from, $to] = $this->resolveDateRange($request, $branch);
+        abort_if($from->diffInDays($to) > 366, 422, 'Choose a date range of one year or less.');
+
+        $direction = in_array($request->query('direction'), ['in', 'out'], true) ? $request->query('direction') : 'all';
+        $method = in_array($request->query('method'), ['cash', 'card', 'upi', 'bank_transfer'], true) ? $request->query('method') : null;
+        $timezone = $branch?->effectiveTimezone() ?? current_tenant()->timezone;
+
+        $entries = $builder->execute(
+            $from,
+            $to,
+            $branchIds,
+            $branches->pluck('name', 'id'),
+            includeBranchless: ! $branch && (bool) Auth::guard('web')->user()->all_branches,
+            timezone: $timezone,
+        )
+            ->when($direction === 'in', fn ($e) => $e->filter(fn ($row) => $row['in'] > 0))
+            ->when($direction === 'out', fn ($e) => $e->filter(fn ($row) => $row['out'] > 0))
+            ->when($method, fn ($e) => $e->filter(fn ($row) => $row['method'] === $method))
+            ->values();
+
+        $totalIn = round($entries->sum('in'), 2);
+        $totalOut = round($entries->sum('out'), 2);
+        $byMethod = $entries->groupBy('method')->map(fn ($rows, $m) => (object) [
+            'method' => $m, 'in' => round($rows->sum('in'), 2), 'out' => round($rows->sum('out'), 2),
+        ])->sortBy('method')->values();
+
+        if ($request->query('export') === 'csv') {
+            return $this->streamCsv('payment-ledger.csv', ['Date & time', 'Type', 'Reference', 'Party', 'Method', 'Branch', 'Money in', 'Money out'], $entries->map(fn ($row) => [
+                $row['at']->copy()->timezone($timezone)->format('Y-m-d H:i'), $row['source'], $row['reference'], $row['party'], $row['method'], $row['branch'],
+                $row['in'] > 0 ? number_format($row['in'], 2, '.', '') : '', $row['out'] > 0 ? number_format($row['out'], 2, '.', '') : '',
+            ]));
+        }
+
+        $perPage = 50;
+        $page = max(1, (int) $request->integer('page', 1));
+        $paginator = new LengthAwarePaginator(
+            $entries->forPage($page, $perPage)->values(),
+            $entries->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
+
+        return view('core.reports.ledger', [
+            'branches' => $branches, 'branch' => $branch, 'from' => $from, 'to' => $to,
+            'entries' => $paginator, 'totalIn' => $totalIn, 'totalOut' => $totalOut, 'byMethod' => $byMethod,
+            'direction' => $direction, 'method' => $method, 'timezone' => $timezone,
+        ]);
     }
 
     /**

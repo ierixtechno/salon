@@ -43,10 +43,11 @@
                     <p class="text-xs text-gray-400">Your GSTIN: {{ $invoice->tenant->gstin }}</p>
                 @endif
 
-                <div class="pt-4 border-t border-gray-100">
+                <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
                     <a href="{{ route('billing.invoices.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
                         &larr; Back to invoices
                     </a>
+                    <a href="{{ route('billing.invoices.pdf', $invoice) }}" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Download PDF</a>
                 </div>
             </div>
         </div>

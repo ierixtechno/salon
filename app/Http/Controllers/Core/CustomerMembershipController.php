@@ -31,17 +31,19 @@ class CustomerMembershipController extends Controller
 
     public function store(StoreCustomerMembershipRequest $request, Customer $customer, SellMembershipToCustomer $action): RedirectResponse
     {
-        $action->execute(
+        $sold = $action->execute(
             branch: Branch::findOrFail($request->validated('branch_id')),
             customer: $customer,
             plan: MembershipPlan::findOrFail($request->validated('membership_plan_id')),
-            pricePaid: (float) $request->validated('price_paid'),
+            price: (float) $request->validated('price_paid'),
             purchaseMethod: $request->validated('purchase_method'),
             purchaseReference: $request->validated('purchase_reference'),
             createdBy: Auth::guard('web')->id(),
         );
 
-        return back()->with('status', 'Membership sold.');
+        return $sold->invoice_id
+            ? redirect()->route('invoices.show', $sold->invoice_id)->with('status', 'Membership sold and invoice generated.')
+            : back()->with('status', 'Membership sold.');
     }
 
     public function cancel(Customer $customer, CustomerMembership $customerMembership, CancelCustomerMembership $action): RedirectResponse

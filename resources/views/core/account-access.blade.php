@@ -12,7 +12,7 @@
                     </div>
                     <h2 class="text-lg font-semibold text-gray-900">Welcome to {{ config('platform.brand_name') }}!</h2>
                     <p class="mt-2 text-sm text-gray-600">
-                        Your account has been created. Our team will send you an invoice shortly — once it's paid, your dashboard unlocks immediately.
+                        Your account has been created. Once your quotation is paid, your dashboard unlocks immediately.
                     </p>
                 @else
                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-4">

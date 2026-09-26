@@ -43,15 +43,16 @@
         @endif
 
         <div class="text-sm border-t border-gray-100 pt-4">
-            <a href="{{ route('platform.quotations.show', $invoice->quotation) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
-                View source quotation {{ $invoice->quotation->quotation_number }} &rarr;
-            </a>
+            @if ($invoice->quotation_number)
+                <p class="text-gray-500">Raised against quotation <span class="font-medium text-gray-800">{{ $invoice->quotation_number }}</span></p>
+            @endif
         </div>
 
-        <div class="pt-5 border-t border-gray-100">
+        <div class="pt-5 border-t border-gray-100 flex items-center justify-between">
             <a href="{{ route('platform.invoices.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
                 &larr; Back to invoices
             </a>
+            <a href="{{ route('platform.invoices.pdf', $invoice) }}" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">Download PDF</a>
         </div>
     </div>
 </x-platform-layout>

@@ -29,6 +29,7 @@
                                 <th class="text-left px-4 py-2 font-semibold text-base">Price</th>
                                 <th class="text-left px-4 py-2 font-semibold text-base">Sold</th>
                                 <th class="text-left px-4 py-2 font-semibold text-base">Status</th>
+                                <th class="px-4 py-2"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -46,6 +47,13 @@
                                         <span class="text-xs px-2 py-1 rounded-full {{ $package->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
                                             {{ $package->is_active ? 'Active' : 'Inactive' }}
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-2 text-right">
+                                        @if ($package->is_active)
+                                            @can('packages.sell')
+                                                <a href="{{ route('packages.sell', $package) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Sell</a>
+                                            @endcan
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

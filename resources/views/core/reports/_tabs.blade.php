@@ -4,6 +4,7 @@
         'reports.appointments' => 'Appointments',
         'reports.module-performance' => 'Module Performance',
         'reports.expenses' => 'Expenses',
+        'reports.ledger' => 'Payment Ledger',
     ];
 @endphp
 <div class="flex flex-wrap gap-2 mb-6">

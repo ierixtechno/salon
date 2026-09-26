@@ -118,6 +118,14 @@
 
                         <form method="POST" action="{{ route('invoices.lines.store', $invoice) }}" class="space-y-4" x-show="mode === 'standalone'" @if($completedAppointments->isEmpty()) x-init="mode = 'standalone'" @endif>
                             @csrf
+                            @if ($services->isEmpty())
+                                <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                                    No services are available at {{ $invoice->branch->name }}.
+                                    @can('services.update')
+                                        Open a service and turn this branch on under its <a href="{{ route('services.index') }}" class="font-semibold underline">Branches</a> tab.
+                                    @endcan
+                                </div>
+                            @endif
                             <div>
                                 <x-input-label for="service_id" value="Service" />
                                 <select id="service_id" name="service_id" x-model="serviceId" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">

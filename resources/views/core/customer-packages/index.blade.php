@@ -35,7 +35,7 @@
                                     <x-input-label for="package_id" value="Package" />
                                     <select id="package_id" name="package_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
                                         @foreach ($packages as $package)
-                                            <option value="{{ $package->id }}" data-price="{{ $package->price }}">{{ $package->name }} ({{ $package->price }})</option>
+                                            <option value="{{ $package->id }}" data-price="{{ $package->price }}" data-tax="{{ $package->tax_rate_percent }}">{{ $package->name }} ({{ $package->price }})</option>
                                         @endforeach
                                     </select>
                                     <x-input-error :messages="$errors->get('package_id')" class="mt-2" />
@@ -44,8 +44,9 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <x-input-label for="price_paid" value="Price paid" />
+                                    <x-input-label for="price_paid" value="Price (before GST)" />
                                     <x-text-input id="price_paid" class="block mt-1 w-full" type="number" step="0.01" min="0" name="price_paid" :value="old('price_paid')" required />
+                                    <p id="gst_note" class="text-xs text-gray-500 mt-1"></p>
                                     <x-input-error :messages="$errors->get('price_paid')" class="mt-2" />
                                 </div>
                                 <div>
@@ -121,4 +122,23 @@
             </div>
         </div>
     </div>
+
+<script>
+    (function () {
+        const select = document.getElementById('package_id');
+        const price = document.getElementById('price_paid');
+        const note = document.getElementById('gst_note');
+        if (!select || !price) return;
+        const sync = () => {
+            const opt = select.options[select.selectedIndex];
+            if (!opt) return;
+            price.value = opt.dataset.price ?? '';
+            const gst = parseFloat(opt.dataset.tax ?? '0');
+            const base = parseFloat(opt.dataset.price ?? '0');
+            note.textContent = gst > 0 ? 'GST ' + gst + '% is added on top; the customer is invoiced ₹' + (base * (1 + gst / 100)).toFixed(2) + '.' : 'No GST configured for this item.';
+        };
+        select.addEventListener('change', sync);
+        sync();
+    })();
+</script>
 </x-app-layout>

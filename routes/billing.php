@@ -20,8 +20,9 @@ Route::middleware('can:tenant.billing.manage')->prefix('billing')->name('billing
     Route::get('quotations', [TenantBillingController::class, 'quotations'])->name('quotations.index');
     Route::get('quotations/{quotation}', [TenantBillingController::class, 'showQuotation'])->name('quotations.show');
     Route::post('quotations/{quotation}/checkout', [TenantBillingController::class, 'createCheckout'])->name('quotations.checkout');
-    Route::post('quotations/{quotation}/confirm', [TenantBillingController::class, 'confirmPayment'])->name('quotations.confirm');
+    Route::post('quotations/{quotation_id}/confirm', [TenantBillingController::class, 'confirmPayment'])->name('quotations.confirm');
 
     Route::get('invoices', [TenantBillingController::class, 'invoices'])->name('invoices.index');
     Route::get('invoices/{invoice}', [TenantBillingController::class, 'showInvoice'])->name('invoices.show');
+    Route::get('invoices/{invoice}/pdf', [TenantBillingController::class, 'downloadInvoicePdf'])->name('invoices.pdf');
 });

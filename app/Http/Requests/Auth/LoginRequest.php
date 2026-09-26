@@ -51,23 +51,11 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Credentials are correct, but a tenant that has never paid must
-        // not be able to use the app at all — log straight back out
-        // rather than letting a session exist just to immediately bounce
-        // to the account-access page every request. A lapsed-but-
-        // previously-active tenant (grace/blocked) is a different case
-        // entirely and is deliberately NOT blocked here — see
-        // EnforceSubscriptionAccess for that flow, which still needs
-        // login to work so they can see their status and pay.
-        $tenantId = Auth::user()->tenant_id;
-        if ($tenantId && Tenant::find($tenantId)?->status === 'pending_payment') {
-            Auth::logout();
-            RateLimiter::clear($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'email' => "Your account is pending payment. We'll email you once your invoice is ready — you can log in once it's paid.",
-            ]);
-        }
+        // Deliberately NO check on the tenant's payment status here. A tenant
+        // that has never paid (or has fully lapsed) must be able to log in —
+        // that is how they reach their quotation and pay it. They are then
+        // confined to the payment screens by EnforceSubscriptionAccess, which
+        // is the one place that decides what a locked tenant can reach.
 
         RateLimiter::clear($this->throttleKey());
     }

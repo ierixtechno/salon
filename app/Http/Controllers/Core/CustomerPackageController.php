@@ -31,17 +31,19 @@ class CustomerPackageController extends Controller
 
     public function store(StoreCustomerPackageRequest $request, Customer $customer, SellPackageToCustomer $action): RedirectResponse
     {
-        $action->execute(
+        $sold = $action->execute(
             branch: Branch::findOrFail($request->validated('branch_id')),
             customer: $customer,
             package: Package::findOrFail($request->validated('package_id')),
-            pricePaid: (float) $request->validated('price_paid'),
+            price: (float) $request->validated('price_paid'),
             purchaseMethod: $request->validated('purchase_method'),
             purchaseReference: $request->validated('purchase_reference'),
             createdBy: Auth::guard('web')->id(),
         );
 
-        return back()->with('status', 'Package sold.');
+        return $sold->invoice_id
+            ? redirect()->route('invoices.show', $sold->invoice_id)->with('status', 'Package sold and invoice generated.')
+            : back()->with('status', 'Package sold.');
     }
 
     public function cancel(Customer $customer, CustomerPackage $customerPackage, CancelCustomerPackage $action): RedirectResponse

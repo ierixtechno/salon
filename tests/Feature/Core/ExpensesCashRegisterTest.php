@@ -50,8 +50,8 @@ test('an owner can create an expense category and record an expense, auto-approv
     $fixture = phase10Fixture();
     $owner = $fixture['owner'];
 
-    $this->actingAs($owner)->post('/expense-categories', ['name' => 'Rent'])->assertRedirect();
-    $category = ExpenseCategory::where('name', 'Rent')->firstOrFail();
+    $this->actingAs($owner)->post('/expense-categories', ['name' => 'Insurance'])->assertRedirect();
+    $category = ExpenseCategory::where('name', 'Insurance')->firstOrFail();
     expect($category->tenant_id)->toBe($owner->tenant_id);
 
     Storage::fake('local');

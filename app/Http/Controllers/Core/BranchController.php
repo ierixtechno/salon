@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Core;
 
+use App\Domain\Core\Actions\CreateBranch;
 use App\Domain\Core\Actions\UpdateBranchModules;
 use App\Domain\Core\Actions\UpsertBusinessHours;
 use App\Domain\Core\Models\Branch;
@@ -30,14 +31,19 @@ class BranchController extends Controller
 
     public function create(): View
     {
+        $limit = current_tenant()->branchLimit();
+        $used = Branch::where('is_active', true)->count();
+
         return view('core.branches.create', [
+            'branchLimit' => $limit,
+            'branchesUsed' => $used,
             'tenantModules' => current_tenant()->tenantModules()->where('enabled', true)->with('module')->get(),
         ]);
     }
 
-    public function store(StoreBranchRequest $request): RedirectResponse
+    public function store(StoreBranchRequest $request, CreateBranch $createBranch): RedirectResponse
     {
-        $branch = Branch::create($request->validated());
+        $branch = $createBranch->execute($request->validated());
 
         return redirect()->route('branches.edit', $branch)->with('status', 'Branch created.');
     }

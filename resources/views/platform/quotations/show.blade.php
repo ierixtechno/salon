@@ -79,8 +79,8 @@
             <div class="border-t border-gray-100 pt-5 mt-6">
                 <h4 class="font-semibold text-gray-900 text-sm">Record payment</h4>
                 <p class="text-xs text-gray-500 mt-1">
-                    Use this once you've received payment outside the app (bank transfer, UPI, cash, cheque) —
-                    the tenant can't pay their own first invoice in-app since login is blocked until it's paid.
+                    Use this once you've received payment outside the app (bank transfer, UPI, cash, cheque).
+                    The tenant can also pay this quotation online themselves after logging in — either way, their account unlocks the moment it's paid.
                 </p>
                 <form method="POST" action="{{ route('platform.quotations.record-payment', $quotation) }}" class="mt-3 space-y-3" onsubmit="return confirm('Record this payment and activate the tenant?')">
                     @csrf

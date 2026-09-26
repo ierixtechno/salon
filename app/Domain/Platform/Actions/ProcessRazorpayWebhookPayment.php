@@ -2,6 +2,7 @@
 
 namespace App\Domain\Platform\Actions;
 
+use App\Domain\Platform\Models\PlatformInvoice;
 use App\Domain\Platform\Models\Quotation;
 use Illuminate\Support\Facades\Log;
 
@@ -44,6 +45,12 @@ class ProcessRazorpayWebhookPayment
         $quotation = Quotation::where('razorpay_order_id', $orderId)->first();
 
         if (! $quotation) {
+            // A paid quotation is deleted, so a duplicate delivery (or the browser
+            // confirm having won the race) lands here — expected, not an error.
+            if (PlatformInvoice::where('payment_reference', $paymentId)->exists()) {
+                return;
+            }
+
             Log::warning('Razorpay webhook: no quotation matches this order_id.', ['order_id' => $orderId]);
 
             return;

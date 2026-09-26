@@ -144,9 +144,11 @@ Route::post('inventory/transfer', [InventoryController::class, 'transfer'])->nam
 // same convention as Branch/Service.
 Route::resource('packages', PackageController::class)->except(['show']);
 Route::put('packages/{package}/services', [PackageController::class, 'updateServices'])->name('packages.services');
+Route::get('packages/{package}/sell', [PackageController::class, 'sell'])->name('packages.sell');
 
 Route::resource('membership-plans', MembershipPlanController::class, ['parameters' => ['membership-plans' => 'membership_plan']])->except(['show']);
 Route::put('membership-plans/{membership_plan}/applicability', [MembershipPlanController::class, 'updateApplicability'])->name('membership-plans.applicability');
+Route::get('membership-plans/{membership_plan}/sell', [MembershipPlanController::class, 'sell'])->name('membership-plans.sell');
 
 // Purchased instances live under a customer — sold and cancelled, never
 // freeform-edited (same lifecycle-only pattern as Appointment/Invoice).
@@ -230,6 +232,7 @@ Route::middleware('can:reports.view')->group(function () {
     Route::get('reports/appointments', [ReportController::class, 'appointments'])->name('reports.appointments');
     Route::get('reports/module-performance', [ReportController::class, 'modulePerformance'])->name('reports.module-performance');
     Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
+    Route::get('reports/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
 });
 
 // Phase 14: Tenant data export.

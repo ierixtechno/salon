@@ -54,7 +54,7 @@ php artisan view:cache
 php artisan up
 ```
 
-**A release that adds tables needs `php artisan migrate --force` — uploading files alone is not enough.** The release that introduced the error log and backups adds two tables (`error_logs`, `backup_runs`); the Super Admin sidebar degrades gracefully until they exist (no crash), but Error log and Backups pages will fail until you run the migration. Whenever you upload a new release, also clear the cached config/routes/views (`php artisan optimize:clear`, then the three `:cache` commands above) — Laravel keeps serving the old compiled copies otherwise.
+**A release that adds tables needs `php artisan migrate --force` — uploading files alone is not enough.** The release that introduced the error log and backups adds two tables (`error_logs`, `backup_runs`); the Super Admin sidebar degrades gracefully until they exist (no crash), but Error log and Backups pages will fail until you run the migration. The invoice-PDF / branch-limit release adds two more migrations (`platform_invoices` no longer depends on quotations — paid quotations are deleted; `subscription_plans.branch_limit`) and one Composer package (`dompdf/dompdf`, pure PHP — needs the `mbstring` and `dom` extensions and a writable `storage/app/dompdf`, created on first use). The migration also deletes every quotation that is already paid; their invoices keep the quotation number. Whenever you upload a new release, also clear the cached config/routes/views (`php artisan optimize:clear`, then the three `:cache` commands above) — Laravel keeps serving the old compiled copies otherwise.
 
 Existing tenants' roles don't automatically pick up newly-added permissions from a `PermissionSeeder` update — that seeder only adds to the global permission catalog (CLAUDE.md's own docblock on that class). A tenant's Owner role only gets `syncPermissions($allPermissions)` at onboarding time. If a release adds permissions that existing tenants' Owners should have, re-sync those roles explicitly (see the `SubscriptionPlanManagementTest`-style tinker pattern used during this project's own development, or add a dedicated backfill command if this becomes routine).
 
@@ -70,7 +70,7 @@ Existing tenants' roles don't automatically pick up newly-added permissions from
 | `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` | your own values | Never deploy with the example defaults. |
 | `QUEUE_CONNECTION` | `database` | Shared-hosting compatible — no persistent worker needed (see §5). |
 | `CACHE_STORE` | `database` | Same reasoning; swappable to Redis/Memcached later without code changes. |
-| `MAIL_MAILER` (+ `MAIL_HOST`/`PORT`/`USERNAME`/`PASSWORD`/`FROM_ADDRESS`) | a real transport (`smtp`, `ses`, etc.) | `.env.example` defaults to `log`, which just writes emails to the log file instead of sending them. **Billing depends on this**: a tenant who hasn't paid yet cannot log in, so the quotation, payment-received and renewal-reminder *emails* are the only way they hear from you — and it's how you get the new-signup alert, the failed-backup alert and the daily error digest. After setting it, sign up a test tenant and confirm the confirmation email actually arrives. Use a `MAIL_FROM_ADDRESS` on your own domain (a real mailbox, with SPF/DKIM set up by your host) or these will land in spam. |
+| `MAIL_MAILER` (+ `MAIL_HOST`/`PORT`/`USERNAME`/`PASSWORD`/`FROM_ADDRESS`) | a real transport (`smtp`, `ses`, etc.) | `.env.example` defaults to `log`, which just writes emails to the log file instead of sending them. **Billing depends on this.** A new tenant's quotation is emailed to them the moment they register; that email is how they learn it exists and that logging in takes them straight to it. Payment-received and renewal-reminder emails reach owners who aren't in the app, and mail is also how you get the new-signup alert, the failed-backup alert and the daily error digest. After setting it, sign up a test tenant and confirm the quotation email actually arrives. Use a `MAIL_FROM_ADDRESS` on your own domain (a real mailbox, with SPF/DKIM set up by your host) or these will land in spam. |
 | `LOG_STACK` / `LOG_LEVEL` | `daily` / `warning` | Rotating log files instead of one that grows forever — see §6. |
 | `NOTIFICATIONS_SMS_DRIVER` / `NOTIFICATIONS_WHATSAPP_DRIVER` | `null` until compliance is in place | CLAUDE.md §36 — only point these at a real provider once DLT/TRAI (SMS) and WhatsApp Business API registration are actually done. `null` logs instead of sending; safe default. |
 | `FILESYSTEM_DISK` | `local` | Private uploads (expense receipts, data exports) stay off the public web root — see §7 for what this means for backups. |
@@ -135,6 +135,20 @@ What the error log deliberately does **not** store: request bodies, query string
 
 Also watch disk usage under `storage/app/private` (expense attachments; tenant data exports self-prune after 7 days) and `storage/backups` (§7). Tenant storage quota tracking (CLAUDE.md §34) is not implemented.
 
+### Will it tell me when something goes wrong?
+
+Yes — but only if **mail and the cron entry from §5 are working**, because every alert is an email sent by the queue. Super Admin gets emailed:
+
+| When | What |
+|---|---|
+| Immediately | A **new kind of error** appears (max 5 emails/hour; the rest go in the digest). Turn off with `HEALTH_INSTANT_ERROR_ALERTS=false`. |
+| 07:30 daily | Digest of every open error seen in the last 24 h (nothing sent on a quiet day). |
+| Hourly check (`health:check`, once per problem per day) | No good backup in 26 h · free disk below `HEALTH_MIN_FREE_DISK_MB` (default 500) · queued emails/WhatsApp stuck over 30 min · background jobs failing. |
+| When a backup fails | Immediately. |
+
+The Super Admin pages also show a **red banner** if the cron has been silent for 15 minutes, or disk is low, and red badges on Error log / Backups.
+
+**The one thing the app cannot report about itself is the cron stopping** — nothing runs to send the email. Cover it with a free external monitor: create a check on healthchecks.io (or similar) that expects a ping every 5–10 minutes, put its URL in `.env` as `HEALTHCHECK_PING_URL=...`, and it will email you when the pings stop. Also set up your host's own disk/uptime alerts.
 ## 7. Backup
 
 **Database and uploaded files are backed up automatically, every night at 02:00**, by `backup:run` (driven by the cron line in §5). No extra setup beyond that cron entry and a writable `storage/` folder.

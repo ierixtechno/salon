@@ -41,6 +41,18 @@ final class SubscriptionAccessState
         return $this->level === 'blocked';
     }
 
+    /**
+     * "Locked" = the tenant cannot use the app itself yet: never paid
+     * (pending) or lapsed past the grace period (blocked). A locked tenant
+     * can still log in, but only to the payment screens — the layout hides
+     * the whole side menu for them (layouts/app.blade.php) and
+     * EnforceSubscriptionAccess bounces every other route.
+     */
+    public function isLocked(): bool
+    {
+        return $this->isPending() || $this->isBlocked();
+    }
+
     public function showsReminderBanner(): bool
     {
         return $this->level === 'active' && $this->reminderDaysLeft !== null;

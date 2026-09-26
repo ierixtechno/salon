@@ -15,6 +15,10 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
+// These tests count the digest email; the instant new-error alert has its own tests
+// (SecurityAndMonitoringTest) and would otherwise add to the tally.
+beforeEach(fn () => config(['platform.health.instant_error_alerts' => false]));
+
 function errorLogTestThrower(string $password): never
 {
     throw new RuntimeException('exploded while handling '.strlen($password).' chars');

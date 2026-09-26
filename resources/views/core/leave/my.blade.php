@@ -14,6 +14,9 @@
 
                 @if ($leaveTypes->isEmpty())
                     <p class="text-sm text-gray-500">No leave types configured yet — ask your admin to set one up.</p>
+                    @can('leave-types.manage')
+                        <a href="{{ route('leave-types.create') }}" class="inline-block mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-800">Add a leave type &rarr;</a>
+                    @endcan
                 @else
                     <form method="POST" action="{{ route('leave.store') }}" class="space-y-4">
                         @csrf

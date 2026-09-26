@@ -11,14 +11,14 @@ use Illuminate\Validation\Rule;
  * IST/INR from config('platform.default_timezone'/'default_currency')
  * rather than asking.
  *
- * `subscription_plan_id` is optional: Super Admin can create a tenant
- * without committing to a plan yet (modules picked manually, quotation
- * created later from Quotations), or pick a plan here to skip the separate
- * "create a quotation" step entirely — see TenantController::store(). When
- * a plan is chosen, `modules` is no longer asked (the plan's own modules
- * are used, matching what PayQuotation syncs to on payment anyway) and
- * `billing_state` becomes required, since CreateQuotation cannot compute
- * GST without it.
+ * `subscription_plan_id` is required: however a tenant is registered (here
+ * by Super Admin, or by self-signup), it picks a package and a quotation
+ * for that package is generated in the same request — see
+ * TenantController::store(). The tenant's modules come from the package,
+ * so they are not asked for separately, and `billing_state` is required
+ * because CreateQuotation cannot compute GST without it. Any active plan
+ * may be chosen here, including a zero-priced one Super Admin grants
+ * deliberately (self-signup only offers paid plans).
  */
 class CreateTenantRequest extends FormRequest
 {
@@ -29,17 +29,13 @@ class CreateTenantRequest extends FormRequest
 
     public function rules(): array
     {
-        $planChosen = $this->filled('subscription_plan_id');
-
         return [
             'business_name' => ['required', 'string', 'max:255'],
-            'subscription_plan_id' => ['nullable', 'integer', 'exists:subscription_plans,id'],
-            'modules' => [Rule::requiredIf(! $planChosen), 'array'],
-            'modules.*' => ['string', 'exists:modules,code'],
+            'subscription_plan_id' => ['required', 'integer', Rule::exists('subscription_plans', 'id')->where('is_active', true)],
             'owner_name' => ['required', 'string', 'max:255'],
             'owner_email' => ['required', 'string', 'email', 'max:255'],
             'owner_password' => ['required', 'confirmed', 'string', 'min:8'],
-            'billing_state' => [Rule::requiredIf($planChosen), 'nullable', 'string', Rule::in(config('india.states'))],
+            'billing_state' => ['required', 'string', Rule::in(config('india.states'))],
             'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
             'quotation_amount' => ['nullable', 'numeric', 'min:0'],
             'quotation_notes' => ['nullable', 'string', 'max:1000'],
@@ -49,7 +45,8 @@ class CreateTenantRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'billing_state.required' => 'Set the billing state so a quotation can be generated for this plan.',
+            'subscription_plan_id.required' => 'Choose the package this tenant is buying.',
+            'billing_state.required' => 'Set the billing state so the quotation\'s GST can be calculated.',
         ];
     }
 }

@@ -5,6 +5,8 @@ namespace App\Domain\Platform\Support;
 use App\Domain\Platform\Models\ErrorLog;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
+use App\Domain\Platform\Actions\NotifyPlatformAdmins;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
@@ -80,7 +82,7 @@ class RecordErrorLog
 
         if (! $existing) {
             try {
-                ErrorLog::create($latest + [
+                $created = ErrorLog::create($latest + [
                     'fingerprint' => $fingerprint,
                     'exception_class' => get_class($e),
                     'message' => $message,
@@ -90,6 +92,8 @@ class RecordErrorLog
                     'first_seen_at' => $now,
                     'last_seen_at' => $now,
                 ]);
+
+                $this->alertNewError($created);
 
                 return;
             } catch (UniqueConstraintViolationException) {
@@ -108,6 +112,44 @@ class RecordErrorLog
             'resolved_at' => null,
             'resolved_by' => null,
         ]);
+    }
+
+    /**
+     * A never-before-seen error emails Super Admin straight away instead of
+     * waiting for the daily digest. Capped at 5 per hour so an outage that
+     * throws a dozen different errors cannot flood the inbox (the rest
+     * still land in the digest). Same rule 1 as everything here: an
+     * alerting failure is swallowed.
+     */
+    private function alertNewError(ErrorLog $log): void
+    {
+        try {
+            if (! config('platform.health.instant_error_alerts')) {
+                return;
+            }
+
+            $key = 'error-alerts-sent:'.now()->format('YmdH');
+            $sent = (int) Cache::get($key, 0);
+
+            if ($sent >= 5) {
+                return;
+            }
+
+            Cache::put($key, $sent + 1, now()->addHour());
+
+            $where = $log->path ? "{$log->http_method} {$log->path}" : ($log->context === 'cli' ? 'scheduled/console job' : 'unrouted request');
+
+            app(NotifyPlatformAdmins::class)->execute(
+                subject: 'New error: '.$log->shortClass(),
+                body: "A new kind of error just occurred.\n\n"
+                    .$log->shortClass().': '.mb_substr($log->message, 0, 300)."\n"
+                    ."Where: {$where}\n"
+                    ."At: {$log->first_seen_at->format('d M Y H:i')} UTC\n\n"
+                    ."Details and stack trace:\n".route('platform.error-logs.index'),
+            );
+        } catch (Throwable) {
+            // See rule 1.
+        }
     }
 
     private function sanitizeMessage(Throwable $e): string

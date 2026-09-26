@@ -32,9 +32,14 @@
                             <x-input-error :messages="$errors->get('validity_days')" class="mt-2" />
                         </div>
                         <div>
-                            <x-input-label for="price" value="Price" />
+                            <x-input-label for="price" value="Price (before GST)" />
                             <x-text-input id="price" class="block mt-1 w-full" type="number" step="0.01" min="0" name="price" :value="old('price', $plan->price)" required />
                             <x-input-error :messages="$errors->get('price')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="tax_rate_percent" value="GST %" />
+                            <x-text-input id="tax_rate_percent" class="block mt-1 w-full" type="number" step="0.01" min="0" max="100" name="tax_rate_percent" :value="old('tax_rate_percent', $plan->tax_rate_percent)" required />
+                            <x-input-error :messages="$errors->get('tax_rate_percent')" class="mt-2" />
                         </div>
                     </div>
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Core;
 
+use App\Domain\Core\Actions\CreateService;
 use App\Domain\Core\Actions\UpdateServiceBranches;
 use App\Domain\Core\Actions\UpdateServiceConsumables;
 use App\Domain\Core\Actions\UpdateServiceStaff;
@@ -60,16 +61,13 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function store(StoreServiceRequest $request): RedirectResponse
+    public function store(StoreServiceRequest $request, CreateService $createService): RedirectResponse
     {
         $category = ServiceCategory::findOrFail($request->validated('service_category_id'));
 
-        $service = Service::create([
-            ...$request->validated(),
-            'module_id' => $category->module_id,
-        ]);
+        $createService->execute($request->validated(), $category);
 
-        return redirect()->route('services.edit', $service)->with('status', 'Service created.');
+        return redirect()->route('services.index')->with('status', 'Service created.');
     }
 
     public function edit(Service $service): View

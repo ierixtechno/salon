@@ -240,3 +240,51 @@ test('a line with no commission rule for its employee accrues no commission', fu
 
     expect(CommissionEntry::count())->toBe(0);
 });
+
+
+test('the Clock out control is a real submit button, so clicking it records the check-out', function () {
+    $fixture = phase9Fixture();
+
+    $html = $this->actingAs($fixture['employee'])->get('/my-attendance')->assertOk()->getContent();
+
+    expect($html)->toMatch('/<button[^>]*type="submit"[^>]*>\s*Clock out\s*<\/button>/');
+});
+
+test('attendance times are shown in Indian time, not UTC', function () {
+    $fixture = phase9Fixture();
+    $employee = $fixture['employee'];
+
+    $record = new AttendanceRecord([
+        'user_id' => $employee->id, 'branch_id' => $fixture['branch']->id, 'date' => '2026-09-25',
+        'check_in_at' => '2026-09-25 04:00:00', 'check_out_at' => '2026-09-25 12:30:00', // UTC
+    ]);
+    $record->tenant_id = $fixture['owner']->tenant_id;
+    $record->status = 'present';
+    $record->save();
+
+    // 04:00 UTC = 09:30 IST, 12:30 UTC = 06:00 PM IST
+    $this->actingAs($employee)->get('/my-attendance')->assertOk()->assertSee('09:30 AM')->assertSee('06:00 PM')->assertDontSee('04:00 AM');
+
+    $this->actingAs($fixture['owner'])->get('/attendance?branch_id='.$fixture['branch']->id.'&date=2026-09-25')
+        ->assertOk()->assertSee('09:30 AM');
+});
+
+test('a clock-in is recorded against the Indian calendar day', function () {
+    $fixture = phase9Fixture();
+
+    // 20:00 UTC on the 24th is already 01:30 IST on the 25th.
+    $this->travelTo(Carbon\Carbon::parse('2026-09-24 20:00:00', 'UTC'));
+
+    $this->actingAs($fixture['employee'])->post('/attendance/clock-in', ['branch_id' => $fixture['branch']->id])->assertRedirect();
+
+    expect(AttendanceRecord::where('user_id', $fixture['employee']->id)->firstOrFail()->date->toDateString())->toBe('2026-09-25');
+});
+
+test('the leave requests page links admins to leave types, and the employee page tells them where to start', function () {
+    $fixture = phase9Fixture();
+
+    $this->actingAs($fixture['owner'])->get('/leave')->assertOk()->assertSee(route('leave-types.index'), false);
+
+    $this->actingAs($fixture['owner'])->get('/my-leave')->assertOk()->assertSee(route('leave-types.create'), false);
+    $this->actingAs($fixture['employee'])->get('/my-leave')->assertOk()->assertDontSee(route('leave-types.create'), false);
+});

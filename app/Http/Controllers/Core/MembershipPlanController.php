@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Core;
 
 use App\Domain\Core\Actions\UpdateMembershipPlanApplicability;
 use App\Domain\Core\Models\Branch;
+use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\MembershipPlan;
 use App\Domain\Core\Models\Service;
 use App\Domain\Platform\Models\Module;
@@ -13,6 +14,7 @@ use App\Http\Requests\Core\UpdateMembershipPlanApplicabilityRequest;
 use App\Http\Requests\Core\UpdateMembershipPlanRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class MembershipPlanController extends Controller
 {
@@ -77,5 +79,23 @@ class MembershipPlanController extends Controller
         );
 
         return back()->with('status', 'Applicability updated.');
+    }
+
+    /**
+     * Pick a customer and sell this membership; the sale form posts to the
+     * customer's own store route, which bills it on an invoice.
+     */
+    public function sell(MembershipPlan $membership_plan): View
+    {
+        abort_unless(Auth::guard('web')->user()->can('memberships.sell'), 403);
+
+        $user = Auth::guard('web')->user();
+
+        return view('core.sell.create', [
+            'type' => 'membership',
+            'item' => $membership_plan,
+            'customers' => Customer::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get()->filter(fn (Branch $branch) => $user->canAccessBranch($branch))->values(),
+        ]);
     }
 }

@@ -20,7 +20,7 @@ class CustomerMembership extends Model
     public const STATUSES = ['active', 'expired', 'cancelled'];
 
     protected $fillable = [
-        'customer_id', 'membership_plan_id', 'branch_id', 'price_paid',
+        'customer_id', 'membership_plan_id', 'branch_id', 'invoice_id', 'price_paid',
         'purchase_method', 'purchase_reference', 'starts_at', 'expires_at', 'created_by',
     ];
 

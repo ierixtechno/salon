@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
-    protected $fillable = ['code', 'name', 'price', 'billing_interval', 'is_active'];
+    protected $fillable = ['code', 'name', 'price', 'billing_interval', 'branch_limit', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'branch_limit' => 'integer',
             'is_active' => 'boolean',
         ];
     }

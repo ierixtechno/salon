@@ -2,6 +2,8 @@
 
 namespace App\Domain\Platform\Actions;
 
+use App\Domain\Core\Models\ExpenseCategory;
+use App\Domain\Core\Support\DefaultExpenseCategories;
 use App\Domain\Platform\Models\Module;
 use App\Domain\Platform\Models\Tenant;
 use App\Domain\Platform\Models\TenantModule;
@@ -154,6 +156,13 @@ class OnboardTenant
         );
 
         $user->assignRole($owner);
+
+        // So the Add-expense form has categories to pick from on day one.
+        foreach (DefaultExpenseCategories::NAMES as $name) {
+            $category = new ExpenseCategory(['name' => $name, 'is_active' => true]);
+            $category->tenant_id = $tenant->id;
+            $category->save();
+        }
 
         return $user;
     }

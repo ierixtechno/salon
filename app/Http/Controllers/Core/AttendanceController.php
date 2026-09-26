@@ -102,7 +102,7 @@ class AttendanceController extends Controller
         $user = Auth::guard('web')->user();
 
         return view('core.attendance.my', [
-            'records' => AttendanceRecord::where('user_id', $user->id)->orderByDesc('date')->limit(60)->get(),
+            'records' => AttendanceRecord::with('branch.tenant')->where('user_id', $user->id)->orderByDesc('date')->limit(60)->get(),
             'accessibleBranches' => $this->accessibleBranches(),
         ]);
     }

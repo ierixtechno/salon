@@ -66,10 +66,10 @@ class QuotationController extends Controller
     }
 
     /**
-     * A tenant cannot pay their own first invoice in-app (login is blocked
-     * until the first invoice is paid — see LoginRequest), and most of this
-     * business's actual clients pay by bank transfer/UPI/cash outside the
-     * app anyway. This lets Super Admin attest that an off-platform payment
+     * A tenant can pay a quotation online themselves (they log in straight to
+     * it — see AccountAccessController), but most of this business's actual
+     * clients pay by bank transfer/UPI/cash outside the app. This lets Super
+     * Admin attest that an off-platform payment
      * was received and drive it through the exact same PayQuotation action
      * the Razorpay flow uses — same invoice generation, module sync, and
      * tenant activation, just skipping the online gateway signature check
@@ -95,11 +95,12 @@ class QuotationController extends Controller
                 'payment_method' => $request->validated('payment_method'),
                 'payment_reference' => $request->validated('payment_reference'),
                 'invoice_id' => $invoice->id,
+                'quotation_number' => $quotation->quotation_number,
             ],
         );
 
-        return redirect()->route('platform.quotations.show', $quotation)
-            ->with('status', 'Payment recorded — invoice generated and tenant activated.');
+        return redirect()->route('platform.invoices.show', $invoice)
+            ->with('status', 'Payment recorded — invoice generated, the quotation removed and the tenant activated.');
     }
 
     public function cancel(Quotation $quotation, CancelQuotation $action): RedirectResponse

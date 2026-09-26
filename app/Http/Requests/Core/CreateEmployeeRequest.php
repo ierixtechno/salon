@@ -27,7 +27,7 @@ class CreateEmployeeRequest extends FormRequest
             'employment_type' => ['required', Rule::in(EmployeeProfile::EMPLOYMENT_TYPES)],
             'hire_date' => ['nullable', 'date'],
             'phone' => ['nullable', new IndianMobileNumber],
-            'role' => ['required', Rule::in(Role::where('tenant_id', $tenantId)->pluck('name'))],
+            'role' => ['required', Rule::in(Role::where('tenant_id', $tenantId)->pluck('name')), $this->user()->isOwner() ? 'string' : Rule::notIn(['Owner'])],
             'all_branches' => ['nullable', 'boolean'],
             'branches' => ['required_if:all_branches,false', 'array'],
             'branches.*' => ['integer', Rule::exists('branches', 'id')->where('tenant_id', $tenantId)],

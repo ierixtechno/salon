@@ -13,7 +13,8 @@
     $customersActive = request()->routeIs('customers.*');
     $salesActive = $appointmentsActive || $invoicesActive || $customersActive;
 
-    $packagesActive = request()->routeIs('packages.*') || request()->routeIs('membership-plans.*');
+    $membershipsActive = request()->routeIs('membership-plans.*');
+    $packagesActive = request()->routeIs('packages.*') || $membershipsActive;
     $giftCardsActive = request()->routeIs('gift-cards.*');
     $loyaltyActive = $packagesActive || $giftCardsActive;
 
@@ -23,7 +24,8 @@
 
     $expensesActive = request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*');
     $cashRegisterActive = request()->routeIs('cash-register.*');
-    $financeActive = $expensesActive || $cashRegisterActive;
+    $ledgerActive = request()->routeIs('reports.ledger');
+    $financeActive = $expensesActive || $cashRegisterActive || $ledgerActive;
 
     $attendanceActive = request()->routeIs('attendance.index');
     $leaveActive = request()->routeIs('leave.index') || request()->routeIs('leave-types.*');
@@ -228,17 +230,29 @@
         </x-nav-group>
     @endif
 
-    @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Package::class) || Auth::user()->can('gift-cards.view'))
+    @if (Auth::user()->can('viewAny', App\Domain\Core\Models\Package::class) || Auth::user()->can('viewAny', App\Domain\Core\Models\MembershipPlan::class) || Auth::user()->can('gift-cards.view'))
         <x-nav-group title="Loyalty & Offers" :active="$loyaltyActive">
             @can('viewAny', App\Domain\Core\Models\Package::class)
-                <a href="{{ route('packages.index') }}" class="{{ $navItemBase }} {{ $packagesActive ? $navItemActive : $navItemInactive }}">
-                    @if ($packagesActive)
+                <a href="{{ route('packages.index') }}" class="{{ $navItemBase }} {{ request()->routeIs('packages.*') ? $navItemActive : $navItemInactive }}">
+                    @if (request()->routeIs('packages.*'))
                         <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
                     @endif
                     <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H4.5a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1014.625 7.5H12V4.875zM12 4.875A2.625 2.625 0 109.375 7.5H12V4.875zM3.375 7.5h17.25c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H3.375c-.621 0-1.125-.504-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125z" />
                     </svg>
                     {{ __('Packages') }}
+                </a>
+            @endcan
+
+            @can('viewAny', App\Domain\Core\Models\MembershipPlan::class)
+                <a href="{{ route('membership-plans.index') }}" class="{{ $navItemBase }} {{ $membershipsActive ? $navItemActive : $navItemInactive }}">
+                    @if ($membershipsActive)
+                        <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
+                    @endif
+                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                    </svg>
+                    {{ __('Memberships') }}
                 </a>
             @endcan
 
@@ -284,7 +298,7 @@
         </x-nav-group>
     @endif
 
-    @if (Auth::user()->can('expenses.view') || Auth::user()->can('expense-categories.manage') || Auth::user()->can('cash-register.view'))
+    @if (Auth::user()->can('expenses.view') || Auth::user()->can('expense-categories.manage') || Auth::user()->can('cash-register.view') || Auth::user()->can('reports.view'))
         <x-nav-group title="Finance" :active="$financeActive">
             @if (Auth::user()->can('expenses.view') || Auth::user()->can('expense-categories.manage'))
                 <a href="{{ Auth::user()->can('expenses.view') ? route('expenses.index') : route('expense-categories.index') }}" class="{{ $navItemBase }} {{ $expensesActive ? $navItemActive : $navItemInactive }}">
@@ -307,6 +321,18 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75h19.5v10.5H2.25V6.75zM12 15a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" />
                     </svg>
                     {{ __('Cash Register') }}
+                </a>
+            @endcan
+
+            @can('reports.view')
+                <a href="{{ route('reports.ledger') }}" class="{{ $navItemBase }} {{ $ledgerActive ? $navItemActive : $navItemInactive }}">
+                    @if ($ledgerActive)
+                        <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
+                    @endif
+                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                    </svg>
+                    {{ __('Payment Ledger') }}
                 </a>
             @endcan
         </x-nav-group>
@@ -516,6 +542,7 @@
             {{ __('My Attendance') }}
         </a>
 
+        @can('leave.request')
         <a href="{{ route('leave.my') }}" class="{{ $navItemBase }} {{ request()->routeIs('leave.my') ? $navItemActive : $navItemInactive }}">
             @if (request()->routeIs('leave.my'))
                 <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
@@ -525,6 +552,7 @@
             </svg>
             {{ __('My Leave') }}
         </a>
+        @endcan
 
         <a href="{{ route('commission.my') }}" class="{{ $navItemBase }} {{ request()->routeIs('commission.my') ? $navItemActive : $navItemInactive }}">
             @if (request()->routeIs('commission.my'))

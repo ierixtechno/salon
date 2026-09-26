@@ -20,7 +20,7 @@ class CustomerPackage extends Model
     public const STATUSES = ['active', 'expired', 'exhausted', 'cancelled'];
 
     protected $fillable = [
-        'customer_id', 'package_id', 'branch_id', 'price_paid',
+        'customer_id', 'package_id', 'branch_id', 'invoice_id', 'price_paid',
         'purchase_method', 'purchase_reference', 'purchased_at', 'expires_at', 'created_by',
     ];
 

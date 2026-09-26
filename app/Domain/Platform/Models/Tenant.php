@@ -80,6 +80,17 @@ class Tenant extends Model
     }
 
     /**
+     * Active branches this tenant may run: their plan's `branch_limit`, or
+     * the one default branch when they have no subscription yet (pending
+     * payment). Branches a tenant already has above the limit are never
+     * removed — the limit only stops new ones being added.
+     */
+    public function branchLimit(): int
+    {
+        return max(1, (int) ($this->currentSubscription()?->plan?->branch_limit ?? 1));
+    }
+
+    /**
      * Checked on effectively every module-gated request (CLAUDE.md §56
      * names "module assignments" as a good cache candidate). The 10-minute
      * TTL is a correctness safety net, not the primary invalidation

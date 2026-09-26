@@ -44,6 +44,19 @@ return [
     'support_email' => env('PLATFORM_SUPPORT_EMAIL'),
 
     /*
+    | Self-monitoring (see CheckSystemHealth). `ping_url` is an optional
+    | external "dead man's switch" (e.g. a free healthchecks.io check): the
+    | scheduler pings it every 5 minutes, and that service emails you if the
+    | pings STOP — the one failure the app cannot report about itself.
+    */
+    'health' => [
+        'min_free_disk_mb' => (int) env('HEALTH_MIN_FREE_DISK_MB', 500),
+        // Email Super Admin the moment a NEW kind of error appears (max 5/hour).
+        'instant_error_alerts' => (bool) env('HEALTH_INSTANT_ERROR_ALERTS', true),
+        'ping_url' => env('HEALTHCHECK_PING_URL'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Default tenant timezone/currency
     |--------------------------------------------------------------------------

@@ -24,6 +24,16 @@
                                 <option value="{{ $category->id }}" @selected(old('expense_category_id') == $category->id)>{{ $category->name }}</option>
                             @endforeach
                         </select>
+                        @if ($categories->isEmpty())
+                            <p class="text-xs text-amber-700 mt-1">
+                                No categories yet.
+                                @can('expense-categories.manage')
+                                    <a href="{{ route('expense-categories.create') }}" class="underline font-medium">Add a category</a> first.
+                                @else
+                                    Ask your admin to add one.
+                                @endcan
+                            </p>
+                        @endif
                         <x-input-error :messages="$errors->get('expense_category_id')" class="mt-2" />
                     </div>
 

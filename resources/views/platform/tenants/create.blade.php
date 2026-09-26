@@ -1,8 +1,7 @@
 <x-platform-layout>
     <x-slot name="header">New tenant</x-slot>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl"
-        x-data="{ planId: '{{ old('subscription_plan_id', '') }}' }">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
         <form method="POST" action="{{ route('platform.tenants.store') }}">
             @csrf
 
@@ -13,43 +12,27 @@
             </div>
 
             <div class="mt-4">
-                <x-input-label for="subscription_plan_id" value="Subscription plan (optional)" />
-                <select id="subscription_plan_id" name="subscription_plan_id" x-model="planId" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                    <option value="">No plan yet &mdash; I'll create a quotation later</option>
+                <x-input-label for="subscription_plan_id" value="Package" />
+                <select id="subscription_plan_id" name="subscription_plan_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                    <option value="">Choose a package&hellip;</option>
                     @foreach ($plans as $plan)
                         <option value="{{ $plan->id }}" @selected((string) old('subscription_plan_id') === (string) $plan->id)>
-                            {{ $plan->name }} &mdash; &#8377;{{ number_format($plan->price, 0) }}/{{ $plan->billing_interval }}
+                            {{ $plan->name }} &mdash; &#8377;{{ number_format($plan->price, 0) }}/{{ $plan->billing_interval }}@if ($plan->modules->isNotEmpty()) ({{ $plan->modules->pluck('name')->implode(', ') }})@endif &middot; {{ $plan->branch_limit }} {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }}
                         </option>
                     @endforeach
                 </select>
                 <p class="text-xs text-gray-500 mt-1">
-                    Pick a plan to skip the separate "create a quotation" step — this creates the tenant and its first quotation together, ready to record payment on.
+                    The tenant gets this package's modules, and its quotation is created and emailed to the owner straight away. The owner can log in immediately but sees only that quotation until it's paid.
                 </p>
                 <x-input-error :messages="$errors->get('subscription_plan_id')" class="mt-2" />
             </div>
 
-            <div class="mt-4" x-show="!planId" x-cloak>
-                <x-input-label value="Modules" />
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
-                    @foreach ($modules as $module)
-                        <label class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 cursor-pointer hover:bg-gray-50 has-[:checked]:border-indigo-400 has-[:checked]:bg-indigo-50 has-[:checked]:ring-1 has-[:checked]:ring-indigo-400 transition">
-                            <input type="checkbox" name="modules[]" value="{{ $module->code }}"
-                                class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                @checked(collect(old('modules', []))->contains($module->code))>
-                            <span class="text-sm text-gray-800">{{ $module->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                <p class="text-xs text-gray-500 mt-1">What to quote this lead for — not enforced until a plan is paid.</p>
-                <x-input-error :messages="$errors->get('modules')" class="mt-2" />
-            </div>
-
-            <div class="mt-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4" x-show="planId" x-cloak>
+            <div class="mt-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
                 <p class="text-sm font-medium text-gray-800">Quotation details</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
                     <div>
                         <x-input-label for="quotation_amount" value="Amount override (optional)" />
-                        <x-text-input id="quotation_amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="quotation_amount" :value="old('quotation_amount')" placeholder="Defaults to the plan's price" />
+                        <x-text-input id="quotation_amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="quotation_amount" :value="old('quotation_amount')" placeholder="Defaults to the package price" />
                         <x-input-error :messages="$errors->get('quotation_amount')" class="mt-2" />
                     </div>
                     <div>
@@ -63,14 +46,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
                     <x-input-label for="billing_state" value="Billing state (for GST)" />
-                    <select id="billing_state" name="billing_state" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" :required="planId">
+                    <select id="billing_state" name="billing_state" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required>
                         <option value="">Select&hellip;</option>
                         @foreach (config('india.states') as $state)
                             <option value="{{ $state }}" @selected(old('billing_state') === $state)>{{ $state }}</option>
                         @endforeach
                     </select>
                     <p class="text-xs text-gray-500 mt-1">
-                        Determines CGST+SGST vs IGST. <span x-show="planId" x-cloak>Required to generate the quotation.</span><span x-show="!planId" x-cloak>Can be set later.</span>
+                        Determines CGST+SGST vs IGST on the quotation.
                     </p>
                     <x-input-error :messages="$errors->get('billing_state')" class="mt-2" />
                 </div>
@@ -110,8 +93,7 @@
 
             <div class="flex justify-end mt-6">
                 <button type="submit" class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
-                    <span x-show="!planId" x-cloak>Create tenant</span>
-                    <span x-show="planId" x-cloak>Create tenant &amp; generate quotation</span>
+                    Create tenant &amp; send quotation
                 </button>
             </div>
         </form>

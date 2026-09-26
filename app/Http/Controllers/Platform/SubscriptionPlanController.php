@@ -40,6 +40,7 @@ class SubscriptionPlanController extends Controller
             'name' => $request->validated('name'),
             'price' => $request->validated('price'),
             'billing_interval' => $request->validated('billing_interval'),
+            'branch_limit' => $request->validated('branch_limit'),
             'is_active' => $request->boolean('is_active'),
         ]);
 
@@ -52,7 +53,7 @@ class SubscriptionPlanController extends Controller
             'SubscriptionPlan',
             $plan->id,
             null,
-            ['name' => $plan->name, 'price' => (float) $plan->price],
+            ['name' => $plan->name, 'price' => (float) $plan->price, 'branch_limit' => $plan->branch_limit],
         );
 
         return redirect()->route('platform.subscription-plans.index')->with('status', 'Subscription plan created.');
@@ -75,6 +76,7 @@ class SubscriptionPlanController extends Controller
             'name' => $request->validated('name'),
             'price' => $request->validated('price'),
             'billing_interval' => $request->validated('billing_interval'),
+            'branch_limit' => $request->validated('branch_limit'),
             'is_active' => $request->boolean('is_active'),
         ]);
 
@@ -90,7 +92,7 @@ class SubscriptionPlanController extends Controller
             'SubscriptionPlan',
             $subscriptionPlan->id,
             null,
-            ['name' => $subscriptionPlan->name, 'price' => (float) $subscriptionPlan->price, 'is_active' => $subscriptionPlan->is_active],
+            ['name' => $subscriptionPlan->name, 'price' => (float) $subscriptionPlan->price, 'branch_limit' => $subscriptionPlan->branch_limit, 'is_active' => $subscriptionPlan->is_active],
         );
 
         return redirect()->route('platform.subscription-plans.index')->with('status', 'Subscription plan updated.');

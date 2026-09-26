@@ -42,6 +42,22 @@ return Application::configure(basePath: dirname(__DIR__))
         // run emails Super Admin and shows red on Platform > Backups.
         $schedule->command('backup:run')->dailyAt('02:00')->withoutOverlapping(180);
 
+        // Heartbeat: proves the server's cron is really firing. Shown as a
+        // red banner on the Platform pages when it goes quiet, and (if
+        // HEALTHCHECK_PING_URL is set) pinged to an external monitor that
+        // emails when the pings stop — the app can't report its own death.
+        $schedule->call(fn () => \Illuminate\Support\Facades\Cache::put(\App\Domain\Platform\Support\PlatformHealth::HEARTBEAT_KEY, now()->getTimestamp(), now()->addDay()))
+            ->name('scheduler-heartbeat')
+            ->everyMinute();
+
+        if ($pingUrl = config('platform.health.ping_url')) {
+            $schedule->call(fn () => null)->name('external-heartbeat-ping')->everyFiveMinutes()->pingOnSuccess($pingUrl);
+        }
+
+        // Emails Super Admin when backups, disk, the queue or failed jobs
+        // need attention — each problem at most once a day.
+        $schedule->command('health:check')->hourly();
+
         // Error-log housekeeping + the once-a-day summary email to Super
         // Admin (skipped entirely on a day with nothing to report).
         $schedule->command('error-logs:prune')->dailyAt('03:30');

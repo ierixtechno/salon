@@ -12,6 +12,25 @@ class UpdateEmployeeScheduleRequest extends FormRequest
         return $this->user()->can('employees.update');
     }
 
+    /**
+     * An unchecked "Off" checkbox is not sent by the browser at all, which made
+     * the required_if below silently skip and let empty times through to the
+     * database (NOT NULL violation). Make the flag an explicit boolean first.
+     */
+    protected function prepareForValidation(): void
+    {
+        $shifts = $this->input('shifts');
+
+        if (is_array($shifts)) {
+            foreach ($shifts as $i => $shift) {
+                if (is_array($shift)) {
+                    $shifts[$i]['is_off'] = filter_var($shift['is_off'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+            $this->merge(['shifts' => $shifts]);
+        }
+    }
+
     public function rules(): array
     {
         return [

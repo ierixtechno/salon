@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Tenant;
 
+use App\Http\Controllers\Tenant\OnboardingController;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,6 +11,12 @@ use Illuminate\Validation\Rule;
  * sole target market (D-003), so OnboardTenant defaults every tenant to
  * IST/INR from config('platform.default_timezone'/'default_currency')
  * rather than asking.
+ *
+ * `subscription_plan_id` is required: every signup picks the package it
+ * wants, and a quotation for that package is generated in the same request
+ * (see OnboardingController). The tenant's modules come from the package,
+ * so they are not asked for separately. Only active, paid plans with at
+ * least one module are offered (see OnboardingController::signupPlans).
  *
  * `billing_state` IS required here (unlike Platform's own CreateTenantRequest,
  * where Super Admin may not know it yet and can set it later) — the tenant
@@ -30,13 +37,22 @@ class OnboardTenantRequest extends FormRequest
     {
         return [
             'business_name' => ['required', 'string', 'max:255'],
-            'modules' => ['required', 'array', 'min:1'],
-            'modules.*' => ['string', 'exists:modules,code'],
+            // Exactly the packages the signup page offers — never a hidden
+            // one posted directly (see OnboardingController::signupPlans).
+            'subscription_plan_id' => ['required', 'integer', Rule::in(OnboardingController::signupPlans()->pluck('id')->all())],
             'owner_name' => ['required', 'string', 'max:255'],
             'owner_email' => ['required', 'string', 'email', 'max:255'],
             'owner_password' => ['required', 'confirmed', 'string', 'min:8'],
             'billing_state' => ['required', 'string', Rule::in(config('india.states'))],
             'gstin' => ['nullable', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'subscription_plan_id.required' => 'Please choose a package.',
+            'subscription_plan_id.in' => 'Please choose one of the packages shown.',
         ];
     }
 }

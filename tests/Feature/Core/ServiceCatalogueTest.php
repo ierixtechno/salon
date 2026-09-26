@@ -34,7 +34,7 @@ test('an owner can create a category and a service in it', function () {
         'name' => 'Haircut',
         'duration_minutes' => 45,
         'base_price' => 500,
-    ])->assertRedirect();
+    ])->assertRedirect(route('services.index'))->assertSessionHas('status', 'Service created.');
 
     $service = Service::where('name', 'Haircut')->firstOrFail();
     expect($service->module_id)->toBe($category->module_id);

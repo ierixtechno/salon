@@ -18,6 +18,7 @@ class UpdateSubscriptionPlanRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'billing_interval' => ['required', Rule::in(['trial', 'monthly', 'yearly'])],
+            'branch_limit' => ['required', 'integer', 'min:1', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],
             'features' => ['present', 'array'],
             'features.*' => ['string', 'exists:features,code'],

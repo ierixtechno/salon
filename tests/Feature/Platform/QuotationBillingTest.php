@@ -213,11 +213,10 @@ test('paying a quotation creates an invoice, syncs tenant modules, and activates
         'razorpay_signature' => 'sig_fake',
     ])->assertRedirect();
 
-    $quotation->refresh();
-    expect($quotation->status)->toBe('paid');
-    expect($quotation->paid_at)->not->toBeNull();
+    // A paid quotation is removed; the invoice that remains carries its number.
+    expect(Quotation::find($quotation->id))->toBeNull();
 
-    $invoice = PlatformInvoice::where('quotation_id', $quotation->id)->first();
+    $invoice = PlatformInvoice::where('quotation_number', $quotation->quotation_number)->first();
     expect($invoice)->not->toBeNull();
     expect($invoice->invoice_number)->toStartWith('PINV/');
     // Invoice.amount records what was actually collected — the
@@ -266,13 +265,18 @@ test('a second payment attempt on an already-paid quotation is rejected', functi
         'razorpay_signature' => 'sig_fake',
     ])->assertRedirect();
 
-    expect(PlatformInvoice::where('quotation_id', $quotation->id)->count())->toBe(1);
+    expect(PlatformInvoice::where('quotation_number', $quotation->quotation_number)->count())->toBe(1);
 
-    // Retry (double-click / webhook replay) must not double-invoice.
+    // Retry (double-click / replay): the quotation is gone, so nothing can be paid or invoiced again.
     $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/checkout")
-        ->assertStatus(409);
+        ->assertNotFound();
+    $this->actingAs($owner, 'web')->post("/billing/quotations/{$quotation->id}/confirm", [
+        'razorpay_order_id' => $quotation->razorpay_order_id,
+        'razorpay_payment_id' => 'pay_fake_123',
+        'razorpay_signature' => 'sig_fake',
+    ])->assertRedirect(); // same payment id: lands on the existing invoice
 
-    expect(PlatformInvoice::where('quotation_id', $quotation->id)->count())->toBe(1);
+    expect(PlatformInvoice::where('quotation_number', $quotation->quotation_number)->count())->toBe(1);
 });
 
 test('an unverified payment signature is rejected and does not create an invoice', function () {
@@ -320,7 +324,7 @@ test('with no payment gateway configured, checkout fails with a business error i
     expect($quotation->fresh()->status)->toBe('pending');
 });
 
-test('a platform admin can cancel a pending quotation but not a paid one', function () {
+test('a platform admin can cancel a pending quotation, and a paid one no longer exists to cancel', function () {
     $this->app->bind(PaymentGatewayProvider::class, FakeVerifiedPaymentGatewayProvider::class);
 
     $admin = PlatformAdmin::factory()->create();
@@ -352,9 +356,10 @@ test('a platform admin can cancel a pending quotation but not a paid one', funct
         'razorpay_signature' => 'sig_fake',
     ]);
 
+    // Paid means gone: there is nothing left to cancel.
+    expect(Quotation::find($paid->id))->toBeNull();
     $this->actingAs($admin, 'platform')->patch("/platform/quotations/{$paid->id}/cancel")
-        ->assertStatus(409);
-    expect($paid->fresh()->status)->toBe('paid');
+        ->assertNotFound();
 });
 
 test('a tenant admin cannot view or pay another tenant quotation or invoice', function () {
@@ -387,9 +392,10 @@ test('a tenant admin cannot view or pay another tenant quotation or invoice', fu
         'razorpay_payment_id' => 'pay_fake_789',
         'razorpay_signature' => 'sig_fake',
     ]);
-    $invoice = PlatformInvoice::where('quotation_id', $quotation->id)->firstOrFail();
+    $invoice = PlatformInvoice::where('quotation_number', $quotation->quotation_number)->firstOrFail();
 
     $this->actingAs($ownerB, 'web')->get("/billing/invoices/{$invoice->id}")->assertNotFound();
+    $this->actingAs($ownerB, 'web')->get("/billing/invoices/{$invoice->id}/pdf")->assertNotFound();
 });
 
 test('a platform admin can record a manual (offline) payment, which activates a pending tenant just like an online payment', function () {
@@ -397,11 +403,11 @@ test('a platform admin can record a manual (offline) payment, which activates a 
     $admin = PlatformAdmin::factory()->create();
     $plan = growthPlanWithModules(); // bundles salon + beauty
 
-    // Blocked pre-payment — this is the whole reason the manual-payment
-    // path is needed (the tenant can't reach the online checkout itself).
+    // Before payment the tenant can log in, but is locked to the payment screens.
     $this->post('/login', ['email' => $owner->email, 'password' => 'password123'])
-        ->assertSessionHasErrors('email');
-    $this->assertGuest('web');
+        ->assertRedirect(route('dashboard'));
+    $this->get('/dashboard')->assertRedirect(route('account.access'));
+    $this->app['auth']->guard('web')->logout();
 
     $this->actingAs($admin, 'platform')->post('/platform/quotations', [
         'tenant_id' => $owner->tenant_id,
@@ -414,11 +420,10 @@ test('a platform admin can record a manual (offline) payment, which activates a 
         'payment_reference' => 'UTR123456789',
     ])->assertRedirect();
 
-    $quotation->refresh();
-    expect($quotation->status)->toBe('paid');
-    expect($quotation->paid_at)->not->toBeNull();
+    // A paid quotation is removed; the invoice that remains carries its number.
+    expect(Quotation::find($quotation->id))->toBeNull();
 
-    $invoice = PlatformInvoice::where('quotation_id', $quotation->id)->first();
+    $invoice = PlatformInvoice::where('quotation_number', $quotation->quotation_number)->first();
     expect($invoice)->not->toBeNull();
     expect($invoice->payment_method)->toBe('bank_transfer');
     expect($invoice->payment_reference)->toBe('UTR123456789');
@@ -433,10 +438,13 @@ test('a platform admin can record a manual (offline) payment, which activates a 
 
     expect(Tenant::findOrFail($owner->tenant_id)->status)->toBe('active');
 
-    // The tenant, previously blocked from logging in pre-payment, can now
-    // log in — this is the whole point of the manual-payment path.
+    // ...and once the payment is recorded, the whole app opens up.
+    // (actingAs(..., 'platform') above switched the default guard; the real
+    // login page always authenticates tenants on the web guard.)
+    $this->app['auth']->shouldUse('web');
     $this->post('/login', ['email' => $owner->email, 'password' => 'password123'])
         ->assertRedirect(route('dashboard'));
+    $this->get('/dashboard')->assertOk();
 });
 
 test('a manual payment cannot be recorded twice on the same quotation', function () {
@@ -456,9 +464,9 @@ test('a manual payment cannot be recorded twice on the same quotation', function
 
     $this->actingAs($admin, 'platform')->post("/platform/quotations/{$quotation->id}/record-payment", [
         'payment_method' => 'cash',
-    ])->assertStatus(409);
+    ])->assertNotFound();
 
-    expect(PlatformInvoice::where('quotation_id', $quotation->id)->count())->toBe(1);
+    expect(PlatformInvoice::where('quotation_number', $quotation->quotation_number)->count())->toBe(1);
 });
 
 test('recording a manual payment requires a valid payment method', function () {
@@ -519,22 +527,49 @@ test('an unauthenticated guest cannot access tenant billing routes', function ()
     $this->get("/billing/quotations/{$quotation->id}")->assertRedirect('/login');
 });
 
-test('creating a tenant without a plan behaves exactly as before (manual modules, no quotation)', function () {
+test('creating a tenant requires a package — nothing is created without one', function () {
     $admin = PlatformAdmin::factory()->create();
 
-    $response = $this->actingAs($admin, 'platform')->post('/platform/tenants', [
-        'business_name' => 'No Plan Yet Salon',
-        'modules' => ['salon'],
+    $this->actingAs($admin, 'platform')->post('/platform/tenants', [
+        'business_name' => 'No Plan Salon',
+        'billing_state' => config('platform.state'),
         'owner_name' => 'Owner',
         'owner_email' => 'noplan@example.com',
         'owner_password' => 'password123',
         'owner_password_confirmation' => 'password123',
-    ]);
+    ])->assertSessionHasErrors('subscription_plan_id');
 
-    $tenant = Tenant::where('name', 'No Plan Yet Salon')->firstOrFail();
-    $response->assertRedirect(route('platform.tenants.show', $tenant->id));
-    expect($tenant->status)->toBe('pending_payment');
-    expect(Quotation::where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect(Tenant::where('name', 'No Plan Salon')->exists())->toBeFalse();
+});
+
+test('a tenant created by Super Admin can log in straight away and lands on its quotation', function () {
+    $admin = PlatformAdmin::factory()->create();
+    $plan = growthPlanWithModules();
+
+    $this->actingAs($admin, 'platform')->post('/platform/tenants', [
+        'business_name' => 'Admin Made Salon',
+        'subscription_plan_id' => $plan->id,
+        'billing_state' => config('platform.state'),
+        'owner_name' => 'Owner',
+        'owner_email' => 'adminmade@example.com',
+        'owner_password' => 'password123',
+        'owner_password_confirmation' => 'password123',
+    ])->assertRedirect();
+
+    $tenant = Tenant::where('name', 'Admin Made Salon')->firstOrFail();
+    $quotation = Quotation::where('tenant_id', $tenant->id)->firstOrFail();
+    // actingAs(..., 'platform') switched the default guard; the real login
+    // page always authenticates tenants on the web guard.
+    $this->app['auth']->guard('platform')->logout();
+    $this->app['auth']->shouldUse('web');
+
+    $this->post('/login', ['email' => 'adminmade@example.com', 'password' => 'password123'])
+        ->assertRedirect(route('dashboard'));
+    $this->get('/account-access')->assertRedirect(route('billing.quotations.show', $quotation));
+    $this->get(route('billing.quotations.show', $quotation))
+        ->assertOk()
+        ->assertSee($quotation->quotation_number)
+        ->assertDontSee('Download Mobile App');
 });
 
 test('creating a tenant with a plan selected skips the separate quotation step', function () {
@@ -672,6 +707,7 @@ test('the UPI QR code does not appear once the quotation is paid', function () {
         'razorpay_signature' => 'sig_fake',
     ]);
 
-    $this->actingAs($admin, 'platform')->get("/platform/quotations/{$quotation->id}")
-        ->assertOk()->assertDontSee('data-upi-qr', false);
+    // Paid means the quotation no longer exists — nothing left to show a QR for.
+    expect(Quotation::find($quotation->id))->toBeNull();
+    $this->actingAs($admin, 'platform')->get("/platform/quotations/{$quotation->id}")->assertNotFound();
 });

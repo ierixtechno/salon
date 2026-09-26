@@ -57,6 +57,7 @@ Route::prefix('platform')->name('platform.')->group(function () {
 
         Route::get('invoices', [PlatformInvoiceController::class, 'index'])->name('invoices.index');
         Route::get('invoices/{invoice}', [PlatformInvoiceController::class, 'show'])->name('invoices.show');
+        Route::get('invoices/{invoice}/pdf', [PlatformInvoiceController::class, 'pdf'])->name('invoices.pdf');
 
         // Operations: application error log and backups (Super Admin only).
         Route::get('error-logs', [ErrorLogController::class, 'index'])->name('error-logs.index');

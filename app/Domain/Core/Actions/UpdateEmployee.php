@@ -15,8 +15,11 @@ class UpdateEmployee
     public function execute(User $user, EmployeeProfile $profile, array $data): void
     {
         DB::transaction(function () use ($user, $profile, $data) {
+            $previousEmail = $user->email;
+
             $user->update([
                 'name' => $data['name'],
+                'email' => $data['email'],
                 'is_active' => (bool) ($data['is_active'] ?? $user->is_active),
                 'all_branches' => (bool) ($data['all_branches'] ?? false),
             ]);
@@ -34,6 +37,17 @@ class UpdateEmployee
             $previousRole = $user->roles()->first()?->name;
             $role = Role::where('tenant_id', $user->tenant_id)->where('name', $data['role'])->firstOrFail();
             $user->syncRoles([$role]);
+
+            if ($previousEmail !== $user->email) {
+                AuditLog::create([
+                    'tenant_id' => $user->tenant_id,
+                    'user_id' => Auth::guard('web')->id(),
+                    'action' => 'employee.email_changed',
+                    'entity_type' => 'User',
+                    'entity_id' => $user->id,
+                    'meta' => ['from' => $previousEmail, 'to' => $user->email],
+                ]);
+            }
 
             if ($previousRole !== $role->name) {
                 // Role changes are audited per CLAUDE.md §47.

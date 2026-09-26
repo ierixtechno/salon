@@ -43,6 +43,12 @@
                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
 
+                            <div>
+                                <x-input-label for="email" value="Email (login ID)" />
+                                <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $employee->user->email)" required />
+                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                            </div>
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <x-input-label for="job_title" value="Job title" />

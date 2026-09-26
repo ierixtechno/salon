@@ -24,11 +24,19 @@ class EmployeeProfilePolicy
 
     public function update(User $user, EmployeeProfile $employeeProfile): bool
     {
-        return $user->can('employees.update') && $user->tenant_id === $employeeProfile->tenant_id;
+        return $user->can('employees.update') && $user->tenant_id === $employeeProfile->tenant_id && $this->mayManage($user, $employeeProfile);
     }
 
     public function delete(User $user, EmployeeProfile $employeeProfile): bool
     {
-        return $user->can('employees.delete') && $user->tenant_id === $employeeProfile->tenant_id;
+        return $user->can('employees.delete') && $user->tenant_id === $employeeProfile->tenant_id && $this->mayManage($user, $employeeProfile);
+    }
+
+    /**
+     * Only an Owner may manage an Owner (see User::isOwner).
+     */
+    private function mayManage(User $actor, EmployeeProfile $target): bool
+    {
+        return $actor->isOwner() || ! $target->user->isOwner();
     }
 }

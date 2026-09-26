@@ -9,6 +9,13 @@
                 </div>
             @endif
 
+            @can('leave-types.manage')
+                <div class="mb-4 flex items-center justify-between rounded-md bg-indigo-50 border border-indigo-100 px-4 py-3 text-sm text-indigo-900">
+                    <span>Employees can only apply for the leave types set up here (e.g. Casual, Sick).</span>
+                    <a href="{{ route('leave-types.index') }}" class="font-semibold underline whitespace-nowrap ml-4">Manage leave types</a>
+                </div>
+            @endcan
+
             <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">

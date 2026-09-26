@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * The source quotation is deleted once it is paid, so `quotation_id` is
+ * normally null here; `quotation_number` keeps the reference.
+ *
  * Deliberately NOT BelongsToTenant — same reasoning as Quotation. Immutable
  * once created (CLAUDE.md §45): only ever produced by PayQuotation, no
  * update/destroy route exists.
@@ -13,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PlatformInvoice extends Model
 {
     protected $fillable = [
-        'tenant_id', 'quotation_id', 'subscription_plan_id',
+        'tenant_id', 'quotation_id', 'quotation_number', 'subscription_plan_id',
         'invoice_number', 'amount', 'subtotal', 'cgst_amount', 'sgst_amount', 'igst_amount', 'gst_rate_percent',
         'payment_method', 'payment_reference', 'paid_at',
     ];

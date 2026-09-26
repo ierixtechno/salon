@@ -64,9 +64,9 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-2 text-gray-500 text-xs">
-                                            {{ $record?->check_in_at?->format('h:i A') ?? '—' }}
+                                            {{ $record?->check_in_at?->timezone($branch->effectiveTimezone())->format('h:i A') ?? '—' }}
                                             /
-                                            {{ $record?->check_out_at?->format('h:i A') ?? '—' }}
+                                            {{ $record?->check_out_at?->timezone($branch->effectiveTimezone())->format('h:i A') ?? '—' }}
                                         </td>
                                         <td class="px-4 py-2">
                                             <form method="POST" action="{{ route('attendance.mark') }}" class="flex items-center gap-2">

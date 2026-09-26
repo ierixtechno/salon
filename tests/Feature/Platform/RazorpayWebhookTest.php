@@ -66,10 +66,9 @@ test('a valid payment.captured webhook pays the matching quotation', function ()
 
     $response->assertNoContent();
 
-    $quotation->refresh();
-    expect($quotation->status)->toBe('paid');
+    expect(Quotation::find($quotation->id))->toBeNull(); // paid quotations are removed
 
-    $invoice = PlatformInvoice::where('quotation_id', $quotation->id)->first();
+    $invoice = PlatformInvoice::where('quotation_number', $quotation->quotation_number)->first();
     expect($invoice)->not->toBeNull();
     expect($invoice->payment_method)->toBe('razorpay');
     expect($invoice->payment_reference)->toBe('pay_xyz789');
@@ -137,7 +136,7 @@ test('a duplicate webhook delivery on an already-paid quotation is a safe no-op'
         'CONTENT_TYPE' => 'application/json', 'HTTP_X_RAZORPAY_SIGNATURE' => $signature,
     ], $body)->assertNoContent();
 
-    expect(PlatformInvoice::where('quotation_id', $quotation->id)->count())->toBe(1);
+    expect(PlatformInvoice::where('quotation_number', $quotation->quotation_number)->count())->toBe(1);
 });
 
 test('an amount mismatch is not applied', function () {
@@ -153,7 +152,7 @@ test('an amount mismatch is not applied', function () {
     ], $body)->assertNoContent();
 
     expect($quotation->fresh()->status)->toBe('pending');
-    expect(PlatformInvoice::where('quotation_id', $quotation->id)->exists())->toBeFalse();
+    expect(PlatformInvoice::where('quotation_number', $quotation->quotation_number)->exists())->toBeFalse();
 });
 
 test('a webhook for an order that matches no quotation is acknowledged without error', function () {

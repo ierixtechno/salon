@@ -1,6 +1,6 @@
 <x-onboarding-layout>
     <h1 class="text-xl font-semibold text-gray-900 mb-1">Set up your business</h1>
-    <p class="text-sm text-gray-600 mb-6">Create your account now — we'll send you an invoice to activate it.</p>
+    <p class="text-sm text-gray-600 mb-6">Choose your package and create your account. We'll email you a quotation straight away — log in any time to view it and pay, and your account unlocks as soon as the payment is received.</p>
 
     <form method="POST" action="{{ route('onboarding.store') }}">
         @csrf
@@ -35,20 +35,33 @@
         </fieldset>
 
         <fieldset class="mb-6">
-            <legend class="text-sm font-semibold text-gray-700 mb-3">Which do you run?</legend>
-            <p class="text-xs text-gray-500 mb-3">Pick at least one — you can enable the others later.</p>
+            <legend class="text-sm font-semibold text-gray-700 mb-1">Choose your package</legend>
+            <p class="text-xs text-gray-500 mb-3">Prices are per billing period, plus GST. You can move to a different package later.</p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                @foreach ($modules as $module)
-                    <label class="flex items-center gap-2 border rounded-md px-3 py-2 cursor-pointer hover:bg-gray-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
-                        <input type="checkbox" name="modules[]" value="{{ $module->code }}"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                            @checked(collect(old('modules', []))->contains($module->code))>
-                        <span class="text-sm text-gray-800">{{ $module->name }}</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                @forelse ($plans as $plan)
+                    <label class="relative flex flex-col gap-1 rounded-lg border border-gray-200 px-4 py-3 cursor-pointer hover:bg-gray-50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500 transition">
+                        <span class="flex items-start justify-between gap-3">
+                            <span class="flex items-center gap-2">
+                                <input type="radio" name="subscription_plan_id" value="{{ $plan->id }}" required
+                                    class="border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    @checked((string) old('subscription_plan_id') === (string) $plan->id)>
+                                <span class="text-sm font-semibold text-gray-900">{{ $plan->name }}</span>
+                            </span>
+                            <span class="text-right shrink-0">
+                                <span class="block text-sm font-semibold text-gray-900">&#8377;{{ number_format($plan->price, 0) }}</span>
+                                <span class="block text-xs text-gray-500">/{{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }} + GST</span>
+                            </span>
+                        </span>
+                        @if ($plan->modules->isNotEmpty())
+                            <span class="pl-6 text-xs text-gray-600">Includes: {{ $plan->modules->pluck('name')->implode(', ') }} &middot; {{ $plan->branch_limit }} {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }}</span>
+                        @endif
                     </label>
-                @endforeach
+                @empty
+                    <p class="text-sm text-gray-500 sm:col-span-2">No packages are available right now — please contact us.</p>
+                @endforelse
             </div>
-            <x-input-error :messages="$errors->get('modules')" class="mt-2" />
+            <x-input-error :messages="$errors->get('subscription_plan_id')" class="mt-2" />
         </fieldset>
 
         <fieldset class="mb-2">

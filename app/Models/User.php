@@ -51,6 +51,17 @@ class User extends Authenticatable
     }
 
     /**
+     * The tenant's Owner role is the top of the tenant hierarchy: only an Owner
+     * may edit, deactivate or hand the Owner role to another user, so a Manager
+     * with `employees.update` can never promote themselves or take over the
+     * Owner's login (e.g. by changing the Owner's email).
+     */
+    public function isOwner(): bool
+    {
+        return $this->roles()->where('name', 'Owner')->exists();
+    }
+
+    /**
      * Server-side branch access check — never trust a client-supplied
      * branch_id (CLAUDE.md §13). `all_branches` grants every branch under
      * this user's own tenant; otherwise access is explicit via branch_user.

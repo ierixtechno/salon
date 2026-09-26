@@ -6,6 +6,7 @@ use App\Domain\Core\Scopes\TenantScope;
 use App\Domain\Platform\Actions\CreateQuotation;
 use App\Domain\Platform\Actions\PayQuotation;
 use App\Domain\Platform\Models\PlatformAdmin;
+use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\SubscriptionPlan;
 use App\Domain\Platform\Models\Tenant;
 use App\Mail\NotificationMail;
@@ -37,10 +38,10 @@ test('creating a quotation for a pending tenant emails the owner, with UPI payme
     expect($email->subject)->toContain($quotation->quotation_number);
     expect($email->body)->toContain('nexbiz@okicici');
     expect($email->body)->toContain(number_format((float) $quotation->total_amount, 2));
-    // A never-paid tenant cannot log in, so the email must not tell them
-    // to pay from inside the app.
-    expect($email->body)->toContain('activated as soon as your payment is received');
-    expect($email->body)->not->toContain('/billing/quotations/');
+    // A never-paid tenant is told to log in — that takes them straight to
+    // this quotation — rather than being pointed at a billing URL directly.
+    expect($email->body)->toContain('Log in to view this quotation and pay online');
+    expect($email->body)->toContain(route('login'));
 });
 
 test('a pending tenant without a configured UPI ID is told to contact us instead of being shown a blank', function () {
@@ -143,16 +144,17 @@ test('a tenant\'s billing emails only go to users allowed to manage billing', fu
     expect($recipients)->toBe([$owner->email]);
 });
 
-test('self-signup emails the new owner a confirmation and alerts every active Super Admin', function () {
+test('self-signup emails the new owner their quotation and alerts every active Super Admin', function () {
     Mail::fake();
 
     $adminA = PlatformAdmin::factory()->create(['is_active' => true]);
     $adminB = PlatformAdmin::factory()->create(['is_active' => true]);
     $inactive = PlatformAdmin::factory()->create(['is_active' => false]);
+    $plan = SubscriptionPlan::where('code', 'salon')->firstOrFail();
 
     $this->post('/register', [
         'business_name' => 'Glow Salon',
-        'modules' => ['salon'],
+        'subscription_plan_id' => $plan->id,
         'owner_name' => 'Alice Owner',
         'owner_email' => 'alice@glow.test',
         'owner_password' => 'password123',
@@ -161,25 +163,32 @@ test('self-signup emails the new owner a confirmation and alerts every active Su
     ])->assertRedirect(route('login'));
 
     $tenant = Tenant::where('name', 'Glow Salon')->firstOrFail();
+    $quotation = Quotation::where('tenant_id', $tenant->id)->firstOrFail();
 
-    $confirmation = emailsFor($tenant->id)->first();
-    expect($confirmation->to_address)->toBe('alice@glow.test');
-    expect($confirmation->subject)->toContain('received your registration');
+    // One email to the owner at signup: the quotation itself, telling them
+    // logging in takes them straight to it.
+    $emails = emailsFor($tenant->id);
+    expect($emails)->toHaveCount(1);
+    expect($emails->first()->to_address)->toBe('alice@glow.test');
+    expect($emails->first()->subject)->toContain($quotation->quotation_number);
+    expect($emails->first()->body)->toContain('Log in to view this quotation')->toContain(route('login'));
 
-    Mail::assertQueued(NotificationMail::class, function (NotificationMail $mail) use ($adminA, $adminB, $inactive) {
+    Mail::assertQueued(NotificationMail::class, function (NotificationMail $mail) use ($adminA, $adminB, $inactive, $quotation) {
         return $mail->hasTo($adminA->email)
             && $mail->hasTo($adminB->email)
             && ! $mail->hasTo($inactive->email)
-            && str_contains($mail->mailSubject, 'New signup: Glow Salon');
+            && str_contains($mail->mailSubject, 'New signup: Glow Salon')
+            && str_contains($mail->mailBody, $quotation->quotation_number);
     });
 });
 
-test('a failure to send signup notifications never breaks the signup itself', function () {
+test('a failure to send signup notifications never breaks the signup itself — the tenant and quotation still exist', function () {
     $this->app->bind(SendNotification::class, fn () => throw new RuntimeException('mail system is down'));
+    $plan = SubscriptionPlan::where('code', 'salon')->firstOrFail();
 
     $this->post('/register', [
         'business_name' => 'Resilient Salon',
-        'modules' => ['salon'],
+        'subscription_plan_id' => $plan->id,
         'owner_name' => 'Bob Owner',
         'owner_email' => 'bob@resilient.test',
         'owner_password' => 'password123',
@@ -187,5 +196,20 @@ test('a failure to send signup notifications never breaks the signup itself', fu
         'billing_state' => 'Haryana',
     ])->assertRedirect(route('login'))->assertSessionHas('status');
 
-    expect(Tenant::where('name', 'Resilient Salon')->exists())->toBeTrue();
+    $tenant = Tenant::where('name', 'Resilient Salon')->firstOrFail();
+    expect(Quotation::where('tenant_id', $tenant->id)->where('status', 'pending')->exists())->toBeTrue();
+});
+
+test('a notification failure never rolls back a payment', function () {
+    $owner = onboard(['activated' => false]);
+    $plan = SubscriptionPlan::where('code', 'growth')->firstOrFail();
+    $quotation = app(CreateQuotation::class)->execute(Tenant::findOrFail($owner->tenant_id), $plan, createdBy: null);
+
+    $this->app->bind(SendNotification::class, fn () => throw new RuntimeException('mail system is down'));
+
+    $invoice = app(PayQuotation::class)->execute($quotation, 'bank_transfer', 'UTR-KEEP');
+
+    expect($invoice->exists)->toBeTrue();
+    expect(Quotation::find($quotation->id))->toBeNull(); // paid quotations are removed
+    expect(Tenant::findOrFail($owner->tenant_id)->status)->toBe('active');
 });

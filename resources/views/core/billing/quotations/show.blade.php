@@ -3,11 +3,29 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">Quotation {{ $quotation->quotation_number }}</h2>
     </x-slot>
 
+    @php
+        // No side menu for a locked tenant (layouts/app.blade.php), so this
+        // is the whole screen — centre it rather than leave it in a corner.
+        $lockedState = $subscriptionAccessState ?? null;
+    @endphp
+
     <div class="py-8">
-        <div class="px-4 sm:px-6 lg:px-8 max-w-xl">
+        <div class="px-4 sm:px-6 lg:px-8 max-w-xl {{ $lockedState?->isLocked() ? 'mx-auto' : '' }}">
             @if (session('status'))
                 <div class="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}
+                </div>
+            @endif
+
+            @if ($quotation->status === 'pending' && $lockedState?->isLocked())
+                <div class="mb-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3 text-sm text-indigo-900">
+                    @if ($lockedState->isPending())
+                        <p class="font-semibold">Welcome to {{ config('platform.brand_name') }}! Your account is ready.</p>
+                        <p class="mt-1">Pay this quotation to unlock it. Pay online with <span class="font-medium">Pay Now</span>, or by UPI below. If you pay another way (bank transfer, cash), your account unlocks as soon as we record the payment.</p>
+                    @else
+                        <p class="font-semibold">Your subscription has ended.</p>
+                        <p class="mt-1">Pay this quotation to restore full access.</p>
+                    @endif
                 </div>
             @endif
 

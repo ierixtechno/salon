@@ -19,6 +19,7 @@ class StorePackageRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'validity_days' => ['required', 'integer', 'min:1', 'max:3650'],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'tax_rate_percent' => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

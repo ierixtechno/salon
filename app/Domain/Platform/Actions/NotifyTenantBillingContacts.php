@@ -10,6 +10,7 @@ use App\Domain\Platform\Models\TenantSubscription;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Spatie\Permission\PermissionRegistrar;
+use Throwable;
 
 /**
  * Every billing message a tenant should receive — quotation created,
@@ -17,11 +18,11 @@ use Spatie\Permission\PermissionRegistrar;
  * holding `tenant.billing.manage` (Owner-only by default), as BOTH an
  * in-app notification and an email.
  *
- * Email is not optional decoration: a tenant that has never paid cannot
- * log in at all (LoginRequest), so an in-app notification alone would
- * never reach the one person who most needs to see their first quotation.
- * Renewal reminders likewise must reach owners who haven't opened the app
- * lately. Email failure never affects the billing operation itself — it
+ * Email is not optional decoration: a brand-new tenant has never logged in,
+ * so an in-app notification alone would sit unseen — the email is how the
+ * owner learns their quotation exists and that logging in takes them
+ * straight to it. Renewal reminders likewise must reach owners who haven't
+ * opened the app lately. Email failure never affects the billing operation itself — it
  * is queued and recorded on its own notification_logs row (CLAUDE.md
  * §37).
  *
@@ -41,7 +42,7 @@ class NotifyTenantBillingContacts
 
         $this->eachContact($tenant, function (User $user) use ($tenant, $plan, $quotation, $number, $total, $gst) {
             $howToPay = $tenant->status === 'pending_payment'
-                ? "Your account will be activated as soon as your payment is received.\n\n".$this->upiInstructions($quotation)
+                ? "Log in to view this quotation and pay online - your account unlocks as soon as the payment is received:\n".route('login')."\n\n".$this->upiInstructions($quotation)
                 : "Log in and open Billing > Quotations to pay online:\n".route('billing.quotations.show', $quotation)."\n\n".$this->upiInstructions($quotation, optional: true);
 
             $this->deliver(
@@ -126,6 +127,14 @@ class NotifyTenantBillingContacts
             ->each($callback);
     }
 
+    /**
+     * Each message is isolated: callers run this inside their own database
+     * transaction (signup, CreateQuotation, PayQuotation), so a notification
+     * that failed to record must never roll back the billing operation it
+     * is only reporting on — a payment is still a payment even if the
+     * "payment received" email couldn't be queued (CLAUDE.md §37). Failures
+     * are reported into the error log instead of being thrown.
+     */
     private function deliver(
         Tenant $tenant,
         User $user,
@@ -136,31 +145,28 @@ class NotifyTenantBillingContacts
         string $referenceType,
         int $referenceId,
     ): void {
-        $send = app(SendNotification::class);
+        $messages = [
+            ['in_app', null, $inAppSubject, $inAppBody],
+            ['email', $user->email, $emailSubject, $emailBody],
+        ];
 
-        $send->execute(
-            tenantId: $tenant->id,
-            channel: 'in_app',
-            recipientType: 'user',
-            recipientId: $user->id,
-            toAddress: null,
-            subject: $inAppSubject,
-            body: $inAppBody,
-            referenceType: $referenceType,
-            referenceId: $referenceId,
-        );
-
-        $send->execute(
-            tenantId: $tenant->id,
-            channel: 'email',
-            recipientType: 'user',
-            recipientId: $user->id,
-            toAddress: $user->email,
-            subject: $emailSubject,
-            body: $emailBody,
-            referenceType: $referenceType,
-            referenceId: $referenceId,
-        );
+        foreach ($messages as [$channel, $toAddress, $subject, $body]) {
+            try {
+                app(SendNotification::class)->execute(
+                    tenantId: $tenant->id,
+                    channel: $channel,
+                    recipientType: 'user',
+                    recipientId: $user->id,
+                    toAddress: $toAddress,
+                    subject: $subject,
+                    body: $body,
+                    referenceType: $referenceType,
+                    referenceId: $referenceId,
+                );
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     /**

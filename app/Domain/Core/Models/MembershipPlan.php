@@ -21,12 +21,13 @@ class MembershipPlan extends Model
 
     // tenant_id deliberately excluded — never mass-assignable (CLAUDE.md
     // §28). BelongsToTenant auto-fills it from the authenticated session.
-    protected $fillable = ['name', 'description', 'validity_days', 'price', 'discount_percent', 'usage_limit', 'is_active'];
+    protected $fillable = ['name', 'description', 'validity_days', 'price', 'tax_rate_percent', 'discount_percent', 'usage_limit', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'tax_rate_percent' => 'decimal:2',
             'discount_percent' => 'decimal:2',
             'is_active' => 'boolean',
         ];

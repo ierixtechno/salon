@@ -42,6 +42,9 @@
                         // shows no badge instead of breaking this page.
                         $openErrorCount = \App\Domain\Platform\Support\PlatformHealth::openErrorCount();
                         $backupStale = \App\Domain\Platform\Support\PlatformHealth::backupIsStale();
+                        $schedulerStale = \App\Domain\Platform\Support\PlatformHealth::schedulerIsStale();
+                        $diskMb = \App\Domain\Platform\Support\PlatformHealth::freeDiskMb();
+                        $diskLow = $diskMb !== null && $diskMb < (int) config('platform.health.min_free_disk_mb');
                     @endphp
 
                     <a href="{{ route('platform.dashboard') }}"
@@ -186,6 +189,16 @@
                 @endif
 
                 <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+                    @if ($schedulerStale ?? false)
+                        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                            <strong>Scheduled jobs are not running.</strong> The server's cron entry has been silent for over 15 minutes, so emails, WhatsApp messages, renewals and backups are not being processed. Check the cron job (see docs/DEPLOYMENT.md &sect;5).
+                        </div>
+                    @endif
+                    @if ($diskLow ?? false)
+                        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                            <strong>Disk space is low</strong> ({{ $diskMb }} MB free). Free some space or increase the hosting quota before backups and uploads start failing.
+                        </div>
+                    @endif
                     {{ $slot }}
                 </main>
 

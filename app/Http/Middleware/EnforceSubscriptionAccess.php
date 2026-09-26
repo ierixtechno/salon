@@ -15,6 +15,11 @@ use Symfony\Component\HttpFoundation\Response;
  * or whose subscription has lapsed, gets progressively restricted rather
  * than logged out — see docs on 'pending'/'grace'/'blocked' in
  * SubscriptionAccessState.
+ *
+ * A tenant that has never paid (or is fully lapsed) CAN log in — that is
+ * how they reach their quotation and pay it — but is confined to the
+ * payment screens: everything else redirects to account.access, which
+ * sends them on to their pending quotation.
  */
 class EnforceSubscriptionAccess
 {
@@ -22,15 +27,6 @@ class EnforceSubscriptionAccess
 
     public function handle(Request $request, Closure $next): Response
     {
-        // Always allowed regardless of state — otherwise a blocked tenant
-        // could never reach the page/routes that let them pay their way
-        // back in. profile.* is included too: a pending/blocked user may
-        // need to fix a typo'd email to actually receive their invoice.
-        if ($request->routeIs('billing.*') || $request->routeIs('account.access')
-            || $request->routeIs('logout') || $request->routeIs('profile.*')) {
-            return $next($request);
-        }
-
         $tenantId = $request->user('web')?->tenant_id;
 
         if (! $tenantId) {
@@ -45,7 +41,22 @@ class EnforceSubscriptionAccess
 
         $state = $this->resolver->execute($tenant);
 
-        if ($state->isPending() || $state->isBlocked()) {
+        // Shared before the exemptions below, not after: the payment
+        // screens themselves are exempt, and they are exactly where the
+        // layout needs to know the tenant is locked so it can hide the
+        // side menu.
+        View::share('subscriptionAccessState', $state);
+
+        // Always allowed regardless of state — otherwise a locked tenant
+        // could never reach the page/routes that let them pay their way
+        // back in. profile.* is included too: a pending/blocked user may
+        // need to fix a typo'd email to actually receive their invoice.
+        if ($request->routeIs('billing.*') || $request->routeIs('account.access')
+            || $request->routeIs('logout') || $request->routeIs('profile.*')) {
+            return $next($request);
+        }
+
+        if ($state->isLocked()) {
             return redirect()->route('account.access');
         }
 
@@ -55,8 +66,6 @@ class EnforceSubscriptionAccess
                 'Your subscription has expired. You have read-only access during the grace period — renew now to make changes.',
             );
         }
-
-        View::share('subscriptionAccessState', $state);
 
         return $next($request);
     }

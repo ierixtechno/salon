@@ -19,6 +19,7 @@ use App\Http\Requests\Platform\UpdateTenantStatusRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TenantController extends Controller
 {
@@ -32,66 +33,51 @@ class TenantController extends Controller
     public function create(): View
     {
         return view('platform.tenants.create', [
-            'modules' => Module::orderBy('name')->get(),
             'plans' => SubscriptionPlan::where('is_active', true)->with('modules')->orderBy('price')->get(),
         ]);
     }
 
     /**
-     * Picking a plan here skips the separate "Quotations > Create" step —
-     * the quotation is generated in the same request, right after the
-     * tenant. Leaving the plan blank keeps the original two-step flow
-     * (manual modules now, a quotation created later).
+     * Creates the tenant and the quotation for its package together, in one
+     * transaction — a tenant is never left with nothing to pay. Same rule as
+     * self-signup (OnboardingController): the package is required and its
+     * modules become the tenant's modules. The new owner can log in straight
+     * away but sees only this quotation until it is paid or recorded.
      */
     public function store(CreateTenantRequest $request, OnboardTenant $onboardTenant, CreateQuotation $createQuotation): RedirectResponse
     {
         $data = $request->validated();
-        $plan = isset($data['subscription_plan_id']) ? SubscriptionPlan::find($data['subscription_plan_id']) : null;
+        $plan = SubscriptionPlan::with('modules')->findOrFail($data['subscription_plan_id']);
+        $data['modules'] = $plan->modules->pluck('code')->all();
+        $admin = Auth::guard('platform')->user();
 
-        // No plan chosen -> modules weren't asked for, nothing to derive.
-        // Plan chosen -> the plan's own modules stand in for the manual
-        // picker (PayQuotation would overwrite them to this exact set on
-        // payment anyway, so asking twice adds nothing).
-        if ($plan) {
-            $data['modules'] = $plan->modules->pluck('code')->all();
-        }
+        $quotation = DB::transaction(function () use ($data, $plan, $admin, $onboardTenant, $createQuotation) {
+            $owner = $onboardTenant->execute($data);
 
-        $owner = $onboardTenant->execute($data);
+            PlatformAuditLog::record($admin, 'tenant.created', 'Tenant', $owner->tenant_id, $owner->tenant_id);
 
-        PlatformAuditLog::record(
-            Auth::guard('platform')->user(),
-            'tenant.created',
-            'Tenant',
-            $owner->tenant_id,
-            $owner->tenant_id,
-        );
+            $quotation = $createQuotation->execute(
+                tenant: Tenant::findOrFail($owner->tenant_id),
+                plan: $plan,
+                createdBy: $admin,
+                amountOverride: $data['quotation_amount'] ?? null,
+                notes: $data['quotation_notes'] ?? null,
+            );
 
-        if (! $plan) {
-            return redirect()->route('platform.tenants.show', $owner->tenant_id)
-                ->with('status', 'Tenant created.');
-        }
+            PlatformAuditLog::record(
+                $admin,
+                'quotation.created',
+                'Quotation',
+                $quotation->id,
+                $owner->tenant_id,
+                ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount],
+            );
 
-        $tenant = Tenant::findOrFail($owner->tenant_id);
-
-        $quotation = $createQuotation->execute(
-            tenant: $tenant,
-            plan: $plan,
-            createdBy: Auth::guard('platform')->user(),
-            amountOverride: $data['quotation_amount'] ?? null,
-            notes: $data['quotation_notes'] ?? null,
-        );
-
-        PlatformAuditLog::record(
-            Auth::guard('platform')->user(),
-            'quotation.created',
-            'Quotation',
-            $quotation->id,
-            $tenant->id,
-            ['quotation_number' => $quotation->quotation_number, 'amount' => (float) $quotation->amount],
-        );
+            return $quotation;
+        });
 
         return redirect()->route('platform.quotations.show', $quotation)
-            ->with('status', 'Tenant created — quotation generated, ready to record payment.');
+            ->with('status', 'Tenant created and quotation emailed to the owner. Record the payment here once it is received.');
     }
 
     public function show(Tenant $tenant): View

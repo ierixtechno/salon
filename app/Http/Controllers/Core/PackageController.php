@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Core;
 
 use App\Domain\Core\Actions\UpdatePackageServices;
+use App\Domain\Core\Models\Branch;
+use App\Domain\Core\Models\Customer;
 use App\Domain\Core\Models\Package;
 use App\Domain\Core\Models\Service;
 use App\Http\Controllers\Controller;
@@ -11,6 +13,7 @@ use App\Http\Requests\Core\UpdatePackageRequest;
 use App\Http\Requests\Core\UpdatePackageServicesRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class PackageController extends Controller
 {
@@ -68,5 +71,23 @@ class PackageController extends Controller
         $action->execute($package, $request->validated('items'));
 
         return back()->with('status', 'Package contents updated.');
+    }
+
+    /**
+     * Pick a customer and sell this package; the sale form posts to the
+     * customer's own store route, which bills it on an invoice.
+     */
+    public function sell(Package $package): View
+    {
+        abort_unless(Auth::guard('web')->user()->can('packages.sell'), 403);
+
+        $user = Auth::guard('web')->user();
+
+        return view('core.sell.create', [
+            'type' => 'package',
+            'item' => $package,
+            'customers' => Customer::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get()->filter(fn (Branch $branch) => $user->canAccessBranch($branch))->values(),
+        ]);
     }
 }

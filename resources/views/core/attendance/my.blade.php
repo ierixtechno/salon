@@ -34,7 +34,7 @@
                                         <option value="{{ $b->id }}">{{ $b->name }}</option>
                                     @endforeach
                                 </select>
-                                <x-secondary-button>Clock out</x-secondary-button>
+                                <x-secondary-button type="submit">Clock out</x-secondary-button>
                             </form>
                         </div>
                     @endif
@@ -57,8 +57,8 @@
                                 <tr>
                                     <td class="px-4 py-2 text-gray-700">{{ $record->date->format('d M Y') }}</td>
                                     <td class="px-4 py-2 text-gray-500">{{ str($record->status)->replace('_', ' ')->headline() }}</td>
-                                    <td class="px-4 py-2 text-gray-500">{{ $record->check_in_at?->format('h:i A') ?? '—' }}</td>
-                                    <td class="px-4 py-2 text-gray-500">{{ $record->check_out_at?->format('h:i A') ?? '—' }}</td>
+                                    <td class="px-4 py-2 text-gray-500">{{ $record->check_in_at?->timezone($record->branch->effectiveTimezone())->format('h:i A') ?? '—' }}</td>
+                                    <td class="px-4 py-2 text-gray-500">{{ $record->check_out_at?->timezone($record->branch->effectiveTimezone())->format('h:i A') ?? '—' }}</td>
                                 </tr>
                             @empty
                                 <tr>

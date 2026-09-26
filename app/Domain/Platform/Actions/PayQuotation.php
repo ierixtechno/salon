@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * The core of the billing flow: turns a paid Quotation into an immutable
- * PlatformInvoice, and — per the confirmed decision — auto-syncs the
+ * PlatformInvoice (and removes the quotation — it has served its purpose), and — per the confirmed decision — auto-syncs the
  * tenant's enabled modules to exactly the paid plan's modules via the
  * existing UpdateTenantModules action. That action *replaces* the tenant's
  * module set rather than adding to it, so paying a smaller/different plan
@@ -33,11 +33,17 @@ class PayQuotation
         abort_if($quotation->status !== 'pending', 409, 'This quotation is no longer payable.');
 
         $invoice = DB::transaction(function () use ($quotation, $paymentMethod, $paymentReference) {
+            // The quotation is deleted once paid, so the unique quotation_id on the
+            // invoice no longer guards against a double payment (webhook racing the
+            // browser confirm). Lock the row and re-check under the lock instead.
+            $locked = Quotation::whereKey($quotation->id)->lockForUpdate()->first();
+            abort_if(! $locked || $locked->status !== 'pending', 409, 'This quotation is no longer payable.');
+
             $invoiceNumber = $this->nextPlatformNumber('invoice');
 
             $invoice = PlatformInvoice::create([
                 'tenant_id' => $quotation->tenant_id,
-                'quotation_id' => $quotation->id,
+                'quotation_number' => $quotation->quotation_number,
                 'subscription_plan_id' => $quotation->subscription_plan_id,
                 'invoice_number' => $invoiceNumber,
                 // The invoice records what was actually collected —
@@ -82,6 +88,10 @@ class PayQuotation
             );
 
             app(NotifyTenantBillingContacts::class)->paymentReceived($quotation, $invoice, $endsAt, $firstActivation);
+
+            // A paid quotation is not kept: the invoice (which carries its
+            // number) is the record that remains.
+            $quotation->delete();
 
             return $invoice;
         });

@@ -15,8 +15,17 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
+    @php
+        // A tenant that has never paid (or has lapsed past the grace
+        // period) is confined to the payment screens by
+        // EnforceSubscriptionAccess — so there is nothing in the side menu
+        // they could open. Hide it entirely rather than show links that
+        // only bounce back here.
+        $accountLocked = isset($subscriptionAccessState) && $subscriptionAccessState->isLocked();
+    @endphp
     <body class="font-sans text-gray-900 antialiased bg-slate-50" x-data="{ sidebarOpen: false }">
         <div class="min-h-screen lg:flex">
+            @unless ($accountLocked)
             <!-- Mobile overlay -->
             <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false"
                 class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden" x-transition.opacity></div>
@@ -35,17 +44,22 @@
 
                 @include('layouts.navigation')
             </aside>
+            @endunless
 
             <!-- Main column -->
             <div class="flex-1 flex flex-col min-w-0">
                 <!-- Top bar -->
                 <header class="sticky top-0 z-20 flex items-center justify-between gap-4 min-h-16 py-3 px-4 sm:px-6 lg:px-8 bg-white border-b border-gray-200">
                     <div class="flex items-center gap-3 min-w-0 flex-1">
+                        @unless ($accountLocked)
                         <button @click="sidebarOpen = true" class="lg:hidden text-gray-500 hover:text-gray-700 p-1 -ml-1 shrink-0">
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
+                        @else
+                            <x-application-logo class="h-8 w-8 shrink-0" />
+                        @endunless
                         <div class="min-w-0 flex-1 text-lg font-semibold text-gray-900">
                             {{ $header ?? '' }}
                         </div>

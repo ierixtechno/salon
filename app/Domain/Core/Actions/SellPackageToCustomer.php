@@ -9,8 +9,8 @@ use App\Domain\Core\Models\Package;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Records the sale directly (method/reference/price_paid) rather than
- * through the Invoice/GST engine — see docs/decisions/README.md D-006.
+ * Bills the sale on a GST invoice (CreateSaleInvoice) and records the
+ * package instance against it — see docs/decisions/README.md D-006 (superseded).
  * The recipe is snapshotted into CustomerPackageItem rows at the moment of
  * sale so a later edit to the template's recipe never retroactively
  * changes an already-sold instance (CLAUDE.md §45).
@@ -21,19 +21,32 @@ class SellPackageToCustomer
         Branch $branch,
         Customer $customer,
         Package $package,
-        float $pricePaid,
+        float $price,
         string $purchaseMethod,
         ?string $purchaseReference,
         ?int $createdBy,
     ): CustomerPackage {
-        return DB::transaction(function () use ($branch, $customer, $package, $pricePaid, $purchaseMethod, $purchaseReference, $createdBy) {
+        return DB::transaction(function () use ($branch, $customer, $package, $price, $purchaseMethod, $purchaseReference, $createdBy) {
             $purchasedAt = now();
+
+            $invoice = app(CreateSaleInvoice::class)->execute(
+                branch: $branch,
+                customer: $customer,
+                description: 'Package: '.$package->name,
+                price: $price,
+                taxRatePercent: (float) $package->tax_rate_percent,
+                paymentMethod: $purchaseMethod,
+                paymentReference: $purchaseReference,
+                createdBy: $createdBy,
+            );
 
             $customerPackage = new CustomerPackage([
                 'customer_id' => $customer->id,
                 'package_id' => $package->id,
                 'branch_id' => $branch->id,
-                'price_paid' => $pricePaid,
+                'invoice_id' => $invoice?->id,
+                // What was actually collected: the tax-inclusive invoice total.
+                'price_paid' => $invoice ? (float) $invoice->grand_total : $price,
                 'purchase_method' => $purchaseMethod,
                 'purchase_reference' => $purchaseReference,
                 'purchased_at' => $purchasedAt,
