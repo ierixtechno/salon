@@ -4,6 +4,7 @@ namespace App\Domain\Core\Actions;
 
 use App\Domain\Core\Models\AuditLog;
 use App\Domain\Core\Models\EmployeeProfile;
+use App\Domain\Core\Support\EnforceUserLimit;
 use App\Domain\Platform\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,10 @@ class CreateEmployee
     public function execute(Tenant $tenant, array $data): User
     {
         return DB::transaction(function () use ($tenant, $data) {
+            // Lock the tenant row so two simultaneous requests cannot both take the last user slot.
+            Tenant::whereKey($tenant->id)->lockForUpdate()->firstOrFail();
+            app(EnforceUserLimit::class)->check($tenant);
+
             // tenant_id is deliberately not fillable on User (CLAUDE.md §28)
             // — set directly, same pattern as OnboardTenant.
             $user = new User([

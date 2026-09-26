@@ -27,12 +27,16 @@ class EmployeeController extends Controller
     {
         return view('core.employees.index', [
             'employees' => EmployeeProfile::with('user')->get(),
+            'userLimit' => current_tenant()->userLimit(),
+            'userCount' => current_tenant()->activeUserCount(),
         ]);
     }
 
     public function create(): View
     {
         return view('core.employees.create', [
+            'userLimit' => current_tenant()->userLimit(),
+            'userCount' => current_tenant()->activeUserCount(),
             'branches' => Branch::orderBy('name')->get(),
             'roles' => Role::where('tenant_id', current_tenant_id())->pluck('name'),
         ]);

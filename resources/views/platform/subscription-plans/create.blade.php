@@ -38,6 +38,8 @@
 
             @include('platform.subscription-plans._branch-pricing', ['plan' => null])
 
+            @include('platform.subscription-plans._user-limits', ['plan' => null])
+
             <div class="mt-4">
                 <x-input-label value="Features included" />
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">

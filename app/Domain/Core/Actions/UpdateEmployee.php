@@ -4,6 +4,8 @@ namespace App\Domain\Core\Actions;
 
 use App\Domain\Core\Models\AuditLog;
 use App\Domain\Core\Models\EmployeeProfile;
+use App\Domain\Core\Support\EnforceUserLimit;
+use App\Domain\Platform\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,12 @@ class UpdateEmployee
     public function execute(User $user, EmployeeProfile $profile, array $data): void
     {
         DB::transaction(function () use ($user, $profile, $data) {
+            // Switching a deactivated employee back on takes a user slot again.
+            if (! $user->is_active && (bool) ($data['is_active'] ?? false)) {
+                $tenant = Tenant::whereKey($user->tenant_id)->lockForUpdate()->firstOrFail();
+                app(EnforceUserLimit::class)->check($tenant);
+            }
+
             $previousEmail = $user->email;
 
             $user->update([

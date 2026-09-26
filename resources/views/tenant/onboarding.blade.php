@@ -59,6 +59,7 @@
                         @if ($plan->sellsExtraBranches())
                             <span class="pl-6 text-xs text-indigo-700">+ &#8377;{{ number_format($plan->additional_branch_price, 0) }} per additional branch</span>
                         @endif
+                        <span class="pl-6 text-xs text-gray-600">{{ $plan->usersLabel() }}</span>
                         @if ($plan->modules->isNotEmpty())
                             <span class="pl-6 text-xs text-gray-600">Includes: {{ $plan->modules->pluck('name')->implode(', ') }} &middot; {{ $plan->branch_limit }} {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }}</span>
                         @endif

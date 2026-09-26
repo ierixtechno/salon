@@ -94,6 +94,22 @@ class Tenant extends Model
     }
 
     /**
+     * Active users this tenant may have, from its plan and the branches it has
+     * bought — null means unlimited (no plan limit set, or no subscription yet).
+     */
+    public function userLimit(): ?int
+    {
+        $subscription = $this->currentSubscription();
+
+        return $subscription?->plan?->userLimitFor($subscription->currentBranchCount());
+    }
+
+    public function activeUserCount(): int
+    {
+        return $this->users()->where('is_active', true)->count();
+    }
+
+    /**
      * Checked on effectively every module-gated request (CLAUDE.md §56
      * names "module assignments" as a good cache candidate). The 10-minute
      * TTL is a correctness safety net, not the primary invalidation

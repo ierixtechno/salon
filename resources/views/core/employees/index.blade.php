@@ -13,6 +13,20 @@
 
     <div class="py-8">
         <div class="px-4 sm:px-6 lg:px-8">
+            @if ($userLimit !== null)
+                @php $full = $userCount >= $userLimit; @endphp
+                <div class="mb-4 rounded-md border px-4 py-3 text-sm {{ $full ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-indigo-50 border-indigo-100 text-indigo-900' }}">
+                    Your plan allows {{ $userLimit }} {{ \Illuminate\Support\Str::plural('user', $userLimit) }} ({{ $userCount }} in use).
+                    @if ($full)
+                        To add more, add branches or upgrade your plan.
+                        @can('tenant.billing.manage')
+                            <a href="{{ route('billing.plans.index') }}" class="font-semibold underline">View plans</a>
+                        @endcan
+                    @endif
+                </div>
+            @endif
+            <x-input-error :messages="$errors->get('user_limit')" class="mb-4" />
+
             @if (session('status'))
                 <div class="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}

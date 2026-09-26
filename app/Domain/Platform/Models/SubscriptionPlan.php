@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
-    protected $fillable = ['code', 'name', 'price', 'compare_at_price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'is_active'];
+    protected $fillable = ['code', 'name', 'price', 'compare_at_price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'users_included', 'users_per_additional_branch', 'is_active'];
 
     protected function casts(): array
     {
@@ -18,6 +18,8 @@ class SubscriptionPlan extends Model
             'branch_limit' => 'integer',
             'additional_branch_price' => 'decimal:2',
             'max_branches' => 'integer',
+            'users_included' => 'integer',
+            'users_per_additional_branch' => 'integer',
             'is_active' => 'boolean',
         ];
     }
@@ -66,6 +68,36 @@ class SubscriptionPlan extends Model
         $count = $this->clampBranches($count);
 
         return round((float) $this->price + ($count - $this->branch_limit) * (float) $this->additional_branch_price, 2);
+    }
+
+    /**
+     * Active users (owner + staff) allowed on this plan for a TOTAL number of
+     * branches, or null for unlimited. `users_included` covers the included
+     * branches; every further branch adds `users_per_additional_branch`.
+     */
+    public function userLimitFor(?int $branches): ?int
+    {
+        if ($this->users_included === null) {
+            return null;
+        }
+
+        $branches = $this->clampBranches($branches);
+
+        return (int) $this->users_included + ($branches - $this->branch_limit) * (int) $this->users_per_additional_branch;
+    }
+
+    /** Short text for plan cards: "5 users (+3 per additional branch)". */
+    public function usersLabel(): string
+    {
+        if ($this->users_included === null) {
+            return 'Unlimited users';
+        }
+
+        $text = $this->users_included.' '.str('user')->plural($this->users_included);
+
+        return $this->users_per_additional_branch > 0 && $this->sellsExtraBranches()
+            ? $text." (+{$this->users_per_additional_branch} per additional branch)"
+            : $text;
     }
 
     public function features(): BelongsToMany

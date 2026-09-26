@@ -44,6 +44,8 @@ class SubscriptionPlanController extends Controller
             'branch_limit' => $request->validated('branch_limit'),
             'additional_branch_price' => $request->validated('additional_branch_price'),
             'max_branches' => $request->validated('max_branches'),
+            'users_included' => $request->validated('users_included'),
+            'users_per_additional_branch' => $request->validated('users_per_additional_branch') ?? 0,
             'is_active' => $request->boolean('is_active'),
         ]);
 
@@ -83,6 +85,8 @@ class SubscriptionPlanController extends Controller
             'branch_limit' => $request->validated('branch_limit'),
             'additional_branch_price' => $request->validated('additional_branch_price'),
             'max_branches' => $request->validated('max_branches'),
+            'users_included' => $request->validated('users_included'),
+            'users_per_additional_branch' => $request->validated('users_per_additional_branch') ?? 0,
             'is_active' => $request->boolean('is_active'),
         ]);
 
