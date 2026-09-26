@@ -77,19 +77,37 @@ class PayQuotation
                 $quotation->tenant->update(['status' => 'active']);
             }
 
-            $endsAt = $this->resolveEndsAt($quotation, $plan);
+            $existing = TenantSubscription::where('tenant_id', $quotation->tenant_id)->where('subscription_plan_id', $plan->id)->first();
 
             // Buying extra branches on the SAME plan mid-cycle must not restart the
             // cycle (proration is measured from its start).
-            $existing = TenantSubscription::where('tenant_id', $quotation->tenant_id)->where('subscription_plan_id', $plan->id)->first();
             $keepCycle = $quotation->is_upgrade && $existing !== null;
+
+            // Renewing BEFORE the current period has ended continues from its end
+            // date, so paying early never costs the tenant the days they had left.
+            // (Paying after it lapsed starts a fresh period from today.)
+            $renewsEarly = ! $quotation->is_upgrade
+                && $existing !== null
+                && in_array($existing->status, ['active', 'trialing'], true)
+                && $existing->ends_at?->isFuture();
+
+            if ($renewsEarly) {
+                $startsAt = $existing->ends_at->copy();
+                $endsAt = match ($plan->billing_interval) {
+                    'yearly' => $existing->ends_at->copy()->addYear(),
+                    default => $existing->ends_at->copy()->addMonth(),
+                };
+            } else {
+                $endsAt = $this->resolveEndsAt($quotation, $plan);
+                $startsAt = $keepCycle ? $existing->starts_at : now();
+            }
 
             TenantSubscription::updateOrCreate(
                 ['tenant_id' => $quotation->tenant_id, 'subscription_plan_id' => $plan->id],
                 [
                     'branch_count' => $plan->clampBranches($quotation->branch_count),
                     'status' => 'active',
-                    'starts_at' => $keepCycle ? $existing->starts_at : now(),
+                    'starts_at' => $startsAt,
                     'ends_at' => $endsAt,
                     'trial_ends_at' => null,
                 ],

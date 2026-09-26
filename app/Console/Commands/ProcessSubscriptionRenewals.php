@@ -10,6 +10,7 @@ use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\TenantSubscription;
 use App\Domain\Platform\Support\ResolveSubscriptionAccessState;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -72,13 +73,20 @@ class ProcessSubscriptionRenewals extends Command
                     $this->sendReminder($subscription, 'expired. You have 7 days of read-only access — renew now to restore full access.');
                     $this->ensurePendingQuotation($subscription);
                     $expiries++;
-                } elseif ($subscription->ends_at->isSameDay(today()->subDays(ResolveSubscriptionAccessState::GRACE_DAYS + 1))) {
-                    // Today is the first fully-blocked day (grace just ran
-                    // out). EnforceSubscriptionAccess already recomputes
-                    // this live and would redirect them regardless — this
-                    // step's job is purely to force an immediate logout on
-                    // every device rather than waiting for their existing
-                    // session to naturally expire.
+                } elseif (
+                    $subscription->ends_at->copy()->startOfDay()->diffInDays(today()) > ResolveSubscriptionAccessState::GRACE_DAYS
+                    && Cache::add('subscription-block-logout:'.$subscription->id.':'.$subscription->ends_at->getTimestamp(), true, now()->addDays(120))
+                ) {
+                    // The grace period has run out. EnforceSubscriptionAccess
+                    // already recomputes this live and would redirect them
+                    // regardless — this step's job is purely to force an
+                    // immediate logout on every device rather than waiting for
+                    // their existing session to naturally expire.
+                    //
+                    // Runs on the first day the cron sees it, not only on day 8
+                    // exactly, so a missed cron day cannot skip it; the cache
+                    // marker (one per expiry date) makes it happen once — a
+                    // tenant who logs back in to pay is not kicked out again.
                     $this->sendReminder($subscription, 'and its 7-day grace period have ended. You have been logged out everywhere — renew now to restore access.');
                     $this->forceLogout($subscription);
                     $blocks++;

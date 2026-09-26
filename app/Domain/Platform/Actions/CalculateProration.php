@@ -36,7 +36,9 @@ class CalculateProration
         $today = now()->startOfDay();
 
         $cycleDays = max(1, $cycleStart->diffInDays($cycleEnd));
-        $remainingDays = max(0, $today->diffInDays($cycleEnd));
+        // A renewal paid early starts its cycle in the future, so the days left can
+        // exceed the cycle length; never charge for more than one cycle.
+        $remainingDays = min($cycleDays, max(0, $today->diffInDays($cycleEnd)));
 
         $prorated = round(($priceDifference / $cycleDays) * $remainingDays, 2);
 
