@@ -18,7 +18,7 @@ class Quotation extends Model
     public const STATUSES = ['pending', 'paid', 'cancelled'];
 
     protected $fillable = [
-        'tenant_id', 'subscription_plan_id', 'platform_admin_id',
+        'tenant_id', 'subscription_plan_id', 'branch_count', 'platform_admin_id',
         'quotation_number', 'amount', 'notes', 'status', 'is_upgrade',
         'cgst_amount', 'sgst_amount', 'igst_amount', 'gst_rate_percent', 'total_amount',
         'razorpay_order_id', 'paid_at', 'cancelled_at',

@@ -53,6 +53,9 @@
                                 <span class="block text-xs text-gray-500">/{{ $plan->billing_interval === 'yearly' ? 'year' : 'month' }} + GST</span>
                             </span>
                         </span>
+                        @if ($plan->sellsExtraBranches())
+                            <span class="pl-6 text-xs text-indigo-700">+ &#8377;{{ number_format($plan->additional_branch_price, 0) }} per additional branch</span>
+                        @endif
                         @if ($plan->modules->isNotEmpty())
                             <span class="pl-6 text-xs text-gray-600">Includes: {{ $plan->modules->pluck('name')->implode(', ') }} &middot; {{ $plan->branch_limit }} {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }}</span>
                         @endif
@@ -62,6 +65,8 @@
                 @endforelse
             </div>
             <x-input-error :messages="$errors->get('subscription_plan_id')" class="mt-2" />
+
+            <x-branch-count-picker :plans="$plans" />
         </fieldset>
 
         <fieldset class="mb-2">

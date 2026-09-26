@@ -34,14 +34,8 @@
                     <x-input-error :messages="$errors->get('billing_interval')" class="mt-2" />
                 </div>
             </div>
+            @include('platform.subscription-plans._branch-pricing', ['plan' => null])
 
-
-            <div>
-                <x-input-label for="branch_limit" value="Branches included" />
-                <x-text-input id="branch_limit" class="block mt-1 w-full sm:w-40" type="number" min="1" max="1000" name="branch_limit" :value="old('branch_limit', 1)" required />
-                <p class="text-xs text-gray-500 mt-1">Total active branches a tenant on this plan can run. Every tenant has 1 by default — make a plan with a higher number (and price) to sell extra branches.</p>
-                <x-input-error :messages="$errors->get('branch_limit')" class="mt-2" />
-            </div>
             <div class="mt-4">
                 <x-input-label value="Features included" />
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">

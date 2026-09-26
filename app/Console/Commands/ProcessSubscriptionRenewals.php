@@ -158,6 +158,7 @@ class ProcessSubscriptionRenewals extends Command
             tenant: $subscription->tenant,
             plan: $subscription->plan,
             createdBy: null,
+            branchCount: $subscription->currentBranchCount(),
         );
     }
 }

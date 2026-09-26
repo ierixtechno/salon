@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('can:tenant.billing.manage')->prefix('billing')->name('billing.')->group(function () {
     Route::get('plans', [TenantBillingController::class, 'plans'])->name('plans.index');
+    Route::post('branches', [TenantBillingController::class, 'addBranches'])->name('branches.add');
     Route::post('plans/{plan}/upgrade', [TenantBillingController::class, 'upgrade'])->name('plans.upgrade');
 
     Route::get('quotations', [TenantBillingController::class, 'quotations'])->name('quotations.index');

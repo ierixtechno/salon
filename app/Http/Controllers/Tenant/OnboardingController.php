@@ -41,7 +41,9 @@ class OnboardingController extends Controller
         $plan = SubscriptionPlan::with('modules')->findOrFail($data['subscription_plan_id']);
         $data['modules'] = $plan->modules->pluck('code')->all();
 
-        [$owner, $quotation] = DB::transaction(function () use ($data, $plan, $onboardTenant, $createQuotation) {
+        $branchCount = $data['branch_count'] ?? null;
+
+        [$owner, $quotation] = DB::transaction(function () use ($data, $plan, $branchCount, $onboardTenant, $createQuotation) {
             $owner = $onboardTenant->execute($data);
 
             // Emails the quotation (with how to pay) to the new owner.
@@ -49,6 +51,7 @@ class OnboardingController extends Controller
                 tenant: Tenant::findOrFail($owner->tenant_id),
                 plan: $plan,
                 createdBy: null,
+                branchCount: $branchCount,
             );
 
             return [$owner, $quotation];

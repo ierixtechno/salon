@@ -8,15 +8,51 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
-    protected $fillable = ['code', 'name', 'price', 'billing_interval', 'branch_limit', 'is_active'];
+    protected $fillable = ['code', 'name', 'price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
             'branch_limit' => 'integer',
+            'additional_branch_price' => 'decimal:2',
+            'max_branches' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /** True when this plan sells branches beyond the included ones. */
+    public function sellsExtraBranches(): bool
+    {
+        return (float) $this->additional_branch_price > 0;
+    }
+
+    /** The most branches a tenant can have on this plan (included + purchasable extras). */
+    public function maxBranches(): int
+    {
+        if (! $this->sellsExtraBranches()) {
+            return $this->branch_limit;
+        }
+
+        return max($this->branch_limit, (int) ($this->max_branches ?? 50));
+    }
+
+    /** Bring any requested branch count inside what this plan allows. */
+    public function clampBranches(?int $count): int
+    {
+        return min(max($count ?? $this->branch_limit, $this->branch_limit), $this->maxBranches());
+    }
+
+    /**
+     * Price for a given TOTAL number of branches: the plan price covers the
+     * included ones, each further branch adds `additional_branch_price`.
+     * Always resolved server-side (CLAUDE.md §20).
+     */
+    public function priceForBranches(?int $count): float
+    {
+        $count = $this->clampBranches($count);
+
+        return round((float) $this->price + ($count - $this->branch_limit) * (float) $this->additional_branch_price, 2);
     }
 
     public function features(): BelongsToMany

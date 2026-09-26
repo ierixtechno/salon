@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Platform;
 
+use App\Rules\BranchCountWithinPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,6 +32,7 @@ class CreateTenantRequest extends FormRequest
     {
         return [
             'business_name' => ['required', 'string', 'max:255'],
+            'branch_count' => ['nullable', 'integer', 'min:1', new BranchCountWithinPlan($this->input('subscription_plan_id'))],
             'subscription_plan_id' => ['required', 'integer', Rule::exists('subscription_plans', 'id')->where('is_active', true)],
             'owner_name' => ['required', 'string', 'max:255'],
             'owner_email' => ['required', 'string', 'email', 'max:255'],

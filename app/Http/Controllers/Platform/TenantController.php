@@ -62,6 +62,7 @@ class TenantController extends Controller
                 createdBy: $admin,
                 amountOverride: $data['quotation_amount'] ?? null,
                 notes: $data['quotation_notes'] ?? null,
+                branchCount: $data['branch_count'] ?? null,
             );
 
             PlatformAuditLog::record(

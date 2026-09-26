@@ -27,7 +27,7 @@ class CreateBranch
 
             if (Branch::where('is_active', true)->count() >= $limit) {
                 throw ValidationException::withMessages([
-                    'branch_limit' => "Your plan includes {$limit} ".str('branch')->plural($limit).' and all are in use. Upgrade your plan to add more branches.',
+                    'branch_limit' => "Your plan includes {$limit} ".str('branch')->plural($limit).' and all are in use. Add branches or upgrade your plan under Billing > Plans.',
                 ]);
             }
 

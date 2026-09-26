@@ -33,7 +33,7 @@
                         @endif
                     </div>
 
-                    <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included</p>
+                    <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif</p>
 
                     <div class="mb-5">
                         <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Modules included</p>

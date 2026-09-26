@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Tenant;
 
 use App\Http\Controllers\Tenant\OnboardingController;
+use App\Rules\BranchCountWithinPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,6 +41,7 @@ class OnboardTenantRequest extends FormRequest
             // Exactly the packages the signup page offers — never a hidden
             // one posted directly (see OnboardingController::signupPlans).
             'subscription_plan_id' => ['required', 'integer', Rule::in(OnboardingController::signupPlans()->pluck('id')->all())],
+            'branch_count' => ['nullable', 'integer', 'min:1', new BranchCountWithinPlan($this->input('subscription_plan_id'))],
             'owner_name' => ['required', 'string', 'max:255'],
             'owner_email' => ['required', 'string', 'email', 'max:255'],
             'owner_password' => ['required', 'confirmed', 'string', 'min:8'],

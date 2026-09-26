@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Bills a specific tenant for a subscription plan. Amount defaults to the
- * plan's price but the Super Admin may override it (e.g. a negotiated
+ * plan's price for the chosen number of branches (extra branches are priced
+ * by SubscriptionPlan::priceForBranches) but the Super Admin may override it (e.g. a negotiated
  * discount) — never a freeform line-item builder (confirmed decision).
  */
 class CreateQuotation
@@ -25,6 +26,7 @@ class CreateQuotation
         ?string $amountOverride = null,
         ?string $notes = null,
         bool $isUpgrade = false,
+        ?int $branchCount = null,
     ): Quotation {
         abort_unless($plan->is_active, 422, 'Cannot quote an inactive plan.');
         // GST determination needs a place of supply to compare against the
@@ -34,9 +36,10 @@ class CreateQuotation
         // silently pick the wrong tax treatment.
         abort_if(blank($tenant->billing_state), 422, "Set this tenant's billing state (for GST) before creating a quotation.");
 
-        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade) {
+        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade, $branchCount) {
             $quotationNumber = $this->nextPlatformNumber('quotation');
-            $amount = (float) ($amountOverride ?? $plan->price);
+            $branchCount = $plan->clampBranches($branchCount);
+            $amount = (float) ($amountOverride ?? $plan->priceForBranches($branchCount));
 
             // GST on Platform Billing (config/platform.php). Snapshotted
             // here so a later rate/state change never affects a quotation
@@ -61,6 +64,7 @@ class CreateQuotation
             $quotation = Quotation::create([
                 'tenant_id' => $tenant->id,
                 'subscription_plan_id' => $plan->id,
+                'branch_count' => $branchCount,
                 'platform_admin_id' => $createdBy?->id,
                 'quotation_number' => $quotationNumber,
                 'amount' => $amount,

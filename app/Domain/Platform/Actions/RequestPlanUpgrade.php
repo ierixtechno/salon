@@ -54,7 +54,10 @@ class RequestPlanUpgrade
             'You can only upgrade to a higher-priced plan.',
         );
 
-        $proratedAmount = $this->calculateProration->execute($currentSubscription, $newPlan);
+        // Keep the branches they already have (within what the new plan allows).
+        $branchCount = $newPlan->clampBranches($currentSubscription->currentBranchCount());
+
+        $proratedAmount = $this->calculateProration->execute($currentSubscription, $newPlan, $branchCount);
 
         return $this->createQuotation->execute(
             tenant: $tenant,
@@ -63,6 +66,7 @@ class RequestPlanUpgrade
             amountOverride: $proratedAmount,
             notes: "Prorated upgrade from {$currentPlan->name} to {$newPlan->name}.",
             isUpgrade: true,
+            branchCount: $branchCount,
         );
     }
 }

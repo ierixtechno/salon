@@ -17,7 +17,7 @@
                     <option value="">Choose a package&hellip;</option>
                     @foreach ($plans as $plan)
                         <option value="{{ $plan->id }}" @selected((string) old('subscription_plan_id') === (string) $plan->id)>
-                            {{ $plan->name }} &mdash; &#8377;{{ number_format($plan->price, 0) }}/{{ $plan->billing_interval }}@if ($plan->modules->isNotEmpty()) ({{ $plan->modules->pluck('name')->implode(', ') }})@endif &middot; {{ $plan->branch_limit }} {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }}
+                            {{ $plan->name }} &mdash; &#8377;{{ number_format($plan->price, 0) }}/{{ $plan->billing_interval }}@if ($plan->modules->isNotEmpty()) ({{ $plan->modules->pluck('name')->implode(', ') }})@endif &middot; {{ $plan->branch_limit }} {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }}@if ($plan->sellsExtraBranches()) (+&#8377;{{ number_format($plan->additional_branch_price, 0) }}/extra)@endif
                         </option>
                     @endforeach
                 </select>
@@ -25,6 +25,8 @@
                     The tenant gets this package's modules, and its quotation is created and emailed to the owner straight away. The owner can log in immediately but sees only that quotation until it's paid.
                 </p>
                 <x-input-error :messages="$errors->get('subscription_plan_id')" class="mt-2" />
+
+                <x-branch-count-picker :plans="$plans" />
             </div>
 
             <div class="mt-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
@@ -32,7 +34,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
                     <div>
                         <x-input-label for="quotation_amount" value="Amount override (optional)" />
-                        <x-text-input id="quotation_amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="quotation_amount" :value="old('quotation_amount')" placeholder="Defaults to the package price" />
+                        <x-text-input id="quotation_amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="quotation_amount" :value="old('quotation_amount')" placeholder="Auto: package price + extra branches" />
                         <x-input-error :messages="$errors->get('quotation_amount')" class="mt-2" />
                     </div>
                     <div>

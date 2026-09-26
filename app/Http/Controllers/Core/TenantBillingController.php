@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Core;
 
 use App\Domain\Platform\Actions\PayQuotation;
+use App\Domain\Platform\Actions\RequestExtraBranches;
 use App\Domain\Platform\Actions\RequestPlanUpgrade;
 use App\Domain\Platform\Contracts\PaymentGatewayProvider;
 use App\Domain\Platform\Models\PlatformInvoice;
@@ -15,6 +16,7 @@ use App\Http\Requests\Core\ConfirmQuotationPaymentRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
@@ -55,6 +57,16 @@ class TenantBillingController extends Controller
 
         return redirect()->route('billing.quotations.show', $quotation)
             ->with('status', 'Upgrade quotation created — pay to complete the switch.');
+    }
+
+    public function addBranches(Request $request, RequestExtraBranches $action): RedirectResponse
+    {
+        $data = $request->validate(['additional' => ['required', 'integer', 'min:1', 'max:50']]);
+
+        $quotation = $action->execute(Tenant::findOrFail(Auth::user()->tenant_id), (int) $data['additional']);
+
+        return redirect()->route('billing.quotations.show', $quotation)
+            ->with('status', 'Quotation created for the additional branches — pay to add them.');
     }
 
     public function quotations(): View

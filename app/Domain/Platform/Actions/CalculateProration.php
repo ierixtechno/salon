@@ -18,10 +18,19 @@ use App\Domain\Platform\Models\TenantSubscription;
  */
 class CalculateProration
 {
-    public function execute(TenantSubscription $currentSubscription, SubscriptionPlan $newPlan): string
+    public function execute(TenantSubscription $currentSubscription, SubscriptionPlan $newPlan, ?int $newBranchCount = null): string
     {
-        $priceDifference = (float) $newPlan->price - (float) $currentSubscription->plan->price;
+        $currentCount = $currentSubscription->currentBranchCount();
+        $newCount = $newPlan->clampBranches($newBranchCount ?? $currentCount);
 
+        $priceDifference = $newPlan->priceForBranches($newCount) - $currentSubscription->plan->priceForBranches($currentCount);
+
+        return $this->prorate($priceDifference, $currentSubscription);
+    }
+
+    /** Charge `$priceDifference` (a per-cycle amount) only for the days left in the current cycle. */
+    public function prorate(float $priceDifference, TenantSubscription $currentSubscription): string
+    {
         $cycleStart = $currentSubscription->starts_at->copy()->startOfDay();
         $cycleEnd = $currentSubscription->ends_at->copy()->startOfDay();
         $today = now()->startOfDay();

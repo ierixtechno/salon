@@ -77,11 +77,17 @@ class PayQuotation
 
             $endsAt = $this->resolveEndsAt($quotation, $plan);
 
+            // Buying extra branches on the SAME plan mid-cycle must not restart the
+            // cycle (proration is measured from its start).
+            $existing = TenantSubscription::where('tenant_id', $quotation->tenant_id)->where('subscription_plan_id', $plan->id)->first();
+            $keepCycle = $quotation->is_upgrade && $existing !== null;
+
             TenantSubscription::updateOrCreate(
                 ['tenant_id' => $quotation->tenant_id, 'subscription_plan_id' => $plan->id],
                 [
+                    'branch_count' => $plan->clampBranches($quotation->branch_count),
                     'status' => 'active',
-                    'starts_at' => now(),
+                    'starts_at' => $keepCycle ? $existing->starts_at : now(),
                     'ends_at' => $endsAt,
                     'trial_ends_at' => null,
                 ],

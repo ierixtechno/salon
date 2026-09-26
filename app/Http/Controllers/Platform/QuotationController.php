@@ -44,6 +44,7 @@ class QuotationController extends Controller
             createdBy: Auth::guard('platform')->user(),
             amountOverride: $request->validated('amount'),
             notes: $request->validated('notes'),
+            branchCount: $request->validated('branch_count'),
         );
 
         PlatformAuditLog::record(

@@ -9,7 +9,7 @@
                 amount: '',
                 get plan() { return this.plans.find(p => p.id == this.planId) },
             }"
-            x-init="$watch('planId', () => amount = plan?.price ?? '')">
+            >
             @csrf
 
             <div>
@@ -32,12 +32,14 @@
                     </template>
                 </select>
                 <x-input-error :messages="$errors->get('subscription_plan_id')" class="mt-2" />
+
+                <x-branch-count-picker :plans="$plans" />
             </div>
 
             <div>
                 <x-input-label for="amount" value="Amount" />
-                <x-text-input id="amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="amount" x-model="amount" />
-                <p class="text-xs text-gray-500 mt-1">Defaults to the plan's price — adjust for a negotiated discount or custom deal.</p>
+                <x-text-input id="amount" class="block mt-1 w-full" type="number" step="0.01" min="0" name="amount" x-model="amount" placeholder="Auto" />
+                <p class="text-xs text-gray-500 mt-1">Leave blank to charge the plan's price for the chosen number of branches — fill in only for a negotiated discount or custom deal.</p>
                 <x-input-error :messages="$errors->get('amount')" class="mt-2" />
             </div>
 

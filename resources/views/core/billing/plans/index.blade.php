@@ -25,6 +25,34 @@
                 </div>
             @endif
 
+            @if ($isActive && $currentPlan?->sellsExtraBranches())
+                @php
+                    $ownedBranches = $currentSubscription->currentBranchCount();
+                    $canAdd = $currentPlan->maxBranches() - $ownedBranches;
+                @endphp
+                <div class="mb-6 bg-white shadow-sm rounded-lg p-6">
+                    <h3 class="font-semibold text-gray-900">Need more branches?</h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                        You have {{ $ownedBranches }} {{ \Illuminate\Support\Str::plural('branch', $ownedBranches) }} on {{ $currentPlan->name }}.
+                        Each additional branch is &#8377;{{ number_format($currentPlan->additional_branch_price, 0) }} per {{ $currentPlan->billing_interval === 'yearly' ? 'year' : 'month' }} + GST,
+                        charged pro rata for the rest of your current billing period.
+                    </p>
+                    @if ($canAdd > 0)
+                        <form method="POST" action="{{ route('billing.branches.add') }}" class="mt-4 flex items-end gap-3">
+                            @csrf
+                            <div>
+                                <label for="additional" class="block text-xs text-gray-500 mb-1">Branches to add</label>
+                                <input id="additional" name="additional" type="number" min="1" max="{{ $canAdd }}" value="1" required class="w-28 border-gray-300 rounded-md shadow-sm text-sm">
+                            </div>
+                            <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Get quotation</button>
+                        </form>
+                        @error('additional')<p class="text-sm text-red-600 mt-2">{{ $message }}</p>@enderror
+                    @else
+                        <p class="text-sm text-gray-500 mt-3">You are at the maximum for this plan.</p>
+                    @endif
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach ($plans as $plan)
                     @php
@@ -52,7 +80,7 @@
                             @endif
                         </div>
 
-                        <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included</p>
+                        <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif</p>
 
                         <div class="mb-5">
                             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Modules included</p>

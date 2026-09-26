@@ -80,14 +80,17 @@ class Tenant extends Model
     }
 
     /**
-     * Active branches this tenant may run: their plan's `branch_limit`, or
+     * Active branches this tenant may run: what their subscription covers (the
+     * plan's included branches plus any bought extras), or
      * the one default branch when they have no subscription yet (pending
      * payment). Branches a tenant already has above the limit are never
      * removed — the limit only stops new ones being added.
      */
     public function branchLimit(): int
     {
-        return max(1, (int) ($this->currentSubscription()?->plan?->branch_limit ?? 1));
+        $subscription = $this->currentSubscription();
+
+        return $subscription ? $subscription->currentBranchCount() : 1;
     }
 
     /**

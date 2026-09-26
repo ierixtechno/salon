@@ -12,6 +12,14 @@ class StoreSubscriptionPlanRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // A blank price box means "not offered" (0), not a missing value.
+        if (blank($this->input('additional_branch_price'))) {
+            $this->merge(['additional_branch_price' => 0]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -20,6 +28,8 @@ class StoreSubscriptionPlanRequest extends FormRequest
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'billing_interval' => ['required', Rule::in(['trial', 'monthly', 'yearly'])],
             'branch_limit' => ['required', 'integer', 'min:1', 'max:1000'],
+            'additional_branch_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'max_branches' => ['nullable', 'integer', 'min:1', 'max:1000', 'gte:branch_limit'],
             'is_active' => ['nullable', 'boolean'],
             'features' => ['present', 'array'],
             'features.*' => ['string', 'exists:features,code'],
