@@ -28,6 +28,15 @@ class PlatformHealth
         }
     }
 
+    public static function pendingBranchReductionCount(): int
+    {
+        try {
+            return \App\Domain\Platform\Models\BranchReductionRequest::where('status', 'pending')->count();
+        } catch (Throwable) {
+            return 0;
+        }
+    }
+
     /** Written every minute by the scheduler (bootstrap/app.php). */
     public const HEARTBEAT_KEY = 'scheduler:last-run';
 

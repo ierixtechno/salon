@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Platform\BackupController;
+use App\Http\Controllers\Platform\BranchReductionRequestController;
 use App\Http\Controllers\Platform\ErrorLogController;
 use App\Http\Controllers\Platform\PlatformAccountingController;
 use App\Http\Controllers\Platform\PlatformAuthController;
@@ -49,6 +50,10 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::put('subscription-plans/{subscription_plan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
 
         Route::post('tenants/{tenant}/branches', [TenantController::class, 'addBranches'])->name('tenants.branches');
+
+        Route::get('branch-reduction-requests', [BranchReductionRequestController::class, 'index'])->name('branch-reduction-requests.index');
+        Route::post('branch-reduction-requests/{branch_reduction_request}/approve', [BranchReductionRequestController::class, 'approve'])->name('branch-reduction-requests.approve');
+        Route::post('branch-reduction-requests/{branch_reduction_request}/reject', [BranchReductionRequestController::class, 'reject'])->name('branch-reduction-requests.reject');
 
         Route::get('quotations', [QuotationController::class, 'index'])->name('quotations.index');
         Route::get('quotations/create', [QuotationController::class, 'create'])->name('quotations.create');

@@ -1,0 +1,31 @@
+To run it locally
+
+Start MySQL from XAMPP. It needs to be on port 3307.
+In the project folder, run:
+php artisan migrate
+
+This makes sure the local database has all the new tables. It's harmless if it's already up to date.
+
+Start the site:
+php artisan serve --port=8010
+Open http://localhost:8010. If the page looks unstyled, run npm run build once.
+
+Logins on localhost (test accounts only, not your live ones)
+
+Super Admin: http://localhost:8010/platform/login with admin@example.com / password.
+A tenant owner: qa-owner2@example.com / password. Or just register a new business at /register.
+
+How to test each area locally
+
+Signup, quotation, locked payment page, discounts, branches, user limits, PDFs: all work on localhost. Pay by using Super Admin's Record payment.
+Renewals and forced logout: in a second terminal run php artisan schedule:work, which acts as the cron job. You can also run php artisan subscriptions:process-renewals by hand. To simulate an expiring tenant, change that tenant's end date in the database.
+Emails: locally they're written to storage/logs/laravel.log instead of being sent, so you can read what would go out.
+Fresh start: 
+php artisan platform:reset-tenants wipes the local test data. Only run it in the local project, never on the server unless you mean to.
+
+What only the server can test
+
+Real email delivery, and whether your host's cron job actually runs.
+Real Razorpay payments (they need your keys), and the payment webhook.
+HTTPS settings, APP_DEBUG=false, disk space and backups on the hosting.
+The external cron monitor (HEALTHCHECK_PING_URL).

@@ -7,6 +7,7 @@ use App\Domain\Core\Actions\UpdateBranchModules;
 use App\Domain\Core\Actions\UpsertBusinessHours;
 use App\Domain\Core\Models\Branch;
 use App\Domain\Core\Models\BusinessHour;
+use App\Domain\Platform\Models\BranchReductionRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Core\StoreBranchRequest;
 use App\Http\Requests\Core\UpdateBranchHoursRequest;
@@ -14,6 +15,7 @@ use App\Http\Requests\Core\UpdateBranchModulesRequest;
 use App\Http\Requests\Core\UpdateBranchRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class BranchController extends Controller
 {
@@ -24,8 +26,15 @@ class BranchController extends Controller
 
     public function index(): View
     {
+        $tenant = current_tenant();
+
         return view('core.branches.index', [
             'branches' => Branch::withCount('resources')->orderBy('name')->get(),
+            'branchLimit' => $tenant->branchLimit(),
+            'activeBranchCount' => Branch::where('is_active', true)->count(),
+            'pendingReductionRequest' => Auth::guard('web')->user()->can('tenant.billing.manage')
+                ? BranchReductionRequest::where('tenant_id', $tenant->id)->where('status', 'pending')->latest()->first()
+                : null,
         ]);
     }
 

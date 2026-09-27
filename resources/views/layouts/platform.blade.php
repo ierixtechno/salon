@@ -45,6 +45,7 @@
                         $schedulerStale = \App\Domain\Platform\Support\PlatformHealth::schedulerIsStale();
                         $diskMb = \App\Domain\Platform\Support\PlatformHealth::freeDiskMb();
                         $diskLow = $diskMb !== null && $diskMb < (int) config('platform.health.min_free_disk_mb');
+                        $pendingBranchReductions = \App\Domain\Platform\Support\PlatformHealth::pendingBranchReductionCount();
                     @endphp
 
                     <a href="{{ route('platform.dashboard') }}"
@@ -89,6 +90,20 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         Quotations
+                    </a>
+
+                    <a href="{{ route('platform.branch-reduction-requests.index') }}"
+                        class="{{ $navItemBase }} {{ request()->routeIs('platform.branch-reduction-requests.*') ? $navItemActive : $navItemInactive }}">
+                        @if (request()->routeIs('platform.branch-reduction-requests.*'))
+                            <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
+                        @endif
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15m15 0a1.5 1.5 0 011.5 1.5v3a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 16.5v-3A1.5 1.5 0 014.5 12m15 0V9a1.5 1.5 0 00-1.5-1.5h-15A1.5 1.5 0 003 9v3" />
+                        </svg>
+                        Branch Requests
+                        @if ($pendingBranchReductions > 0)
+                            <span class="ml-auto inline-flex items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">{{ $pendingBranchReductions > 99 ? '99+' : $pendingBranchReductions }}</span>
+                        @endif
                     </a>
 
                     <a href="{{ route('platform.invoices.index') }}"

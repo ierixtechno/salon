@@ -3,6 +3,7 @@
 use App\Http\Controllers\Core\AppointmentController;
 use App\Http\Controllers\Core\AttendanceController;
 use App\Http\Controllers\Core\BranchController;
+use App\Http\Controllers\Core\BranchReductionRequestController;
 use App\Http\Controllers\Core\CampaignAutomationController;
 use App\Http\Controllers\Core\CampaignController;
 use App\Http\Controllers\Core\CashRegisterController;
@@ -63,6 +64,10 @@ Route::middleware('can:tenant.settings.manage')->group(function () {
 Route::resource('branches', BranchController::class)->except(['show']);
 Route::put('branches/{branch}/modules', [BranchController::class, 'updateModules'])->name('branches.modules');
 Route::put('branches/{branch}/hours', [BranchController::class, 'updateHours'])->name('branches.hours');
+
+Route::post('branch-reduction-requests', [BranchReductionRequestController::class, 'store'])
+    ->middleware('can:tenant.billing.manage')
+    ->name('branch-reduction-requests.store');
 
 Route::resource('branches.resources', ResourceController::class)
     ->shallow()
