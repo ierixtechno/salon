@@ -66,6 +66,9 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
+                        @unless ($accountLocked)
+                            <x-notification-bell />
+                        @endunless
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
                                 <button class="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-gray-100 transition">

@@ -234,6 +234,8 @@ Route::get('marketing/automations', [CampaignAutomationController::class, 'index
 Route::put('marketing/automations/{type}', [CampaignAutomationController::class, 'update'])->name('campaign-automations.update');
 
 Route::get('my-notifications', [NotificationController::class, 'index'])->name('notifications.my');
+Route::get('my-notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
+Route::post('my-notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 Route::post('my-notifications/{notification_log}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 
 // Phase 12: Reports.
