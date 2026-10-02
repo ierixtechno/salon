@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Core;
 
+use App\Domain\Platform\Actions\CalculateProration;
 use App\Domain\Platform\Actions\PayQuotation;
 use App\Domain\Platform\Actions\RequestExtraBranches;
 use App\Domain\Platform\Actions\RequestExtraEmployees;
@@ -59,6 +60,65 @@ class TenantBillingController extends Controller
 
         return redirect()->route('billing.quotations.show', $quotation)
             ->with('status', 'Upgrade quotation created — pay to complete the switch.');
+    }
+
+    /**
+     * One place to buy more branches and/or employees at the tenant's current
+     * plan prices. Works out up front why something can't be bought, so the
+     * forms are only offered when the purchase will actually go through.
+     */
+    public function addons(CalculateProration $proration): View
+    {
+        $tenant = Tenant::findOrFail(Auth::user()->tenant_id);
+        $subscription = $tenant->currentSubscription();
+        $plan = $subscription?->plan;
+        $active = $subscription && $subscription->ends_at && now()->lte($subscription->ends_at);
+
+        $pending = Quotation::where('tenant_id', $tenant->id)->where('status', 'pending')->latest()->first();
+
+        $blocked = match (true) {
+            ! $active => 'You need an active subscription to add branches or employees. Renew or pay your pending quotation first.',
+            $pending !== null => 'You have an unpaid quotation. Pay or cancel it before buying more.',
+            default => null,
+        };
+
+        $data = ['plan' => $plan, 'subscription' => $subscription, 'blocked' => $blocked, 'pending' => $pending, 'cycle' => $plan?->billing_interval === 'yearly' ? 'year' : 'month'];
+
+        if ($active) {
+            $ratio = fn (float $price) => (float) $proration->prorate($price, $subscription);
+
+            $ownedBranches = $subscription->currentBranchCount();
+            $branchRoom = $plan->sellsExtraBranches() ? max(0, $plan->maxBranches() - $ownedBranches) : 0;
+            $branchPrice = (float) $plan->additional_branch_price;
+
+            $sellsEmployees = $plan->sellsExtraEmployees() && $plan->users_included !== null;
+            $extraOwned = $subscription->currentExtraUserCount();
+            $employeeRoom = 0;
+            if ($sellsEmployees) {
+                $employeeRoom = 1000;
+                if ($plan->max_users !== null) {
+                    $employeeRoom = max(0, $plan->max_users - ($plan->userLimitFor($ownedBranches) + $extraOwned));
+                }
+            }
+            $employeePrice = (float) $plan->additional_employee_price;
+
+            $data += [
+                'ownedBranches' => $ownedBranches,
+                'branchRoom' => $branchRoom,
+                'branchPrice' => $branchPrice,
+                'branchToday' => $ratio($branchPrice),
+                'extraOwned' => $extraOwned,
+                'sellsEmployees' => $sellsEmployees,
+                'employeeRoom' => $employeeRoom,
+                'employeePrice' => $employeePrice,
+                'employeeToday' => $ratio($employeePrice),
+                'userLimit' => $tenant->userLimit(),
+                'userCount' => $tenant->activeUserCount(),
+                'daysLeft' => max(0, (int) now()->startOfDay()->diffInDays($subscription->ends_at->copy()->startOfDay())),
+            ];
+        }
+
+        return view('core.billing.addons', $data);
     }
 
     public function addBranches(Request $request, RequestExtraBranches $action): RedirectResponse

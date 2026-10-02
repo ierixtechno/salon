@@ -139,7 +139,7 @@ class SubscriptionPlan extends Model
             return null;
         }
 
-        $text = '₹'.number_format($this->additional_employee_price, 0).' per additional employee';
+        $text = '₹'.number_format($this->additional_employee_price, 0).' + GST per additional employee';
 
         return $this->max_users !== null ? $text." (max {$this->max_users} total)" : $text;
     }

@@ -57,7 +57,7 @@
                             </span>
                         </span>
                         @if ($plan->sellsExtraBranches())
-                            <span class="pl-6 text-xs text-indigo-700">+ &#8377;{{ number_format($plan->additional_branch_price, 0) }} per additional branch</span>
+                            <span class="pl-6 text-xs text-indigo-700">+ &#8377;{{ number_format($plan->additional_branch_price, 0) }} + GST per additional branch</span>
                         @endif
                         <span class="pl-6 text-xs text-gray-600">{{ $plan->usersLabel() }}</span>
                         @if ($plan->modules->isNotEmpty())

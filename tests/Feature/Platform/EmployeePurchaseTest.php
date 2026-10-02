@@ -277,3 +277,29 @@ test('purchased employee slots carry into the renewal quotation price', function
     expect($quotation->extra_user_count)->toBe(3);
     expect((float) $quotation->amount)->toBe(1000.0 + 300.0);
 });
+
+// ------------------------------------------------ the add-ons page
+
+test('the add-ons page offers branches and employees at the current plan prices', function () {
+    $owner = tenantOnStaffPlan(staffPlan());
+
+    $this->actingAs($owner, 'web')->get('/billing/add-ons')->assertOk()
+        ->assertSee('Add branches')->assertSee('Branches to add')->assertSee('Employees to add')->assertSee('Staff Plan');
+});
+
+test('the add-ons page explains instead of offering when the plan sells neither or a quotation is pending', function () {
+    $owner = tenantOnStaffPlan(staffPlan(['additional_branch_price' => 0, 'additional_employee_price' => 0]));
+    $this->actingAs($owner, 'web')->get('/billing/add-ons')->assertOk()
+        ->assertDontSee('Branches to add')->assertDontSee('Employees to add')->assertSee('not sold on this plan');
+
+    $other = tenantOnStaffPlan(staffPlan());
+    $this->actingAs($other, 'web')->post('/billing/employees', ['additional' => 1]);
+    $this->actingAs($other, 'web')->get('/billing/add-ons')->assertOk()->assertSee('unpaid quotation')->assertDontSee('Employees to add');
+});
+
+test('the branch-limit notice links to the add-ons page', function () {
+    $owner = tenantOnStaffPlan(staffPlan());
+
+    $this->actingAs($owner, 'web')->get('/billing/add-ons')->assertOk();
+    $this->actingAs($owner, 'web')->get('/branches/create')->assertOk()->assertSee('/billing/add-ons');
+});

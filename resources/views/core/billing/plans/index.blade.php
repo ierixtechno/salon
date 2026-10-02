@@ -58,7 +58,7 @@
                 <div class="mb-6 bg-white shadow-sm rounded-lg p-6">
                     <h3 class="font-semibold text-gray-900">Need more staff?</h3>
                     <p class="text-sm text-gray-600 mt-1">
-                        {{ $currentPlan->employeePurchaseLabel() }}, + GST per {{ $currentPlan->billing_interval === 'yearly' ? 'year' : 'month' }},
+                        {{ $currentPlan->employeePurchaseLabel() }}, billed per {{ $currentPlan->billing_interval === 'yearly' ? 'year' : 'month' }},
                         charged pro rata for the rest of your current billing period. You have {{ $extraOwned }} purchased {{ \Illuminate\Support\Str::plural('slot', $extraOwned) }}.
                     </p>
                     <form method="POST" action="{{ route('billing.employees.add') }}" class="mt-4 flex items-end gap-3">
@@ -95,7 +95,7 @@
                             <x-plan-price :plan="$plan" />
                         </div>
 
-                        <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif &middot; {{ $plan->usersLabel() }} @if ($plan->sellsExtraEmployees() && $plan->users_included !== null) &middot; {{ $plan->employeePurchaseLabel() }} @endif</p>
+                        <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> + GST per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif &middot; {{ $plan->usersLabel() }} @if ($plan->sellsExtraEmployees() && $plan->users_included !== null) &middot; {{ $plan->employeePurchaseLabel() }} @endif</p>
 
                         <div class="mb-5">
                             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Modules included</p>

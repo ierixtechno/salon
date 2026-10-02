@@ -1,7 +1,7 @@
 @php
     $navItemBase = 'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150';
     $navItemActive = 'bg-pink-500/15 text-pink-200';
-    $navItemInactive = 'text-rose-100/80 hover:bg-white/5 hover:text-white';
+    $navItemInactive = 'text-rose-50/90 hover:bg-white/5 hover:text-white';
 
     // Groups are ordered to follow the day-to-day workflow: book/serve/checkout
     // customers first, then the vertical service catalogues referenced during
@@ -50,7 +50,8 @@
     $billingPlansActive = request()->routeIs('billing.plans.*');
     $billingQuotationsActive = request()->routeIs('billing.quotations.*');
     $billingInvoicesActive = request()->routeIs('billing.invoices.*');
-    $billingActive = $billingPlansActive || $billingQuotationsActive || $billingInvoicesActive;
+    $billingAddonsActive = request()->routeIs('billing.addons');
+    $billingActive = $billingAddonsActive || $billingPlansActive || $billingQuotationsActive || $billingInvoicesActive;
 @endphp
 
 <nav class="flex-1 px-3 py-4 space-y-1">
@@ -487,6 +488,16 @@
 
     @can('tenant.billing.manage')
         <x-nav-group title="Billing" :active="$billingActive">
+            <a href="{{ route('billing.addons') }}" class="{{ $navItemBase }} {{ $billingAddonsActive ? $navItemActive : $navItemInactive }}">
+                @if ($billingAddonsActive)
+                    <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
+                @endif
+                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                {{ __('Add branches & staff') }}
+            </a>
+
             <a href="{{ route('billing.plans.index') }}" class="{{ $navItemBase }} {{ $billingPlansActive ? $navItemActive : $navItemInactive }}">
                 @if ($billingPlansActive)
                     <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-pink-400"></span>
@@ -587,7 +598,7 @@
     }"
     x-show="!installed">
     <button type="button" @click="install()"
-        class="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-100/80 hover:bg-white/5 hover:text-white transition-colors duration-150">
+        class="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-50/90 hover:bg-white/5 hover:text-white transition-colors duration-150">
         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
