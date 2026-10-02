@@ -139,6 +139,14 @@ class PayQuotation
         // immediately, no re-login required.
         Tenant::forgetSubscriptionCache($quotation->tenant_id);
 
+        app(NotifyPlatformAdmins::class)->execute(
+            subject: "Payment received: {$quotation->tenant->name}",
+            body: "Invoice {$invoice->invoice_number} — ₹".number_format((float) $quotation->total_amount, 2)." via {$paymentMethod}.",
+            url: route('platform.invoices.show', $invoice, false),
+            email: false,
+            kind: 'invoice',
+        );
+
         return $invoice;
     }
 

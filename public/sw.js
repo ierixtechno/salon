@@ -33,6 +33,35 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+// Web Push: show the notification the server sent (title/body/url), and open
+// or focus the app at that URL when it's tapped.
+self.addEventListener('push', (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch (e) { data = {}; }
+
+    event.waitUntil(self.registration.showNotification(data.title || 'StyloBiz', {
+        body: data.body || '',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: data.tag || undefined,
+        data: { url: data.url || '/' },
+    }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const target = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+
+    event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+        for (const client of windows) {
+            if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+                return client.navigate(target).then((c) => c && c.focus());
+            }
+        }
+        return self.clients.openWindow(target);
+    }));
+});
+
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') {
         return;

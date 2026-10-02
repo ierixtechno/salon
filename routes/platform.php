@@ -8,6 +8,7 @@ use App\Http\Controllers\Platform\PlatformAccountingController;
 use App\Http\Controllers\Platform\PlatformAuthController;
 use App\Http\Controllers\Platform\PlatformDashboardController;
 use App\Http\Controllers\Platform\PlatformInvoiceController;
+use App\Http\Controllers\Platform\PlatformNotificationController;
 use App\Http\Controllers\Platform\QuotationController;
 use App\Http\Controllers\Platform\SubscriptionPlanController;
 use App\Http\Controllers\Platform\TenantController;
@@ -33,6 +34,10 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::post('logout', [PlatformAuthController::class, 'destroy'])->name('logout');
 
         Route::get('dashboard', [PlatformDashboardController::class, 'index'])->name('dashboard');
+        Route::get('notifications', [PlatformNotificationController::class, 'index'])->name('notifications.index');
+        Route::get('notifications/summary', [PlatformNotificationController::class, 'summary'])->name('notifications.summary');
+        Route::post('notifications/read-all', [PlatformNotificationController::class, 'markAllRead'])->name('notifications.read-all');
+        Route::get('notifications/{platform_notification}/open', [PlatformNotificationController::class, 'open'])->name('notifications.open');
         Route::get('accounting', [PlatformAccountingController::class, 'index'])->name('accounting.index');
 
         Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');

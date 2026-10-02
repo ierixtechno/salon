@@ -201,6 +201,7 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
+                        <x-platform-notification-bell />
                         <span class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
                             SA
                         </span>

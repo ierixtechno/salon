@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Domain\Core\Models\NotificationLog;
 use App\Domain\Core\Scopes\TenantScope;
 use App\Domain\Platform\Actions\CreateQuotation;
+use App\Domain\Platform\Actions\NotifyPlatformAdmins;
 use App\Domain\Platform\Actions\NotifyTenantBillingContacts;
 use App\Domain\Platform\Models\Quotation;
 use App\Domain\Platform\Models\TenantSubscription;
@@ -68,10 +69,12 @@ class ProcessSubscriptionRenewals extends Command
                 if ($subscription->ends_at->isSameDay(today()->addDays($threshold))) {
                     $this->sendReminder($subscription, "renews on {$subscription->ends_at->format('d M Y')}. Renew now to avoid interruption.");
                     $this->ensurePendingQuotation($subscription);
+                    $this->alertAdmins($subscription, 'Upcoming renewal', "renews on {$subscription->ends_at->format('d M Y')} (in {$threshold} days).");
                     $reminders++;
                 } elseif ($subscription->ends_at->isSameDay(today()->subDay())) {
                     $this->sendReminder($subscription, 'expired. You have 7 days of read-only access — renew now to restore full access.');
                     $this->ensurePendingQuotation($subscription);
+                    $this->alertAdmins($subscription, 'Subscription expired', 'expired yesterday and is now in its 7-day read-only grace period.');
                     $expiries++;
                 } elseif (
                     $subscription->ends_at->copy()->startOfDay()->diffInDays(today()) > ResolveSubscriptionAccessState::GRACE_DAYS
@@ -89,6 +92,7 @@ class ProcessSubscriptionRenewals extends Command
                     // tenant who logs back in to pay is not kicked out again.
                     $this->sendReminder($subscription, 'and its 7-day grace period have ended. You have been logged out everywhere — renew now to restore access.');
                     $this->forceLogout($subscription);
+                    $this->alertAdmins($subscription, 'Tenant locked out', 'grace period ended — all users were logged out until they renew.');
                     $blocks++;
                 }
             } catch (Throwable $e) {
@@ -123,6 +127,18 @@ class ProcessSubscriptionRenewals extends Command
         TenantSubscription::where('status', 'active')
             ->whereDate('ends_at', '<', today())
             ->update(['status' => 'expired']);
+    }
+
+    /** Super Admin bell entry (no email — the tenant already got theirs). */
+    private function alertAdmins(TenantSubscription $subscription, string $title, string $what): void
+    {
+        app(NotifyPlatformAdmins::class)->execute(
+            subject: "{$title}: {$subscription->tenant->name}",
+            body: "{$subscription->tenant->name} ({$subscription->plan->name}) {$what}",
+            url: route('platform.tenants.show', $subscription->tenant_id, false),
+            email: false,
+            kind: 'renewal',
+        );
     }
 
     private function sendReminder(TenantSubscription $subscription, string $message): void

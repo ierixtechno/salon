@@ -47,6 +47,26 @@
             </template>
             <li x-show="items.length === 0" class="px-4 py-6 text-center text-sm text-gray-500">No notifications yet.</li>
         </ul>
+        @if (\App\Domain\Core\Support\WebPushSender::configured())
+            <div class="border-t border-gray-100 px-4 py-2.5 text-xs" x-data="{
+                    push: 'checking', busy: false, error: '',
+                    async init() { this.push = window.stylobizPush ? await window.stylobizPush.state() : 'unsupported'; },
+                    async toggle() {
+                        this.busy = true; this.error = '';
+                        try { this.push = this.push === 'on' ? await window.stylobizPush.disable() : await window.stylobizPush.enable(); }
+                        catch (e) { this.error = e.message || 'Something went wrong.'; }
+                        this.busy = false;
+                    },
+                }">
+                <template x-if="push === 'off' || push === 'on'">
+                    <button type="button" @click="toggle()" :disabled="busy" class="font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                        x-text="push === 'on' ? 'Turn off alerts on this device' : 'Get alerts on this device'"></button>
+                </template>
+                <p x-show="push === 'blocked'" class="text-gray-500">Alerts are blocked for this site. Allow notifications in your browser settings to turn them on.</p>
+                <p x-show="push === 'unsupported'" class="text-gray-500">To get alerts on iPhone, install the app first (Share &rarr; Add to Home Screen) and open it from there.</p>
+                <p x-show="error" x-text="error" class="mt-1 text-red-600"></p>
+            </div>
+        @endif
         <a href="{{ route('notifications.my') }}" class="block border-t border-gray-100 px-4 py-2.5 text-center text-sm font-medium text-indigo-600 hover:bg-gray-50">View all</a>
     </div>
 </div>

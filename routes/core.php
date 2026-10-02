@@ -235,6 +235,9 @@ Route::put('marketing/automations/{type}', [CampaignAutomationController::class,
 
 Route::get('my-notifications', [NotificationController::class, 'index'])->name('notifications.my');
 Route::get('my-notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
+Route::get('push/key', [\App\Http\Controllers\Core\PushSubscriptionController::class, 'key'])->name('push.key');
+Route::post('push/subscribe', [\App\Http\Controllers\Core\PushSubscriptionController::class, 'store'])->name('push.subscribe');
+Route::post('push/unsubscribe', [\App\Http\Controllers\Core\PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
 Route::post('my-notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 Route::post('my-notifications/{notification_log}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 

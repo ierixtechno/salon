@@ -35,6 +35,8 @@ window.addEventListener('beforeinstallprompt', (event) => {
     window.deferredInstallPrompt = event;
 });
 
+import './push';
+
 Alpine.start();
 
 // PWA install support (see public/sw.js and public/manifest.webmanifest) —

@@ -106,6 +106,16 @@ class CreateQuotation
 
             app(NotifyTenantBillingContacts::class)->quotationCreated($quotation);
 
+            // Tell Super Admin (bell only — the tenant side already emails). A renewal
+            // quotation made by the daily job is the "pending renewal" alert.
+            app(NotifyPlatformAdmins::class)->execute(
+                subject: "New quotation {$quotation->quotation_number}: {$tenant->name}",
+                body: "{$plan->name} — ₹".number_format((float) $quotation->total_amount, 2)." incl. GST".($quotation->notes ? "\n{$quotation->notes}" : ''),
+                url: route('platform.quotations.show', $quotation, false),
+                email: false,
+                kind: 'quotation',
+            );
+
             return $quotation;
         });
     }

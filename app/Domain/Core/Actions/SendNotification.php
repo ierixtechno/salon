@@ -3,7 +3,9 @@
 namespace App\Domain\Core\Actions;
 
 use App\Domain\Core\Models\NotificationLog;
+use App\Domain\Core\Support\WebPushSender;
 use App\Jobs\DeliverNotification;
+use App\Jobs\SendWebPush;
 
 /**
  * The single entry point for every outbound notification — transactional
@@ -51,6 +53,16 @@ class SendNotification
             $log->status = 'sent';
             $log->sent_at = now();
             $log->save();
+
+            // Also buzz the recipient's phone/desktop if they enabled push. Best effort —
+            // the bell entry above is the notification; this must never fail it.
+            if ($recipientType === 'user' && WebPushSender::configured()) {
+                try {
+                    SendWebPush::dispatch($log->id);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
 
             return $log;
         }
