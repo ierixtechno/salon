@@ -1,1157 +1,211 @@
-# Beauty Business SaaS — Claude Code Project Constitution
+# Beauty Business SaaS — Project Constitution (condensed)
+
+Full original text: `docs/CLAUDE-full.md`. Section numbers (§) are stable — code comments cite them. Detailed specs live in `/docs`.
 
 ## 1. Purpose
-
-This repository contains a production-grade multi-tenant SaaS platform for businesses operating in:
-
-- Salon
-- Beauty Parlour
-- Spa
-
-The application is a single SaaS platform with a shared Core and independently assignable vertical modules.
-
-A tenant may operate:
-
-- Salon only
-- Beauty Parlour only
-- Spa only
-- Salon + Beauty Parlour
-- Salon + Spa
-- Beauty Parlour + Spa
-- Salon + Beauty Parlour + Spa
-
-The Super Admin controls which modules are available to each tenant.
-
-The system must be designed for long-term scalability, security, maintainability, multi-branch operation, and future mobile/API clients.
+Production multi-tenant SaaS for Salon, Beauty Parlour and Spa. One platform: shared Core + independently assignable vertical modules. A tenant may run any combination; Super Admin controls which modules each tenant gets. Built for long-term scalability, security, maintainability, multi-branch operation, future mobile/API clients.
 
 ## 2. Technology
-
-Primary stack:
-
-- Laravel
-- PHP version compatible with the selected Laravel release
-- MySQL
-- Blade
-- Tailwind CSS
-- Alpine.js where appropriate
-- Vite
-- REST/JSON APIs where needed
-- Laravel Scheduler
-- Laravel Queue
-- PHPUnit/Pest according to project configuration
-
-Initial production target:
-
-- Shared hosting
-- MySQL
-- Cron support
-- Database queue where workers are unavailable
-- File/database cache
-
-The architecture must allow future migration to:
-
-- VPS/cloud
-- Redis
-- Dedicated queue workers
-- Object storage
-- Multiple application instances
-- Load balancer
-- Managed database
-
-Do not make Redis, WebSockets, Docker, Kubernetes, Elasticsearch, RabbitMQ, Kafka, or persistent background processes mandatory for the initial application.
+Laravel (+ compatible PHP), MySQL, Blade, Tailwind, Alpine.js, Vite, REST/JSON where needed, Scheduler, Queue, PHPUnit/Pest.
+Initial target: shared hosting, MySQL, cron, database queue (no workers), file/database cache. Must allow later move to VPS/cloud, Redis, workers, object storage, multiple instances, load balancer, managed DB.
+Do NOT make Redis, WebSockets, Docker, Kubernetes, Elasticsearch, RabbitMQ, Kafka or persistent background processes mandatory.
 
 ## 3. Architecture
-
-Use a modular monolith. Do **NOT** create microservices.
-
-Logical architecture:
-
-```
-Platform
-├── Core
-├── Salon
-├── Beauty Parlour
-└── Spa
-```
-
-Shared business capabilities belong to Core. Vertical-specific business behavior belongs to the corresponding vertical module.
-
-Do not duplicate shared concepts across vertical modules.
-
-Examples:
-
-**Correct:** `customers`, `appointments`, `employees`, `products`, `invoices`
-
-**Incorrect:** `salon_customers`, `beauty_customers`, `spa_customers`
-
-## 4. SaaS Hierarchy
-
-```
-Platform → Tenant → Branch → Users / Employees → Business Operations
-```
-
-Every tenant-owned business record must belong to a tenant.
-
-Branch-specific records must additionally belong to a branch where applicable.
-
-## 5. SaaS Platform
-
-The Platform layer is controlled by Super Admin.
-
-Responsibilities:
-
-- Super Admin authentication
-- Platform dashboard
-- Tenant management
-- Module management
-- Subscription plans
-- Feature management
-- Subscription management
-- Tenant activation
-- Tenant suspension
-- Trial management
-- Usage limits
-- Platform configuration
-- Platform audit logs
-- Platform reporting
-
-Super Admin and tenant administration must remain logically separated.
-
-## 6. Business Modules
-
-The three primary vertical modules are:
-
-`SALON` · `BEAUTY_PARLOUR` · `SPA`
-
-Store modules using stable machine-readable codes.
-
-Example: `salon`, `beauty`, `spa`
-
-Do not use display labels as identifiers.
-
-## 7. Tenant Module Assignment
-
-Super Admin must be able to enable or disable any vertical module for a tenant.
-
-Example:
-
-- Tenant A: Salon = enabled, Beauty Parlour = enabled, Spa = disabled
-- Tenant B: Salon = disabled, Beauty Parlour = disabled, Spa = enabled
-
-Module assignment must be database driven. Never hard-code tenant module assignments.
-
-Disabling a module must **NOT** delete historical data. Historical:
-
-- appointments
-- invoices
-- payments
-- treatments
-- sessions
-- customer history
-- inventory transactions
-- audit records
-
-must remain intact.
-
-## 8. Branch Module Assignment
-
-A tenant may operate different modules at different branches.
-
-Example:
-
-- Branch A: Salon, Beauty Parlour, Spa
-- Branch B: Salon, Beauty Parlour
-- Branch C: Spa
-
-Tenant module enablement is the upper boundary. A branch cannot enable a module unavailable to its tenant.
-
-## 9. Access Evaluation
-
-Authorization must consider:
-
-1. Authentication
-2. Account status
-3. Tenant status
-4. Subscription status
-5. Tenant module
-6. Branch module
-7. Plan feature
-8. Role/permission
-9. Resource ownership/scope
-
-Do not rely only on menu visibility. Unauthorized routes, controllers, APIs and actions must remain inaccessible even when manually requested.
-
-## 10. Plans, Modules, Features and Permissions
-
-These concepts **MUST** remain separate.
-
-- **MODULE**: Business vertical. Examples: `salon`, `beauty`, `spa`
-- **FEATURE**: System capability. Examples: `inventory`, `online_booking`, `loyalty`, `advanced_reports`, `whatsapp`
-- **PLAN**: Commercial package defining features and limits.
-- **PERMISSION**: Action a user may perform. Example: `appointments.view`, `appointments.create`, `appointments.update`, `appointments.cancel`
-
-Never substitute one concept for another.
-
-## 11. Multi-Tenancy
-
-Initial strategy:
-
-```
-Single Laravel application
-+ Single MySQL database
-+ Shared schema
-+ tenant_id isolation
-```
-
-Tenant isolation is a **SECURITY BOUNDARY**.
-
-Every tenant-owned record must contain `tenant_id` unless a documented architectural exception exists.
-
-Never trust `tenant_id` supplied by:
-
-- request body
-- query string
-- route parameter
-- hidden field
-- JavaScript
-- API client
-
-Tenant identity must come from authenticated server-side tenant context.
-
-## 12. Tenant Isolation
-
-A user from Tenant A must **NEVER** access Tenant B data. This includes:
-
-- direct URL manipulation
-- API requests
-- exports
-- reports
-- autocomplete
-- search
-- file downloads
-- attachments
-- queued jobs
-- notifications
-- background tasks
-
-Every new tenant-aware module must include automated cross-tenant isolation tests.
-
-## 13. Branch Isolation
-
-Users may have access to:
-
-- all branches
-- selected branches
-- one branch
-
-Branch access must be authorization checked server-side.
-
-Never trust `branch_id` merely because it was submitted by the UI.
-
-## 14. Common Core
-
-Shared modules include:
-
-### Organization
-
-- Business profile
-- Business settings
-- Tax configuration
-- Currency
-- Timezone
-- Business hours
-- Policies
-
-### Branches
-
-- Branch management
-- Working hours
-- Holidays
-- Module availability
-- Branch configuration
-
-### Users & RBAC
-
-- Users
-- Roles
-- Permissions
-- Branch access
-- Module access
-- Sessions
-
-### Employees
-
-- Employee profile
-- Branch assignment
-- Role
-- Skills
-- Services
-- Shifts
-- Attendance
-- Leave
-- Commission
-- Incentives
-- Performance
-
-> **Scope note:** Full payroll processing (salary computation, statutory deductions such as PF/ESI, payslip generation) is **not currently in scope**. Attendance, leave, and commission are tracked for operational and incentive purposes only. Confirm before Phase 9 (see Section 74) whether payroll processing should be added to the roadmap.
-
-### Customers
-
-- Customer profile
-- Contact information
-- Preferences
-- Tags
-- Notes
-- Visit history
-- Appointment history
-- Purchase history
-- Membership
-- Packages
-- Loyalty
-- Wallet
-- Feedback
-
-Customer identity must be shared across enabled business modules.
-
-### Services Core
-
-- Categories
-- Services
-- Variants
-- Add-ons
-- Durations
-- Pricing
-- Taxes
-- Staff capability
-- Branch availability
-
-Services must identify their originating vertical/module where applicable.
-
-### Appointment Engine
-
-- Booking
-- Calendar
-- Availability
-- Staff allocation
-- Resource allocation
-- Walk-ins
-- Waitlist
-- Check-in
-- Reschedule
-- Cancellation
-- No-show
-- Completion
-- Rebooking
-- Recurring appointments
-
-Appointment conflict checks must occur server-side.
-
-### Resource Management
-
-Examples: chair, room, treatment bed, nail station, wash station, steam room, sauna.
-
-Resources belong to branches.
-
-### Pricing
-
-Support:
-
-- Base pricing
-- Branch pricing
-- Variants
-- Membership benefits
-- Package pricing
-- Promotional pricing
-- Discount
-- Tax
-
-Pricing calculations must occur server-side.
-
-### Packages
-
-Packages may contain services from multiple enabled modules.
-
-Track:
-
-- Validity
-- Purchased quantity
-- Redeemed quantity
-- Remaining quantity
-- Expiry
-- Redemption history
-
-### Membership
-
-Support:
-
-- Membership plans
-- Validity
-- Module applicability
-- Branch applicability
-- Service applicability
-- Benefits
-- Discounts
-- Usage limits
-- Renewal
-
-### Inventory
-
-- Products
-- Categories
-- Brands
-- Units
-- Branch stock
-- Stock movements
-- Service consumption
-- Transfers
-- Adjustments
-- Damage
-- Expiry
-- Low-stock alerts
-
-Inventory must use a stock ledger. Do not treat a mutable quantity column as the authoritative transaction history.
-
-### Suppliers & Purchasing
-
-- Suppliers
-- Purchase requests
-- Purchase orders
-- Goods receipt
-- Supplier invoices
-- Purchase returns
-- Supplier payments
-
-### POS
-
-POS must support:
-
-- Services
-- Products
-- Packages
-- Memberships
-- Gift cards
-- Discounts
-- Tax
-- Loyalty redemption
-- Wallet redemption
-- Split payment
-- Tips
-
-### Invoice
-
-Support: draft, finalized, paid, partially paid, void, refunded.
-
-Finalized financial records must not be silently modified or deleted.
-
-### Payments
-
-Support extensible payment methods.
-
-Initial examples: cash, card, UPI, bank transfer, wallet, gift card.
-
-External payment gateways must be implemented behind provider interfaces/adapters.
-
-### Refunds
-
-Support: full refund, partial refund, credit note.
-
-Refunds must correctly reverse affected:
-
-- Financial entries
-- Inventory
-- Commission
-- Loyalty
-- Wallet
-- Package/membership usage
-
-where applicable.
-
-### Expenses
-
-- Expense categories
-- Branch expenses
-- Vendor
-- Tax
-- Payment method
-- Attachment
-- Approval where configured
-
-### Cash Register
-
-- Opening cash
-- Cash sales
-- Cash expense
-- Cash refund
-- Cash in/out
-- Expected closing
-- Actual closing
-- Difference
-
-### Commission
-
-Support:
-
-- Service commission
-- Product commission
-- Package commission
-- Membership commission
-- Fixed commission
-- Percentage
-- Slab rules
-- Targets
-- Incentives
-
-### Loyalty
-
-Use a transaction ledger. Do not maintain only a mutable points balance.
-
-### Wallet
-
-Use a transaction ledger. Financial wallet entries must be traceable and reversible.
-
-### Gift Cards / Vouchers
-
-Support: issuance, value, balance, redemption, expiry, cancellation where legally/business appropriate.
-
-### Marketing
-
-- Customer segmentation
-- Campaigns
-- Templates
-- WhatsApp
-- SMS
-- Email
-- Birthday campaigns
-- Re-engagement
-- Membership renewal
-- Package expiry
-- Feedback requests
-
-Marketing communication must respect customer consent and applicable communication preferences. (See Section 36, Data Privacy & Retention.)
-
-### Notifications
-
-Support: in-app, email, SMS, WhatsApp.
-
-Providers must remain replaceable.
-
-### Reports
-
-Support: sales, appointments, customers, employees, inventory, purchasing, expenses, tax, commission, membership, packages, loyalty, marketing, branch performance, module performance.
-
-Reports must enforce tenant and branch authorization.
-
-### Audit
-
-Audit security-sensitive and financially significant actions.
-
-## 15. Salon Module
-
-Salon-specific capabilities include:
-
-- Salon service catalogue
-- Hair profile
-- Hair consultation
-- Hair/scalp concerns
-- Treatment recommendation
-- Hair treatment history
-- Color formula
-- Color history
-- Stylist capability
-- Salon chair/station allocation
-- Salon product consumption
-
-Possible categories: haircut, styling, wash, hair spa, hair treatment, coloring, straightening, smoothing, keratin, extensions, beard, shaving, grooming, scalp treatment.
-
-## 16. Beauty Parlour Module
-
-Beauty-specific capabilities include:
-
-- Beauty service catalogue
-- Skin profile
-- Skin consultation
-- Treatment recommendation
-- Treatment plans
-- Treatment sessions
-- Session progress
-- Bridal management
-- Bridal events
-- Makeup management
-- Before/after records with consent
-- Beauty product consumption
-
-Possible categories: facial, cleanup, waxing, threading, bleach, manicure, pedicure, nail care, nail art, makeup, bridal makeup, skin treatment, body polishing, hand/foot care.
-
-Bridal may include: engagement, haldi, mehendi, sangeet, wedding, reception.
-
-Each event may have: date, time, venue, services, staff, travel charges, payments, notes.
-
-> Before/after records fall under Section 36, Data Privacy & Retention — consent, retention period, and deletion workflow apply.
-
-## 17. Spa Module
-
-Spa-specific capabilities include:
-
-- Spa service catalogue
-- Spa consultation
-- Therapy plan
-- Therapy/session records
-- Therapist assignment
-- Room management
-- Room availability
-- Room turnaround
-- Couple bookings
-- Spa product consumption
-
-Possible categories: massage, body therapy, body scrub, body wrap, aromatherapy, hydrotherapy, steam, sauna, reflexology, couple spa, Ayurvedic therapy, wellness package.
-
-Spa scheduling may require:
-
-```
-Customer + Therapist + Room/resource + Time slot
-```
-
-All required resources must be available before booking confirmation.
-
-## 18. Database Rules
-
-Use:
-
-- Foreign keys where appropriate
-- Indexes
-- Unique constraints
-- Composite indexes
-- Transactions
-- Explicit relationships
-
-Every tenant-owned table must consider indexes beginning with `tenant_id` based on actual query patterns.
-
-Common examples: `(tenant_id, branch_id)`, `(tenant_id, status)`, `(tenant_id, created_at)`
-
-Appointment-specific indexes may include: `(tenant_id, branch_id, appointment_date)`, `(tenant_id, employee_id, appointment_date)`
-
-Do not add indexes blindly. Indexes must support real queries.
-
-## 19. Primary Keys
-
-Use one consistent primary-key strategy throughout the project. Do not change identifier strategy module by module.
-
-If public identifiers are needed, use separate UUID/ULID/public reference fields where appropriate without casually changing internal relational keys.
-
-> **Proposed default (confirm before Phase 0 begins):** Auto-incrementing unsigned `bigint` internal primary keys for all tables (fast joins/indexes, small footprint, MySQL/shared-hosting friendly), paired with a separate ULID/UUID public-facing reference column on entities exposed externally (invoice numbers, API resources, customer-facing booking references). Internal keys should not be exposed in URLs/APIs for tenant-owned resources.
+Modular monolith, NO microservices. Platform → Core, Salon, Beauty Parlour, Spa. Shared capabilities in Core; vertical behaviour in its module. Never duplicate shared concepts per vertical (`customers`, not `salon_customers`).
+
+## 4. SaaS hierarchy
+Platform → Tenant → Branch → Users/Employees → Business operations. Every tenant-owned record has `tenant_id`; branch-specific records also `branch_id`.
+
+## 5. Platform layer (Super Admin)
+Auth, dashboard, tenant/module/plan/feature/subscription management, activation/suspension, trials, usage limits, config, audit logs, reporting. Super Admin and tenant admin stay logically separated.
+
+## 6. Modules
+`salon`, `beauty`, `spa` — stable machine codes, never display labels as identifiers.
+
+## 7. Tenant module assignment
+Super Admin enables/disables any module per tenant. Database-driven; never hard-code. Disabling must NOT delete history (appointments, invoices, payments, treatments, sessions, customer history, inventory transactions, audit).
+
+## 8. Branch module assignment
+Branches may run different modules. Tenant enablement is the upper bound; a branch cannot enable a module its tenant lacks.
+
+## 9. Access evaluation
+Check in order: authentication, account status, tenant status, subscription status, tenant module, branch module, plan feature, role/permission, resource ownership/scope. Hidden menus are not authorization — unauthorized routes/controllers/APIs must be inaccessible when requested manually.
+
+## 10. Plans, modules, features, permissions — keep separate
+MODULE = business vertical. FEATURE = system capability (`inventory`, `online_booking`, `loyalty`, `advanced_reports`, `whatsapp`). PLAN = commercial package of features + limits. PERMISSION = user action (`appointments.view`). Never substitute one for another.
+
+## 11. Multi-tenancy
+Single app + single MySQL DB + shared schema + `tenant_id`. Tenant isolation is a SECURITY BOUNDARY. Every tenant-owned record has `tenant_id` unless a documented exception exists. Never trust `tenant_id` from request body, query, route, hidden field, JS or API client — it comes from authenticated server-side context.
+
+## 12. Tenant isolation
+Tenant A must never reach Tenant B data via URL manipulation, API, exports, reports, autocomplete, search, downloads, attachments, queued jobs, notifications or background tasks. Every tenant-aware module needs automated cross-tenant tests.
+
+## 13. Branch isolation
+Users may have all, selected, or one branch. Check branch access server-side; never trust a submitted `branch_id`.
+
+## 14. Common Core (capabilities)
+- **Organization:** profile, settings, tax, currency, timezone, hours, policies. **Branches:** management, hours, holidays, module availability.
+- **Users & RBAC:** users, roles, permissions, branch/module access, sessions.
+- **Employees:** profile, branches, role, skills, services, shifts, attendance, leave, commission, incentives, performance. Full payroll (salary, PF/ESI, payslips) is OUT of scope — confirm before Phase 9.
+- **Customers:** profile, contact, preferences, tags, notes, visit/appointment/purchase history, membership, packages, loyalty, wallet, feedback. Identity shared across modules.
+- **Services:** categories, services, variants, add-ons, durations, pricing, taxes, staff capability, branch availability; identify originating module.
+- **Appointment engine:** booking, calendar, availability, staff/resource allocation, walk-ins, waitlist, check-in, reschedule, cancel, no-show, complete, rebook, recurring. Conflict checks server-side.
+- **Resources:** chairs, rooms, beds, stations, steam rooms, saunas — belong to branches.
+- **Pricing:** base, branch, variants, membership benefits, package, promo, discount, tax — all server-side.
+- **Packages:** multi-module; track validity, purchased/redeemed/remaining qty, expiry, redemption history. **Membership:** plans, validity, module/branch/service applicability, benefits, discounts, usage limits, renewal.
+- **Inventory:** products, categories, brands, units, branch stock, movements, service consumption, transfers, adjustments, damage, expiry, low-stock alerts. Use a stock LEDGER, not a mutable quantity column.
+- **Suppliers & purchasing:** suppliers, requests, POs, goods receipt, supplier invoices, returns, payments.
+- **POS:** services, products, packages, memberships, gift cards, discounts, tax, loyalty/wallet redemption, split payment, tips.
+- **Invoice:** draft, finalized, paid, partially paid, void, refunded. Finalized records are never silently edited/deleted.
+- **Payments:** extensible methods (cash, card, UPI, bank, wallet, gift card); gateways behind provider interfaces/adapters.
+- **Refunds:** full, partial, credit note — must reverse financial entries, inventory, commission, loyalty, wallet, package/membership usage where applicable.
+- **Expenses**, **Cash register** (opening, sales, expense, refund, cash in/out, expected vs actual closing, difference), **Commission** (service/product/package/membership, fixed, %, slabs, targets, incentives).
+- **Loyalty** and **Wallet:** transaction ledgers (traceable, reversible), never just a mutable balance. **Gift cards:** issue, value, balance, redeem, expire, cancel.
+- **Marketing:** segmentation, campaigns, templates, WhatsApp/SMS/email, birthday, re-engagement, renewal, expiry, feedback — respect consent (§36).
+- **Notifications:** in-app, email, SMS, WhatsApp; replaceable providers. **Reports:** sales, appointments, customers, employees, inventory, purchasing, expenses, tax, commission, membership, packages, loyalty, marketing, branch/module performance — enforce tenant + branch authorization. **Audit:** security-sensitive and financially significant actions.
+
+## 15. Salon module
+Service catalogue, hair profile/consultation/concerns, treatment recommendation/history, color formula/history, stylist capability, chair/station allocation, product consumption. Categories: haircut, styling, wash, hair spa/treatment, coloring, straightening, smoothing, keratin, extensions, beard, shaving, grooming, scalp.
+
+## 16. Beauty Parlour module
+Service catalogue, skin profile/consultation, treatment plans/sessions/progress, bridal management/events (engagement, haldi, mehendi, sangeet, wedding, reception — each with date, time, venue, services, staff, travel charges, payments, notes), makeup, before/after records WITH consent (§36), product consumption. Categories: facial, cleanup, waxing, threading, bleach, manicure, pedicure, nail care/art, makeup, bridal, skin treatment, body polishing, hand/foot care.
+
+## 17. Spa module
+Service catalogue, consultation, therapy plan/sessions, therapist assignment, rooms/availability/turnaround, couple bookings, product consumption. Booking may need Customer + Therapist + Room/resource + Time slot — ALL available before confirmation. Categories: massage, body therapy/scrub/wrap, aromatherapy, hydrotherapy, steam, sauna, reflexology, couple spa, Ayurvedic, wellness packages.
+
+## 18. Database rules
+Foreign keys, indexes, unique constraints, composite indexes, transactions, explicit relationships. Indexes begin with `tenant_id` where queries need it (`(tenant_id, branch_id)`, `(tenant_id, status)`, `(tenant_id, created_at)`; appointments: `(tenant_id, branch_id, appointment_date)`, `(tenant_id, employee_id, appointment_date)`). Don't add indexes blindly.
+
+## 19. Primary keys
+One strategy project-wide. Default: auto-increment unsigned bigint internal keys + separate ULID/UUID public reference column for externally exposed entities. Don't expose internal keys in URLs/APIs for tenant-owned resources.
 
 ## 20. Money
+Never FLOAT/DOUBLE. Default `DECIMAL(12,2)`, single currency per tenant; round half-up at 2 dp only on final line/invoice totals. Server calculates all subtotals, discounts, taxes, commissions, refunds, wallet/loyalty impact, totals — never trust browser totals. (Confirm multi-currency need before Phase 6.)
 
-Never use FLOAT or DOUBLE for money. Use:
+## 21. Tax & invoice compliance
+Confirm target countries before Phase 6. If India: GST sequential invoice numbering (unbroken, per branch, per financial year); CGST/SGST vs IGST by place of supply; HSN (products) / SAC (services); per-branch GSTIN; e-invoicing/IRN schema-ready but not built until required; TDS/TCS for supplier payments where applicable.
 
-- DECIMAL with documented precision/scale
+## 22. Time and timezones
+Store canonical timestamps consistently; tenant timezone configured explicitly; display in tenant (or branch) timezone; never use server local timezone for business logic.
 
-or
-
-- integer minor units
-
-according to the project's established convention. All calculations must use one consistent strategy.
-
-Never trust financial totals calculated by the browser. Server must calculate:
-
-- Subtotal
-- Discounts
-- Taxes
-- Commissions
-- Refunds
-- Wallet impact
-- Loyalty impact
-- Totals
-
-> **Proposed default (confirm before Phase 0 begins):** `DECIMAL(12,2)` for all monetary columns; single currency per tenant. Confirm whether multi-currency per tenant/branch is genuinely required — if yes, revisit this default before Phase 6. Rounding: round-half-up at 2 decimal places, applied only to final calculated totals per line item/invoice, never to intermediate values.
-
-## 21. Tax & Invoice Compliance
-
-The target market(s) for this platform must be explicitly confirmed, since invoicing and tax rules are jurisdiction-specific and directly affect the invoice/tax data model designed in Phase 6.
-
-If India is a target market, the platform must additionally support:
-
-- GST-compliant sequential invoice numbering (unbroken, per branch, per financial year, as legally required)
-- CGST/SGST vs IGST determination based on the tenant/branch's registered state vs. the transaction's place of supply
-- HSN codes for products and SAC codes for services on invoices
-- Per-branch GSTIN, where a tenant's branches are registered in different states
-- e-Invoicing/IRN generation if the tenant crosses the applicable turnover threshold (design the schema to allow this later; do not implement until required)
-- TDS/TCS considerations for supplier payments where applicable
-
-> **Decision needed:** Confirm target country/countries before Phase 6 (POS/Invoice/Payment/Refund) begins, so invoice numbering and tax fields are modeled correctly from the first migration. Retrofitting statutory invoice numbering after production data exists is high-risk.
-
-## 22. Time and Timezones
-
-Store canonical timestamps consistently. Tenant timezone must be explicitly configured. Convert timestamps for display using tenant timezone.
-
-Appointment scheduling must respect branch timezone if branch-specific timezone support is introduced.
-
-Never rely on server local timezone for business logic.
-
-## 23. Database Transactions
-
-Use DB transactions for multi-record business operations. Examples:
-
-- Checkout
-- Invoice finalization
-- Payment
-- Refund
-- Stock transfer
-- Package redemption
-- Wallet operation
-- Loyalty redemption
-- Membership purchase
-- Commission finalization
-
-If one critical step fails, the transaction must roll back.
-
-Do not perform external API calls inside long-running database transactions unless the architecture explicitly requires it.
+## 23. Transactions
+Use DB transactions for checkout, invoice finalization, payment, refund, stock transfer, package redemption, wallet/loyalty operations, membership purchase, commission finalization. Critical step fails → roll back. No external API calls inside long transactions.
 
 ## 24. Concurrency
+Prevent races on appointment/room/resource booking, stock decrement, package/gift-card/wallet/loyalty redemption, payment processing, invoice numbering — via transactions, row locks, unique constraints, idempotency, atomic updates. Never assume sequential requests.
 
-Prevent race conditions for:
-
-- Appointment booking
-- Room allocation
-- Resource allocation
-- Stock decrement
-- Package redemption
-- Gift card redemption
-- Wallet redemption
-- Loyalty redemption
-- Payment processing
-- Invoice numbering
-
-Use appropriate: database transactions, row locking, unique constraints, idempotency, atomic updates.
-
-Do not assume requests occur sequentially.
-
-## 25. Authentication Security
-
-Use Laravel's supported authentication mechanisms.
-
-Requirements:
-
-- Secure password hashing
-- CSRF protection
-- Session regeneration after login
-- Logout invalidation
-- Login rate limiting
-- Password reset expiry
-- Secure cookies in production
-- HTTPS
-- Email verification where configured
-
-Never implement custom cryptography for authentication.
+## 25. Authentication security
+Laravel's mechanisms only: secure hashing, CSRF, session regeneration on login, logout invalidation, login rate limiting, reset expiry, secure cookies in production, HTTPS, email verification where configured. No custom crypto.
 
 ## 26. Authorization
-
-Use: middleware, policies, gates/permissions, tenant context, branch context.
-
-Controllers must not become the sole authorization layer. Sensitive operations must explicitly authorize the action.
+Middleware, policies, gates/permissions, tenant + branch context. Controllers are not the only layer; sensitive operations authorize explicitly.
 
 ## 27. Validation
+All input untrusted; Form Requests. Validate type, format, range, enum, length, ownership, tenant scope, branch scope, business state. Client-side validation is UX only.
 
-Every external input is untrusted. Validate using Form Requests or equivalent structured validation.
+## 28. Mass assignment
+Never `request->all()` for persistence. Sensitive fields (`tenant_id`, role, permissions, subscription status, invoice totals, payment status, wallet/loyalty balance, commission amount) are never mass-assignable from untrusted input.
 
-Validate: type, format, range, enum, length, ownership, tenant scope, branch scope, business state.
+## 29–31. SQL injection, XSS, CSRF
+Eloquent/query-builder bindings only; raw SQL needs justification + bindings. Blade escaped output by default; no arbitrary HTML. All state-changing browser requests use CSRF; never disable globally — webhooks use provider signature verification.
 
-Client-side validation is UX only. Server-side validation is mandatory.
+## 32. IDOR
+Possessing an ID grants nothing. Verify tenant ownership, branch authorization, permission and resource policy on every web and API route.
 
-## 28. Mass Assignment
+## 33. File uploads
+Validate type, MIME, extension, size, authorization, destination; server-generated filenames; sensitive files not public (authorized/signed downloads).
 
-Do not use `request->all()` for model persistence. Use validated and explicitly allowed fields.
+## 34. Tenant storage quota
+Track per-tenant (optionally per-branch) usage; per-plan limit; warn near quota; reject over-quota uploads with a clear business error (not 500); Super Admin visibility; abstraction removable on object storage. (Not yet implemented.)
 
-Sensitive fields must never be mass assignable from untrusted requests. Examples: `tenant_id`, role, permissions, subscription status, invoice totals, payment status, wallet balance, loyalty balance, commission amount.
+## 35. Sensitive information
+Never log passwords, reset tokens, API secrets, payment credentials, access tokens, private keys, or unnecessary customer data. Secrets in env config, never in Git.
 
-## 29. SQL Injection
+## 36. Data privacy & retention
+Capture consent (who, when, scope) before storing before/after images or sensitive consultation detail; define retention periods; support customer erasure workflow for non-financial, non-audit data; erasure must never remove/corrupt finalized financial records or audit logs; marketing respects consent + opt-out (India SMS/WhatsApp: confirm DLT/TRAI and WhatsApp opt-in before Phase 11). Confirm data-protection regime (e.g. DPDP) before Phase 3/4.
 
-Use Eloquent/query builder parameter binding. Never concatenate untrusted values into SQL.
+## 37. Payment security
+Never store raw card data; use provider tokenization/hosted flows. Webhooks verify signature, event, amount, currency, merchant context, idempotency; duplicate delivery must not duplicate payments.
 
-Raw SQL requires documented justification and parameter binding.
+## 38. API security
+Appropriate auth; enforce tenant scope, permissions, rate limits, validation, pagination, safe errors; no stack traces in production APIs.
 
-## 30. XSS
-
-Escape user-generated content by default. Blade output should use escaped rendering unless sanitized trusted HTML is explicitly required.
-
-Do not render arbitrary customer/staff HTML.
-
-## 31. CSRF
-
-All state-changing browser requests must use Laravel CSRF protection.
-
-Do not disable CSRF globally to solve integration problems. External webhook routes must use provider-specific signature verification instead.
-
-## 32. IDOR Prevention
-
-Never assume possession of a record ID grants access. Before returning or modifying a resource verify:
-
-- Tenant ownership
-- Branch authorization
-- Permission
-- Resource-specific policy
-
-This applies to API and web routes.
-
-## 33. File Upload Security
-
-Validate: file type, MIME type, extension, size, authorization, storage destination.
-
-Generate server-controlled filenames. Never trust uploaded filenames.
-
-Sensitive files must not be publicly accessible. Use authorized download endpoints or signed access where appropriate.
-
-## 34. Tenant Storage Quota
-
-Shared hosting environments have finite, often modest disk quotas. Uploaded content (before/after photos, attachments, exports, documents) can grow unpredictably per tenant.
-
-Requirements:
-
-- Track storage consumption per tenant (and optionally per branch)
-- Enforce a configurable storage limit per subscription plan
-- Warn tenants approaching their quota
-- Reject new uploads that would exceed quota with a clear business error, not a generic 500
-- Provide Super Admin visibility into per-tenant storage usage
-
-Design the abstraction so storage limits can be relaxed or removed when migrating to object storage (see Section 65, Future Scalability) without an architecture rewrite.
-
-## 35. Sensitive Information
-
-Never log: passwords, password reset tokens, API secrets, payment credentials, access tokens, private keys, full sensitive customer data unnecessarily.
-
-Secrets belong in environment configuration. Never commit secrets to Git.
-
-## 36. Data Privacy & Retention
-
-The platform stores sensitive personal data beyond typical business records, including skin/hair consultation notes and before/after photographs captured with customer consent (see Section 16, Beauty Parlour Module).
-
-Requirements:
-
-- Consent must be captured and stored (who consented, when, for what purpose/scope) before storing before/after images or sensitive consultation detail
-- Define a retention period for consultation photos and sensitive notes; do not retain indefinitely by default
-- Support a customer data deletion/erasure request workflow, scoped to non-financial, non-audit data
-- Deletion requests must **NOT** be permitted to remove or corrupt finalized financial records, invoices, or audit logs (Sections 42, 47) — sensitive media/notes are deletable; financial/audit history is not
-- Marketing communications (Section 14, Marketing) must respect explicit customer consent and provide opt-out; where SMS/WhatsApp campaigns are used in India, confirm DLT/TRAI registration and WhatsApp Business API opt-in requirements before Phase 11
-
-> **Decision needed:** Confirm the applicable data protection regime (e.g., India's DPDP Act, or another jurisdiction) so retention periods and the erasure workflow are modeled correctly, ideally before Phase 3 (Customer CRM) and Phase 4 (vertical consultation records) begin.
-
-## 37. Payment Security
-
-Never store raw card details. Use payment provider tokenization/hosted payment flows.
-
-Webhook processing must verify: provider signature, expected event, amount, currency, merchant/account context, idempotency.
-
-Duplicate webhook delivery must not create duplicate payments.
-
-## 38. API Security
-
-APIs must use appropriate authentication.
-
-Enforce: tenant scope, permissions, rate limits, validation, pagination, safe error responses.
-
-Never expose internal exceptions or stack traces through production APIs.
-
-## 39. Error Handling
-
-Errors must be handled intentionally. Categorize errors as:
-
-`VALIDATION ERROR` · `AUTHENTICATION ERROR` · `AUTHORIZATION ERROR` · `NOT FOUND` · `CONFLICT` · `BUSINESS RULE ERROR` · `EXTERNAL SERVICE ERROR` · `SYSTEM ERROR`
-
-Expected business failures must not become generic 500 errors. Examples:
-
-- Slot unavailable → conflict/business error
-- Insufficient stock → business error
-- Membership expired → business error
-- Unauthorized branch → authorization error
-
-## 40. Production Error Responses
-
-Production users must never receive: stack traces, SQL queries, filesystem paths, environment values, secrets, internal class details.
-
-Return a safe message and correlation/request identifier where implemented. Log technical details server-side.
+## 39–40. Error handling and production responses
+Categories: validation, authentication, authorization, not found, conflict, business rule, external service, system. Expected business failures (slot unavailable, insufficient stock, membership expired, unauthorized branch) are not generic 500s. Production users never see stack traces, SQL, paths, env values, secrets or class details — safe message + correlation ID; technical detail logged server-side.
 
 ## 41. Logging
+Structured, contextual (request ID, tenant, branch, user, action, entity). No sensitive data.
 
-Use structured contextual logging where practical.
+## 42. External services
+Behind interfaces (`PaymentProvider`, `WhatsAppProvider`, `SmsProvider`, `EmailProvider`, `StorageProvider`). External failure must not corrupt local state: timeouts, retries, backoff, queueing, idempotency, failure logging. Never blindly retry irreversible operations.
 
-Useful context: request ID, tenant ID, branch ID, user ID, action, entity type, entity ID.
+## 43–44. Queues and scheduler
+Queue slow/non-critical work (email, WhatsApp, SMS, exports, reports, image processing). Database queue via cron on shared hosting. Business-critical state must not depend solely on a queue. Scheduled tasks are idempotent — running twice never duplicates financial or communication effects.
 
-Never expose sensitive data unnecessarily.
+## 45. Financial integrity
+Never silently edit/delete finalized financial records — use void, reversal, refund, credit note, adjustment. Every financial change is traceable.
 
-## 42. External Services
+## 46. Inventory integrity
+Every stock change creates a movement (`PURCHASE`, `SALE`, `SERVICE_CONSUMPTION`, `TRANSFER_IN/OUT`, `ADJUSTMENT`, `RETURN`, `DAMAGE`, `EXPIRY`). Stock must be reconstructable from the ledger.
 
-Integrations must be behind abstractions/interfaces. Examples: `PaymentProvider`, `WhatsAppProvider`, `SmsProvider`, `EmailProvider`, `StorageProvider`.
+## 47. Audit logging
+Audit at least: security events, role/permission changes, tenant/branch module changes, service price changes, invoice finalization/void, payment, refund, stock/wallet/loyalty adjustments, subscription changes, impersonation. Tenant users cannot edit audit logs.
 
-External failures must not corrupt local state. Use: timeouts, retries, backoff, queueing where appropriate, idempotency, failure logging.
+## 48. Soft deletes
+Use selectively; lifecycle states, not deletion, represent business state. Financial ledgers and audit history stay immutable.
 
-Never retry irreversible operations blindly.
-
-## 43. Queues
-
-Use queued jobs for slow/non-critical work: email, WhatsApp, SMS, exports, report generation, image processing, non-critical notifications.
-
-Shared hosting must support database-backed queue processing through cron/scheduled execution where persistent workers are unavailable.
-
-Business-critical state changes must not depend exclusively on a queue succeeding.
-
-## 44. Scheduler
-
-Scheduled operations may include: reminders, package expiry checks, membership expiry, birthday campaigns, inactive customer campaigns, low stock alerts, reporting aggregation.
-
-Tasks must be idempotent where practical. Running the same scheduled job twice must not create duplicate financial or communication effects.
-
-## 45. Financial Integrity
-
-Never silently edit/delete finalized financial records. Use: void, reversal, refund, credit note, adjustment.
-
-Every financial change must be traceable.
-
-## 46. Inventory Integrity
-
-Every stock change must create a stock movement. Examples: `PURCHASE`, `SALE`, `SERVICE_CONSUMPTION`, `TRANSFER_IN`, `TRANSFER_OUT`, `ADJUSTMENT`, `RETURN`, `DAMAGE`, `EXPIRY`.
-
-Stock should be reconstructable from its ledger.
-
-## 47. Audit Logging
-
-Audit at minimum: login/security events where useful, role changes, permission changes, tenant module changes, branch module changes, service price changes, invoice finalization, invoice void, payment, refund, stock adjustment, wallet adjustment, loyalty adjustment, subscription changes, impersonation.
-
-Audit logs must not be editable by ordinary tenant users.
-
-## 48. Soft Deletes
-
-Use soft deletion selectively. Do not use deletion as a substitute for proper business lifecycle states.
-
-Financial ledgers and audit history should generally remain immutable.
-
-## 49. Controllers
-
-Controllers should be thin.
-
-Controller responsibility: accept request, authorize, call application/domain service/action, return response.
-
-Do not place large business workflows directly inside controllers.
-
-## 50. Models
-
-Models should define: relationships, casts, scopes, small domain helpers.
-
-Avoid giant models containing unrelated workflows.
-
-## 51. Business Logic
-
-Complex workflows belong in: Actions, Services, Domain classes — according to established project conventions.
-
-Examples: `BookAppointment`, `CompleteAppointment`, `CheckoutSale`, `ProcessRefund`, `RedeemPackage`, `TransferStock`.
+## 49–51. Code structure
+Thin controllers (accept, authorize, call action/service, respond). Models: relationships, casts, scopes, small helpers. Complex workflows in Actions/Services/Domain classes (`BookAppointment`, `CheckoutSale`, `ProcessRefund`, `RedeemPackage`, `TransferStock`).
 
 ## 52. Events
+Use for multiple independent side effects after a successful operation; don't hide critical state changes in event chains.
 
-Use events when multiple independent side effects follow a successful domain operation.
+## 53. Migrations
+Never edit a deployed migration — add a new one. Safe rollback where feasible; consider existing data for non-null columns, unique constraints, foreign keys.
 
-Example: `AppointmentCompleted` → inventory consumption → loyalty processing → notification → reporting update.
+## 54–57. Performance, reporting, cache, search
+Avoid N+1, unbounded queries, huge in-memory collections, repeated settings/permission queries. Large reports must not slow operational screens (aggregates, summary tables, scheduled aggregation, export jobs). Cache tenant/branch settings, module assignments, plan features, permissions, tax config — with tenant/user-aware keys and invalidation on change. Global search enforces tenant + branch scope.
 
-Do not hide critical business state changes in unpredictable event chains.
+## 58–60. UI
+Business software: speed, clarity, consistency, accessibility, responsiveness. POS and calendar minimize clicks. Navigation reflects tenant/branch modules, plan features and permissions (hidden nav ≠ authorization). Primary screens work on desktop, tablet, mobile; PWA/native clients possible without rewriting domain logic.
 
-## 53. Database Migrations
+## 61–63. Testing
+Every module needs automated tests: success, validation failure, authentication failure, authorization failure, tenant isolation, branch isolation, disabled module/feature, business-rule conflict, transaction rollback, concurrency. Financial modules need stronger coverage. Mandatory isolation test: create Tenant A and B, resource under A, authenticate as B, attempt view/edit/delete/export/API fetch — all fail safely. Also test duplicate requests, expired resources, invalid state transitions, unavailable employee/room, insufficient inventory, duplicate payment webhooks, provider timeouts, unauthorized branch, module disabled mid-operation.
 
-Never modify an already deployed migration merely to change production schema. Create a new migration.
+## 64–67. Hosting, scalability, export, backup
+Verify shared-hosting compatibility before adding infrastructure; no mandatory persistent worker/Redis/WebSocket/root access without approval. Stay portable via Laravel abstractions (storage, cache, queue, mail, DB); no host-specific filesystem assumptions. Tenant data export is tenant-scoped, permission-protected, queued when possible. Deployment docs cover DB backups, uploaded files, env config, restore; backups never public.
 
-Migrations must have safe rollback behavior where feasible.
+## 68. Code quality
+Readable, typed where appropriate, modular, testable, Laravel conventions. No premature abstractions or needless repositories.
 
-Consider existing production data before adding: non-null columns, unique constraints, foreign keys, enum-like constraints.
+## 69. Working rules (before modifying code)
+Read this file and the relevant `/docs` spec; inspect existing code, migrations, models, relationships; identify tenant boundary, branch boundary, module/feature and authorization requirements, financial/inventory effects, and tests required. Don't implement before understanding these.
 
-## 54. Performance
+## 70. Never assume missing requirements
+If a business rule is ambiguous and affects security, tenancy, money, inventory, permissions, subscriptions, historical data or API compatibility — don't invent behaviour; document the ambiguity and get a decision before irreversible architecture.
 
-Avoid: N+1 queries, unbounded queries, loading huge collections into memory, unnecessary joins, repeated settings queries, repeated permission queries.
+## 71. Don't rewrite working architecture
+No changes to tenant architecture, primary-key strategy, authentication, money representation, permission architecture, core identifiers, or queue/storage strategy without explicit architectural approval.
 
-Use: eager loading, pagination, indexes, aggregation, caching, chunking, queues — when appropriate.
+## 72. Implementation workflow
+REQUIREMENTS → DATA MODEL → SECURITY MODEL → MIGRATIONS → MODELS → POLICIES → DOMAIN/ACTIONS → VALIDATION → CONTROLLERS → ROUTES → UI/API → TESTS → SECURITY REVIEW → PERFORMANCE REVIEW → DOCUMENTATION. CRUD working ≠ module complete.
 
-## 55. Reporting Performance
+## 73. Definition of done
+Requirements implemented; tenant isolation, branch authorization, module access, permissions verified; validation, error handling, transactions, audit in place; tests pass; no known security issue; docs updated.
 
-Large reports must not degrade operational screens.
+## 74. Development phases
+0 Foundations · 1 Auth/Tenancy/RBAC/Super Admin/Modules/Plans/Subscriptions/Onboarding · 2 Organization/Branches/Employees/Schedules/Resources · 3 Customer CRM · 4 Services/Pricing/vertical services · 5 Appointments/availability · 6 POS/Invoice/Payment/Refund · 7 Products/Inventory/Suppliers/Purchasing · 8 Packages/Membership/Loyalty/Wallet/Gift cards · 9 Attendance/Leave/Commission/Incentives (no payroll) · 10 Expenses/Cash register · 11 Notifications/Marketing · 12 Reports/Dashboards/Exports · 13 Online booking/Customer self-service (see §75) · 14 Security hardening/Performance/Backup/Deployment.
 
-As data grows, use: aggregate queries, summary tables, scheduled aggregation, export jobs.
+## 75. Public-facing booking security (Phase 13)
+Rate limit public endpoints per IP and tenant; expose only what a prospective customer needs (no staff cost/commission, no other customers' bookings, no cross-tenant data); bot/spam protection (honeypot, throttling); treat requests as untrusted with the same validation, tenant/branch/module checks and availability revalidation; don't leak whether an email/phone is already a customer.
 
-Do not calculate expensive lifetime analytics on every dashboard request.
+## 77. Token economy (applies to every session)
+- Keep replies short; no recaps of what the user already knows. Don't print whole files or long logs — read only the needed lines.
+- Run only the tests for the area changed. Run the full suite ONLY when the user asks or before a release they requested.
+- Never poll or loop-wait on long runs; start them in the background once and check the result once.
+- Don't commit, push, build zips/patches or write extra test files unless the user asks.
+- Batch related edits into one call; don't re-read files already in context.
+- If a conversation gets long, say so once and suggest a new chat or /compact.
 
-## 56. Cache
-
-Good cache candidates include: tenant settings, branch settings, module assignments, plan features, permissions, service configuration, tax settings.
-
-Cache invalidation must occur after relevant configuration changes.
-
-Do not cache authorization-sensitive data without tenant/user-aware keys.
-
-## 57. Search
-
-Global search must enforce tenant isolation.
-
-Searchable entities may include: customers, appointments, invoices, employees, products.
-
-Never return records outside the current tenant/branch authorization scope.
-
-## 58. UI Principles
-
-The application is business software. Priorities:
-
-1. Speed
-2. Clarity
-3. Consistency
-4. Accessibility
-5. Responsiveness
-
-Avoid decorative complexity. Critical screens such as POS and appointment calendar must minimize clicks.
-
-## 59. Dynamic Navigation
-
-Navigation must reflect: tenant modules, branch modules, plan features, user permissions.
-
-Hidden navigation is **NOT** authorization. Server-side authorization remains mandatory.
-
-## 60. Mobile Responsiveness
-
-All primary operational screens must work on: desktop, tablet, mobile.
-
-Future native/PWA clients must be possible without rewriting domain logic.
-
-## 61. Testing
-
-Every module requires automated tests.
-
-At minimum test: success path, validation failure, authentication failure, authorization failure, tenant isolation, branch isolation, disabled module, disabled feature, business-rule conflict, transaction rollback, relevant concurrency-sensitive behavior.
-
-Financial modules require stronger test coverage.
-
-## 62. Tenant Isolation Test Requirement
-
-For every tenant-aware resource: create Tenant A, create Tenant B, create resource under Tenant A, authenticate as Tenant B, attempt view/edit/delete/export/API fetch.
-
-All must fail safely. This test is mandatory.
-
-## 63. Error Path Testing
-
-Do not test only successful requests. Test: duplicate request, expired resource, invalid state transition, unavailable employee, unavailable room, insufficient inventory, duplicate payment webhook, external provider timeout, unauthorized branch, module disabled during operation.
-
-## 64. Shared Hosting Compatibility
-
-Before adding infrastructure dependencies, verify they are compatible with shared hosting.
-
-Do not introduce a mandatory dependency on: persistent worker, Redis, WebSocket server, root server access, system daemon — unless explicitly approved.
-
-## 65. Future Scalability
-
-Code must remain portable to VPS/cloud infrastructure. Do not write code dependent on a particular shared-host filesystem layout.
-
-Use Laravel abstractions for: storage, cache, queues, mail, database, filesystem.
-
-## 66. Data Export / Tenant Portability
-
-Architecture should allow future tenant data export. Export must be tenant scoped and permission protected.
-
-Large exports should be queued when infrastructure permits.
-
-## 67. Backup & Recovery
-
-Production deployment documentation must cover: database backups, uploaded files, environment configuration, restore process.
-
-Backups must not be publicly accessible.
-
-## 68. Code Quality
-
-Code must be: readable, typed where appropriate, modular, testable, documented where reasoning is non-obvious, consistent with Laravel conventions.
-
-Avoid premature abstractions. Do not create unnecessary repositories/services simply to increase architecture complexity.
-
-## 69. Claude Code Working Rules
-
-Before modifying code:
-
-1. Read CLAUDE.md.
-2. Read relevant /docs specification.
-3. Inspect existing implementation.
-4. Inspect migrations/models/relationships.
-5. Identify tenant boundary.
-6. Identify branch boundary.
-7. Identify module/feature requirements.
-8. Identify authorization requirements.
-9. Identify financial/inventory effects.
-10. Identify tests required.
-
-Do not begin implementation before understanding these dependencies.
-
-## 70. Never Assume Missing Requirements
-
-If a business rule is ambiguous and could affect: security, tenancy, money, inventory, permissions, subscription, historical data, API compatibility — do not invent behavior silently.
-
-Document the ambiguity and request/record a decision before implementing irreversible architecture.
-
-## 71. Do Not Rewrite Working Architecture Casually
-
-Do not: replace tenant architecture, change primary key strategy, replace authentication, change money representation, change permission architecture, rename core business identifiers, replace queue/storage strategy — without explicit architectural approval.
-
-## 72. Implementation Workflow
-
-For each module:
-
-```
-REQUIREMENTS → DATA MODEL → SECURITY MODEL → MIGRATIONS → MODELS → POLICIES →
-DOMAIN/ACTIONS → VALIDATION → CONTROLLERS → ROUTES → UI/API → TESTS →
-SECURITY REVIEW → PERFORMANCE REVIEW → DOCUMENTATION
-```
-
-Do not mark a module complete merely because CRUD pages work.
-
-## 73. Definition of Done
-
-A feature is complete only when:
-
-- Requirements are implemented
-- Tenant isolation is verified
-- Branch authorization is verified
-- Module access is enforced
-- Permissions are enforced
-- Validation exists
-- Errors are handled
-- Transactions are correct
-- Audit requirements are implemented
-- Tests pass
-- No known security issue remains
-- Relevant documentation is updated
-
-## 74. Development Priority
-
-- **Phase 0:** Architecture and foundations
-- **Phase 1:** Authentication, Tenancy, RBAC, Super Admin, Modules, Plans, Subscriptions, Onboarding
-- **Phase 2:** Organization, Branches, Employees, Schedules, Resources
-- **Phase 3:** Customer CRM
-- **Phase 4:** Service catalogue, Pricing, Salon/Beauty/Spa vertical services
-- **Phase 5:** Appointment and availability engine
-- **Phase 6:** POS, Invoice, Payment, Refund
-- **Phase 7:** Products, Inventory, Suppliers, Purchasing, Consumption
-- **Phase 8:** Packages, Membership, Loyalty, Wallet, Gift Cards
-- **Phase 9:** Attendance, Leave, Commission, Incentives *(payroll processing is out of scope — see Section 14 note)*
-- **Phase 10:** Expenses, Cash register
-- **Phase 11:** Notifications, Email, SMS, WhatsApp, Marketing
-- **Phase 12:** Reports, Dashboards, Exports
-- **Phase 13:** Online booking, Customer self-service *(see Section 75, Public-Facing Booking Security, before starting this phase)*
-- **Phase 14:** Security hardening, Performance, Backup/restore, Production deployment
-
-## 75. Public-Facing Booking Security
-
-Phase 13 (Online booking, Customer self-service) introduces the platform's first unauthenticated, public-facing surface. This has a different threat model than the authenticated back-office application and needs explicit treatment before implementation begins:
-
-- Rate limit public booking/availability endpoints per IP and per tenant to prevent scraping and abuse
-- Never expose more information than a prospective customer needs (e.g., no internal staff cost/commission data, no other customers' bookings, no cross-tenant data)
-- Apply bot/spam protection (e.g., honeypot fields, throttling) on public booking form submission, consistent with Section 9 (Access Evaluation) principles
-- Treat public booking requests as untrusted input subject to the same validation, tenant/branch/module checks, and availability revalidation as authenticated bookings
-- Public endpoints must not leak whether a given email/phone is already a registered customer beyond what the booking flow legitimately requires
-
-This section supplements, not replaces, the general Access Evaluation (Section 9) and API Security (Section 38) requirements.
-
-## 76. Core Principle
-
-Correctness and security take priority over development speed.
-
-Never sacrifice: tenant isolation, authorization, financial integrity, inventory integrity, auditability, data integrity — to make implementation faster.
-
-When unsure: inspect existing architecture, follow Laravel conventions, protect tenant boundaries, use database constraints, use transactions for atomic workflows, validate server-side, authorize server-side, write tests, and preserve historical records.
+## 76. Core principle
+Correctness and security outrank speed. Never sacrifice tenant isolation, authorization, financial/inventory integrity, auditability or data integrity. When unsure: inspect existing architecture, follow Laravel conventions, protect tenant boundaries, use DB constraints and transactions, validate and authorize server-side, write tests, preserve history.

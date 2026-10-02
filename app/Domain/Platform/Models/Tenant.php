@@ -107,7 +107,7 @@ class Tenant extends Model
     {
         $subscription = $this->currentSubscription();
 
-        return $subscription?->plan?->userLimitFor($subscription->currentBranchCount());
+        return $subscription?->plan?->totalUserLimit($subscription->currentBranchCount(), $subscription->currentExtraUserCount());
     }
 
     public function activeUserCount(): int

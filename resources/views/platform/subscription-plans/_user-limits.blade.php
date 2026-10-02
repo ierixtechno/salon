@@ -22,6 +22,22 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div>
+            <x-input-label for="additional_employee_price" value="Price per extra employee (₹ per cycle)" />
+            <input id="additional_employee_price" name="additional_employee_price" type="number" min="0" step="0.01" value="{{ old('additional_employee_price', $plan->additional_employee_price ?? 0) }}"
+                class="block mt-1 w-full border-gray-300 rounded-md shadow-sm text-sm">
+            <p class="text-xs text-gray-500 mt-1">Tenants can buy employee slots on their own, without adding a branch. 0 = not offered.</p>
+            <x-input-error :messages="$errors->get('additional_employee_price')" class="mt-1" />
+        </div>
+        <div>
+            <x-input-label for="max_users" value="Overall maximum employees" />
+            <input id="max_users" name="max_users" type="number" min="1" max="100000" value="{{ old('max_users', $plan->max_users ?? '') }}" placeholder="Blank = no cap"
+                class="block mt-1 w-full border-gray-300 rounded-md shadow-sm text-sm">
+            <x-input-error :messages="$errors->get('max_users')" class="mt-1" />
+        </div>
+    </div>
+
     <p class="text-xs text-gray-500 mt-3">User limit by number of branches: <span id="user-preview" class="font-medium text-gray-700"></span></p>
 </div>
 

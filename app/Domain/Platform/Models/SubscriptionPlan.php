@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPlan extends Model
 {
-    protected $fillable = ['code', 'name', 'price', 'compare_at_price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'users_included', 'users_per_additional_branch', 'is_active'];
+    protected $fillable = ['code', 'name', 'price', 'compare_at_price', 'billing_interval', 'branch_limit', 'additional_branch_price', 'max_branches', 'users_included', 'users_per_additional_branch', 'additional_employee_price', 'max_users', 'is_active'];
 
     protected function casts(): array
     {
@@ -20,6 +20,8 @@ class SubscriptionPlan extends Model
             'max_branches' => 'integer',
             'users_included' => 'integer',
             'users_per_additional_branch' => 'integer',
+            'additional_employee_price' => 'decimal:2',
+            'max_users' => 'integer',
             'is_active' => 'boolean',
         ];
     }
@@ -98,6 +100,48 @@ class SubscriptionPlan extends Model
         return $this->users_per_additional_branch > 0 && $this->sellsExtraBranches()
             ? $text." (+{$this->users_per_additional_branch} per additional branch)"
             : $text;
+    }
+
+    /**
+     * True when this plan sells employee slots directly, independent of
+     * branches — e.g. one branch running 15 staff instead of the included 5
+     * (CLAUDE.md §70 — the business asked for this explicitly rather than
+     * forcing a tenant to buy an unwanted branch just for more staff).
+     */
+    public function sellsExtraEmployees(): bool
+    {
+        return (float) $this->additional_employee_price > 0;
+    }
+
+    /**
+     * The employee limit from branches and direct purchase combined, for a
+     * given branch count and directly-purchased extra count — or null for
+     * unlimited. `max_users`, if set, caps the combined total (never just
+     * one side of it). Always resolved server-side (CLAUDE.md §20).
+     */
+    public function totalUserLimit(?int $branches, ?int $extraEmployees = 0): ?int
+    {
+        $base = $this->userLimitFor($branches);
+
+        if ($base === null) {
+            return null;
+        }
+
+        $total = $base + max(0, $extraEmployees ?? 0);
+
+        return $this->max_users !== null ? min($total, $this->max_users) : $total;
+    }
+
+    /** Short text for plan cards when this plan also sells employees directly. */
+    public function employeePurchaseLabel(): ?string
+    {
+        if (! $this->sellsExtraEmployees()) {
+            return null;
+        }
+
+        $text = '₹'.number_format($this->additional_employee_price, 0).' per additional employee';
+
+        return $this->max_users !== null ? $text." (max {$this->max_users} total)" : $text;
     }
 
     public function features(): BelongsToMany

@@ -135,6 +135,24 @@ class NotifyTenantBillingContacts
         });
     }
 
+    public function employeeReductionDecided(Tenant $tenant, string $message): void
+    {
+        $this->eachContact($tenant, function (User $user) use ($tenant, $message) {
+            $this->deliver(
+                $tenant, $user,
+                inAppSubject: 'Employee reduction request decided',
+                inAppBody: $message,
+                emailSubject: 'Employee reduction request decided',
+                emailBody: "Hello {$user->name},\n\n"
+                    .$message."\n\n"
+                    .'Log in to view your subscription:'."\n".route('billing.plans.index')
+                    .$this->signOff(),
+                referenceType: 'Tenant',
+                referenceId: $tenant->id,
+            );
+        });
+    }
+
     private function eachContact(Tenant $tenant, callable $callback): void
     {
         app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);

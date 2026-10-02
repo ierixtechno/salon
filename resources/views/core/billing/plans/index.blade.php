@@ -53,6 +53,26 @@
                 </div>
             @endif
 
+            @if ($isActive && $currentPlan?->sellsExtraEmployees() && $currentPlan->users_included !== null)
+                @php $extraOwned = $currentSubscription->currentExtraUserCount(); @endphp
+                <div class="mb-6 bg-white shadow-sm rounded-lg p-6">
+                    <h3 class="font-semibold text-gray-900">Need more staff?</h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                        {{ $currentPlan->employeePurchaseLabel() }}, + GST per {{ $currentPlan->billing_interval === 'yearly' ? 'year' : 'month' }},
+                        charged pro rata for the rest of your current billing period. You have {{ $extraOwned }} purchased {{ \Illuminate\Support\Str::plural('slot', $extraOwned) }}.
+                    </p>
+                    <form method="POST" action="{{ route('billing.employees.add') }}" class="mt-4 flex items-end gap-3">
+                        @csrf
+                        <div>
+                            <label for="additional_employees" class="block text-xs text-gray-500 mb-1">Employees to add</label>
+                            <input id="additional_employees" name="additional" type="number" min="1" max="1000" value="1" required class="w-28 border-gray-300 rounded-md shadow-sm text-sm">
+                        </div>
+                        <button type="submit" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Get quotation</button>
+                    </form>
+                    @error('additional')<p class="text-sm text-red-600 mt-2">{{ $message }}</p>@enderror
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach ($plans as $plan)
                     @php
@@ -75,7 +95,7 @@
                             <x-plan-price :plan="$plan" />
                         </div>
 
-                        <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif &middot; {{ $plan->usersLabel() }}</p>
+                        <p class="text-sm text-gray-700 mb-4"><span class="font-medium">{{ $plan->branch_limit }}</span> {{ \Illuminate\Support\Str::plural('branch', $plan->branch_limit) }} included @if ($plan->sellsExtraBranches()) &middot; <span class="font-medium">&#8377;{{ number_format($plan->additional_branch_price, 0) }}</span> per additional branch @if ($plan->max_branches) (max {{ $plan->max_branches }}) @endif @endif &middot; {{ $plan->usersLabel() }} @if ($plan->sellsExtraEmployees() && $plan->users_included !== null) &middot; {{ $plan->employeePurchaseLabel() }} @endif</p>
 
                         <div class="mb-5">
                             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Modules included</p>

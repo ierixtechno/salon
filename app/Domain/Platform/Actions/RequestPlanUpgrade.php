@@ -67,6 +67,11 @@ class RequestPlanUpgrade
             notes: "Prorated upgrade from {$currentPlan->name} to {$newPlan->name}.",
             isUpgrade: true,
             branchCount: $branchCount,
+            // Keep any directly-purchased employee slots too (not charged for again
+            // here — an upgrade only bills the plan price difference); a lower
+            // max_users on the new plan still caps the total at read time
+            // (SubscriptionPlan::totalUserLimit).
+            extraUserCount: $currentSubscription->currentExtraUserCount(),
         );
     }
 }

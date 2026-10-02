@@ -57,6 +57,8 @@ class RequestExtraBranches
             notes: "Prorated: {$additional} additional ".str('branch')->plural($additional)." (total {$newTotal}).",
             isUpgrade: true,
             branchCount: $newTotal,
+            // Buying more branches must not drop any employee slots already bought directly.
+            extraUserCount: $subscription->currentExtraUserCount(),
         );
     }
 }

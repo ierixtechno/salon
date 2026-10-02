@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TenantSubscription extends Model
 {
     protected $fillable = [
-        'tenant_id', 'subscription_plan_id', 'branch_count', 'status', 'starts_at', 'ends_at', 'trial_ends_at',
+        'tenant_id', 'subscription_plan_id', 'branch_count', 'extra_user_count', 'status', 'starts_at', 'ends_at', 'trial_ends_at',
     ];
 
     protected function casts(): array
@@ -29,6 +29,12 @@ class TenantSubscription extends Model
     public function currentBranchCount(): int
     {
         return max(1, (int) ($this->branch_count ?? $this->plan->branch_limit));
+    }
+
+    /** Employee slots bought directly, independent of branches (see SubscriptionPlan::totalUserLimit). */
+    public function currentExtraUserCount(): int
+    {
+        return max(0, (int) ($this->extra_user_count ?? 0));
     }
 
     public function plan(): BelongsTo

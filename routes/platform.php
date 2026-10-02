@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Platform\BackupController;
 use App\Http\Controllers\Platform\BranchReductionRequestController;
+use App\Http\Controllers\Platform\EmployeeReductionRequestController;
 use App\Http\Controllers\Platform\ErrorLogController;
 use App\Http\Controllers\Platform\PlatformAccountingController;
 use App\Http\Controllers\Platform\PlatformAuthController;
@@ -54,6 +55,10 @@ Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('branch-reduction-requests', [BranchReductionRequestController::class, 'index'])->name('branch-reduction-requests.index');
         Route::post('branch-reduction-requests/{branch_reduction_request}/approve', [BranchReductionRequestController::class, 'approve'])->name('branch-reduction-requests.approve');
         Route::post('branch-reduction-requests/{branch_reduction_request}/reject', [BranchReductionRequestController::class, 'reject'])->name('branch-reduction-requests.reject');
+
+        Route::get('employee-reduction-requests', [EmployeeReductionRequestController::class, 'index'])->name('employee-reduction-requests.index');
+        Route::post('employee-reduction-requests/{employee_reduction_request}/approve', [EmployeeReductionRequestController::class, 'approve'])->name('employee-reduction-requests.approve');
+        Route::post('employee-reduction-requests/{employee_reduction_request}/reject', [EmployeeReductionRequestController::class, 'reject'])->name('employee-reduction-requests.reject');
 
         Route::get('quotations', [QuotationController::class, 'index'])->name('quotations.index');
         Route::get('quotations/create', [QuotationController::class, 'create'])->name('quotations.create');

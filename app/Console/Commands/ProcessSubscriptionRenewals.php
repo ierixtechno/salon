@@ -167,6 +167,10 @@ class ProcessSubscriptionRenewals extends Command
             plan: $subscription->plan,
             createdBy: null,
             branchCount: $subscription->currentBranchCount(),
+            // Explicit (not left null) so the renewal quotation also bills for any
+            // directly-purchased employee slots — see CreateQuotation's default
+            // price formula.
+            extraUserCount: $subscription->currentExtraUserCount(),
         );
     }
 }

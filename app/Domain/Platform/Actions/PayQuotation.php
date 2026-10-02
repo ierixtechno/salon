@@ -79,6 +79,16 @@ class PayQuotation
 
             $existing = TenantSubscription::where('tenant_id', $quotation->tenant_id)->where('subscription_plan_id', $plan->id)->first();
 
+            // Captured now, before resolveEndsAt() below may cancel the previous
+            // subscription row (a plan upgrade) — cancelled rows no longer count as
+            // "current", so this must run first or the fallback below would miss it.
+            // Unlike branch_count, a null extra_user_count on the quotation means
+            // "this quotation wasn't about employees": carry forward whatever the
+            // tenant already had rather than resetting it to zero.
+            $extraUserCount = $quotation->extra_user_count
+                ?? $quotation->tenant->currentSubscription()?->currentExtraUserCount()
+                ?? 0;
+
             // Buying extra branches on the SAME plan mid-cycle must not restart the
             // cycle (proration is measured from its start).
             $keepCycle = $quotation->is_upgrade && $existing !== null;
@@ -106,6 +116,7 @@ class PayQuotation
                 ['tenant_id' => $quotation->tenant_id, 'subscription_plan_id' => $plan->id],
                 [
                     'branch_count' => $plan->clampBranches($quotation->branch_count),
+                    'extra_user_count' => $extraUserCount,
                     'status' => 'active',
                     'starts_at' => $startsAt,
                     'ends_at' => $endsAt,

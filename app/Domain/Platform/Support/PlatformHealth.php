@@ -37,6 +37,15 @@ class PlatformHealth
         }
     }
 
+    public static function pendingEmployeeReductionCount(): int
+    {
+        try {
+            return \App\Domain\Platform\Models\EmployeeReductionRequest::where('status', 'pending')->count();
+        } catch (Throwable) {
+            return 0;
+        }
+    }
+
     /** Written every minute by the scheduler (bootstrap/app.php). */
     public const HEARTBEAT_KEY = 'scheduler:last-run';
 

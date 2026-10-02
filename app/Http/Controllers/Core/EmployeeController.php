@@ -29,6 +29,10 @@ class EmployeeController extends Controller
             'employees' => EmployeeProfile::with('user')->get(),
             'userLimit' => current_tenant()->userLimit(),
             'userCount' => current_tenant()->activeUserCount(),
+            'extraUserCount' => current_tenant()->currentSubscription()?->currentExtraUserCount() ?? 0,
+            'pendingEmployeeReduction' => auth('web')->user()->can('tenant.billing.manage')
+                ? \App\Domain\Platform\Models\EmployeeReductionRequest::where('tenant_id', current_tenant_id())->where('status', 'pending')->latest()->first()
+                : null,
         ]);
     }
 

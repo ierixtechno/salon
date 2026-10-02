@@ -28,6 +28,7 @@ class CreateQuotation
         bool $isUpgrade = false,
         ?int $branchCount = null,
         ?float $discountPercent = null,
+        ?int $extraUserCount = null,
     ): Quotation {
         abort_unless($plan->is_active, 422, 'Cannot quote an inactive plan.');
         // GST determination needs a place of supply to compare against the
@@ -37,15 +38,25 @@ class CreateQuotation
         // silently pick the wrong tax treatment.
         abort_if(blank($tenant->billing_state), 422, "Set this tenant's billing state (for GST) before creating a quotation.");
 
-        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade, $branchCount, $discountPercent) {
+        return DB::transaction(function () use ($tenant, $plan, $createdBy, $amountOverride, $notes, $isUpgrade, $branchCount, $discountPercent, $extraUserCount) {
             $quotationNumber = $this->nextPlatformNumber('quotation');
             $branchCount = $plan->clampBranches($branchCount);
+            // A caller that doesn't say (e.g. Super Admin's manual quotation) keeps the
+            // purchased employees on the same plan, priced in, so they aren't free.
+            $current = $tenant->currentSubscription();
+            $extraUserCount ??= $current && $current->subscription_plan_id === $plan->id ? $current->currentExtraUserCount() : 0;
             $discountPercent = round(max(0.0, min(100.0, (float) $discountPercent)), 2);
             abort_if($amountOverride !== null && $discountPercent > 0, 422, 'Use either a custom amount or a discount percentage, not both.');
 
             // A percentage discount is Super Admin's to grant (callers only pass it from
             // Platform forms); it comes off the list price, before GST.
-            $listAmount = (float) ($amountOverride ?? $plan->priceForBranches($branchCount));
+            //
+            // The employee add-on only prices in here when a caller explicitly passes
+            // extraUserCount (e.g. a renewal quotation, which must keep billing for it)
+            // — callers paying specifically for branches or employees already compute
+            // their own prorated amountOverride instead, so this never double-charges.
+            $listAmount = (float) ($amountOverride
+                ?? $plan->priceForBranches($branchCount) + max(0, $extraUserCount ?? 0) * (float) $plan->additional_employee_price);
             $discountAmount = round($listAmount * $discountPercent / 100, 2);
             $amount = round($listAmount - $discountAmount, 2);
 
@@ -73,6 +84,11 @@ class CreateQuotation
                 'tenant_id' => $tenant->id,
                 'subscription_plan_id' => $plan->id,
                 'branch_count' => $branchCount,
+                // Not clamped/defaulted here, unlike branch_count: null means "no
+                // change" and is resolved against the existing subscription at
+                // payment time (PayQuotation) — this is a brand-new field with no
+                // callers relying on an eager-reset-to-base-plan default.
+                'extra_user_count' => $extraUserCount,
                 'platform_admin_id' => $createdBy?->id,
                 'quotation_number' => $quotationNumber,
                 'amount' => $amount,

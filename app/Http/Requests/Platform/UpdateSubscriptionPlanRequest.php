@@ -21,6 +21,9 @@ class UpdateSubscriptionPlanRequest extends FormRequest
         if (blank($this->input('users_per_additional_branch'))) {
             $this->merge(['users_per_additional_branch' => 0]);
         }
+        if (blank($this->input('additional_employee_price'))) {
+            $this->merge(['additional_employee_price' => 0]);
+        }
     }
 
     public function rules(): array
@@ -32,6 +35,12 @@ class UpdateSubscriptionPlanRequest extends FormRequest
             'compare_at_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99', 'gt:price'],
             'users_included' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'users_per_additional_branch' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            'additional_employee_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'max_users' => ['nullable', 'integer', 'min:1', 'max:100000', function ($attribute, $value, $fail) {
+                if (filled($value) && filled($this->input('users_included')) && (int) $value < (int) $this->input('users_included')) {
+                    $fail('The overall maximum cannot be below the users included.');
+                }
+            }],
             'branch_limit' => ['required', 'integer', 'min:1', 'max:1000'],
             'additional_branch_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'max_branches' => ['nullable', 'integer', 'min:1', 'max:1000', 'gte:branch_limit'],

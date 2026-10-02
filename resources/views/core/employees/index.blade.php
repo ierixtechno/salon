@@ -27,6 +27,31 @@
             @endif
             <x-input-error :messages="$errors->get('user_limit')" class="mb-4" />
 
+            @can('tenant.billing.manage')
+                @if ($extraUserCount > 0)
+                    <div class="mb-4 rounded-md border border-gray-200 bg-white px-4 py-3 text-sm">
+                        @if ($pendingEmployeeReduction)
+                            <p class="text-gray-700">Request pending: reduce purchased employee slots from {{ $extraUserCount }} to {{ $pendingEmployeeReduction->requested_extra_user_count }}. Super Admin will review it.</p>
+                        @else
+                            <form method="POST" action="{{ route('employee-reduction-requests.store') }}" class="flex flex-wrap items-end gap-3">
+                                @csrf
+                                <div>
+                                    <label for="requested_extra_user_count" class="block text-xs text-gray-500 mb-1">Reduce purchased employee slots (now {{ $extraUserCount }}) to</label>
+                                    <input id="requested_extra_user_count" name="requested_extra_user_count" type="number" min="0" max="{{ $extraUserCount - 1 }}" required class="w-28 border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                                <div class="flex-1 min-w-[12rem]">
+                                    <label for="reduction_reason" class="block text-xs text-gray-500 mb-1">Reason (optional)</label>
+                                    <input id="reduction_reason" name="reason" type="text" maxlength="500" class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                                <button type="submit" class="inline-flex items-center rounded-md bg-gray-800 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700">Request reduction</button>
+                            </form>
+                            <p class="text-xs text-gray-500 mt-2">Deactivate the staff you no longer need first. The lower price applies from your next renewal; no refund for the current period.</p>
+                            <x-input-error :messages="$errors->get('requested_extra_user_count')" class="mt-2" />
+                        @endif
+                    </div>
+                @endif
+            @endcan
+
             @if (session('status'))
                 <div class="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}

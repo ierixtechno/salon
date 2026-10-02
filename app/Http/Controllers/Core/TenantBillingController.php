@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Core;
 
 use App\Domain\Platform\Actions\PayQuotation;
 use App\Domain\Platform\Actions\RequestExtraBranches;
+use App\Domain\Platform\Actions\RequestExtraEmployees;
 use App\Domain\Platform\Actions\RequestPlanUpgrade;
 use App\Domain\Platform\Contracts\PaymentGatewayProvider;
 use App\Domain\Platform\Models\PlatformInvoice;
@@ -68,6 +69,16 @@ class TenantBillingController extends Controller
 
         return redirect()->route('billing.quotations.show', $quotation)
             ->with('status', 'Quotation created for the additional branches — pay to add them.');
+    }
+
+    public function addEmployees(Request $request, RequestExtraEmployees $action): RedirectResponse
+    {
+        $data = $request->validate(['additional' => ['required', 'integer', 'min:1', 'max:1000']]);
+
+        $quotation = $action->execute(Tenant::findOrFail(Auth::user()->tenant_id), (int) $data['additional']);
+
+        return redirect()->route('billing.quotations.show', $quotation)
+            ->with('status', 'Quotation created for the additional employees — pay to add them.');
     }
 
     public function quotations(): View
